@@ -1,0 +1,9 @@
+# El desarrollo ocurre en Windows y la compilacion de iOS en macOS. Sin esto,
+# cada cambio de maquina reescribiria los finales de linea y ensuciaria los diffs.
+* text=auto eol=lf
+
+# Los binarios no deben normalizarse nunca.
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary

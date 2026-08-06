@@ -1,0 +1,42 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+
+    // Endurecen el modo estricto mas alla del preset de Expo. Se activan ahora,
+    // con el proyecto vacio, porque adoptarlos sobre codigo ya escrito obliga a
+    // una refactorizacion masiva.
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+
+    // Convierten el codigo muerto en error de compilacion, no en aviso opcional.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    // Evita que el proyecto compile en Windows pero falle en el Mac, donde el
+    // sistema de archivos si distingue mayusculas.
+    "forceConsistentCasingInFileNames": true,
+
+    // TypeScript 6 con la base de Expo no escanea node_modules/@types de forma
+    // automatica (verificado con --traceResolution: no emite ninguna
+    // resolucion de type reference directive). Sin esta linea, describe/it/
+    // expect no existen para el compilador aunque @types/jest este instalado.
+    //
+    // "node" entra por los tests estaticos de la paleta, que leen el codigo
+    // fuente con node:fs para comprobar desde donde se consume cada familia de
+    // color. Es la unica forma de que una regla de diseno falle la compilacion.
+    "types": ["jest", "node"],
+
+    // Alias de imports. Metro lo lee de aqui de forma nativa: no requiere
+    // babel-plugin-module-resolver.
+    //
+    // Sin "baseUrl" a proposito: TypeScript 6 lo deprecio y deja de funcionar
+    // en la 7. Las rutas se resuelven respecto a este archivo, que es lo que
+    // se busca. El ejemplo de la documentacion de Expo aun lo incluye.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

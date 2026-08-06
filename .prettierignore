@@ -1,0 +1,13 @@
+node_modules/
+
+# SKILL.md es la especificacion de diseno, no codigo del proyecto. Se conserva
+# literal para que las enmiendas sean trazables frente al documento original.
+SKILL.md
+android/
+ios/
+.expo/
+dist/
+coverage/
+package-lock.json
+expo-env.d.ts
+assets/
