@@ -53,7 +53,10 @@ const BRAND_FILL_ALLOWED = [
 const TINTED_ALLOWED = ['src/components/BentoTile.tsx', 'src/screens/HomeScreen.tsx'];
 
 /** Modulos que pueden tocar la jerarquia de alarma de la IEC 60601-1-8. */
-const SEMANTIC_ALLOWED = ['src/components/ErrorNotice.tsx'];
+// `Notice` sustituye a `ErrorNotice` en esta lista: el color de alarma se movio
+// con la barra lateral cuando la presentacion se separo de la traduccion de
+// causas. `ErrorNotice` ya no pinta, solo elige copy.
+const SEMANTIC_ALLOWED = ['src/components/Notice.tsx'];
 
 /** Modulos que pueden tocar la atmosfera del lienzo. */
 const AURORA_ALLOWED = ['src/design/Aurora.tsx'];
@@ -202,7 +205,7 @@ describe('regla de tamano de §12.9 — la alarma no es un fondo grande', () => 
     // el estilo que pinta la alarma declare a la vez un ancho o un alto sacado de
     // `size`, o sea que su tamano este acotado y a la vista.
     //
-    // `ErrorNotice` cumple: su barra lateral es `width: size.frameBorder`, tres
+    // `Notice` cumple: su barra lateral es `width: size.frameBorder`, tres
     // puntos, con titulo y accion al lado. Un `backgroundColor: semantic.*` en un
     // estilo sin medida es un contenedor que se estira, y ahi la regla salta.
     const offenders: string[] = [];
