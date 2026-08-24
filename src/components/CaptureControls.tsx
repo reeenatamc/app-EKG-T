@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,10 +7,13 @@ import { ShutterButton } from '@/components/ShutterButton';
 import { CAMERA_TEXT } from '@/constants/captureText';
 import { gap, paperDark, radius, scrim, size } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useTask } from '@/shell/useTask';
 
 interface CaptureControlsProps {
   readonly isReady: boolean;
   readonly isCapturing: boolean;
+  /** Cierto si el ultimo disparo no llego a dar foto. */
+  readonly hasCaptureFailed: boolean;
   readonly isDim: boolean;
   readonly isTilted: boolean;
   readonly onShutter: () => void;
@@ -26,6 +28,7 @@ interface CaptureControlsProps {
  *
  * @param isReady Cierto cuando la camara ya puede disparar.
  * @param isCapturing Cierto mientras hay una captura en curso.
+ * @param hasCaptureFailed Cierto si el ultimo disparo se quedo sin foto.
  * @param isDim Cierto con poca luz ambiente.
  * @param isTilted Cierto cuando el telefono no esta paralelo al papel.
  * @param onShutter Dispara la captura.
@@ -35,26 +38,29 @@ interface CaptureControlsProps {
 export function CaptureControls({
   isReady,
   isCapturing,
+  hasCaptureFailed,
   isDim,
   isTilted,
   onShutter,
   onImported,
 }: CaptureControlsProps) {
   const insets = useSafeAreaInsets();
-  const { isImporting, importPhoto } = useGalleryImport(onImported);
+  const gallery = useGalleryImport(onImported);
 
   return (
     <View style={[styles.controls, { bottom: insets.bottom + gap.xl }]}>
       {isDim ? <Text style={styles.warning}>{CAMERA_TEXT.dimWarning}</Text> : null}
       {isTilted ? <Text style={styles.warning}>{CAMERA_TEXT.tiltWarning}</Text> : null}
+      {hasCaptureFailed ? <Text style={styles.warning}>{CAMERA_TEXT.shutterFailure}</Text> : null}
+      {gallery.hasFailed ? <Text style={styles.warning}>{CAMERA_TEXT.importFailure}</Text> : null}
 
       <ShutterButton onPress={onShutter} busy={isCapturing} disabled={!isReady} />
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={CAMERA_TEXT.fromGallery}
-        onPress={importPhoto}
-        disabled={isImporting}
+        onPress={gallery.importPhoto}
+        disabled={gallery.isImporting}
         style={styles.galleryButton}
       >
         <Text style={[type.caption, styles.galleryLabel]}>{CAMERA_TEXT.fromGallery}</Text>
@@ -70,28 +76,26 @@ export function CaptureControls({
  * del sistema: la segunda invocacion se queda esperando y devuelve una foto que
  * ya nadie espera.
  *
+ * ELEGIR SIN ELEGIR NO ES UN FALLO. `importFromGallery` devuelve null cuando el
+ * usuario cierra el selector, y eso resuelve bien: quien se arrepiente de abrir
+ * la galeria no ha hecho nada mal y no tiene por que ver un aviso.
+ *
  * @param onImported Se invoca con la foto ya recodificada y sin metadatos.
- * @returns Si hay una importacion en curso y la accion para lanzarla.
+ * @returns El estado de la importacion y la accion para lanzarla.
  */
 function useGalleryImport(onImported: (photo: CapturedPhoto) => void) {
-  const [isImporting, setIsImporting] = useState(false);
+  const task = useTask('[capture] no se pudo importar la imagen');
 
-  const importPhoto = () => {
-    setIsImporting(true);
-    void importFromGallery()
-      .then((photo) => {
-        setIsImporting(false);
-        if (photo !== null) {
-          onImported(photo);
-        }
-      })
-      .catch((error: unknown) => {
-        setIsImporting(false);
-        console.error('[capture] no se pudo importar la imagen', error);
-      });
-  };
+  const importPhoto = () =>
+    task.run(async () => {
+      const photo = await importFromGallery();
 
-  return { isImporting, importPhoto };
+      if (photo !== null) {
+        onImported(photo);
+      }
+    });
+
+  return { isImporting: task.isBusy, hasFailed: task.hasFailed, importPhoto };
 }
 
 const styles = StyleSheet.create({

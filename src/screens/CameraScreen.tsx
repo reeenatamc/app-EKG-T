@@ -116,6 +116,7 @@ function CameraChrome({ stage, mount, onMountChange, onClose, onImported }: Came
       <CaptureControls
         isReady={stage.isReady}
         isCapturing={stage.isCapturing}
+        hasCaptureFailed={stage.hasFailed}
         isDim={stage.light.isDim}
         isTilted={stage.tilt.isAvailable && !stage.tilt.isAligned}
         onShutter={stage.shoot}
@@ -132,6 +133,7 @@ interface CameraStage {
   readonly light: AmbientLight;
   readonly isReady: boolean;
   readonly isCapturing: boolean;
+  readonly hasFailed: boolean;
   readonly pictureSize: string | undefined;
   readonly handleLayout: (event: LayoutChangeEvent) => void;
   readonly handlePreviewReady: () => void;
@@ -157,7 +159,8 @@ function useCameraStage(
   onCaptured: (photo: CapturedPhoto) => void,
 ): CameraStage {
   const { container, frame, handleLayout } = usePreviewFrame(mount);
-  const { isReady, isCapturing, capture, handlePreviewReady } = useCameraCapture(onCaptured);
+  const { isReady, isCapturing, hasFailed, capture, handlePreviewReady } =
+    useCameraCapture(onCaptured);
   const pictureSize = useLargestPictureSize(cameraRef, isReady);
   const tilt = useTilt();
   const light = useAmbientLight();
@@ -169,6 +172,7 @@ function useCameraStage(
     light,
     isReady,
     isCapturing,
+    hasFailed,
     pictureSize,
     handleLayout,
     handlePreviewReady,

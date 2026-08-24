@@ -28,6 +28,16 @@ export const STUDY_TEXT = {
   notesHint: 'Se guardan solo en este dispositivo. No escribas datos que identifiquen al paciente.',
   saveNote: 'Guardar anotacion',
   exportAction: 'Exportar informe',
+  /**
+   * El informe no se generó.
+   *
+   * No se nombra el PDF ni el motor de impresión: quien lo lee quiere el
+   * informe, y de qué pieza falló no puede hacer nada.
+   */
+  exportFailure: {
+    title: 'No se pudo generar el informe',
+    action: 'El estudio no se ha tocado. Vuelve a intentarlo.',
+  },
   compareAction: 'Comparar con otro',
   retryAnalysis: 'Reintentar el analisis',
 } as const;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 
 import type { CapturedPhoto } from '@/camera/capturePhoto';
 import { discardCapture } from '@/camera/discardCapture';
@@ -13,6 +13,7 @@ import { CameraScreen } from '@/screens/CameraScreen';
 import { ConfirmScreen } from '@/screens/ConfirmScreen';
 import { ReviewScreen } from '@/screens/ReviewScreen';
 import { useGoBack } from '@/shell/useGoBack';
+import { useTask } from '@/shell/useTask';
 
 /**
  * Los tres pasos del flujo de captura.
@@ -91,6 +92,8 @@ function PhotoStage({ stage, mount, flow }: PhotoStageProps) {
       {stage.kind === 'review' ? (
         <ReviewScreen
           photo={stage.photo}
+          isCropping={flow.isCropping}
+          hasCropFailed={flow.hasCropFailed}
           onDiscard={() => flow.discard(stage.photo)}
           onConfirm={(quad) => flow.adjust(stage.photo, quad)}
         />
@@ -107,6 +110,29 @@ function PhotoStage({ stage, mount, flow }: PhotoStageProps) {
   );
 }
 
+/**
+ * Recorta la foto y avanza a la confirmacion.
+ *
+ * Vive fuera del gancho porque no necesita nada de React salvo el actualizador,
+ * y dentro engordaba el cuerpo del gancho hasta hacerlo ilegible.
+ *
+ * El identificador anonimo se genera aqui, cuando el recorte ya existe: hacerlo
+ * antes gastaria uno cada vez que el recorte falla.
+ *
+ * @param photo Foto de partida.
+ * @param quad Esquinas elegidas, en pixeles de la foto.
+ * @param setStage Actualizador del paso del flujo.
+ */
+async function cropAndAdvance(
+  photo: CapturedPhoto,
+  quad: Quad,
+  setStage: Dispatch<SetStateAction<Stage>>,
+): Promise<void> {
+  const image = await cropToQuad(photo, quad);
+
+  setStage({ kind: 'confirm', photo, image, anonymousId: createAnonymousId(new Date()) });
+}
+
 interface CaptureFlowControls {
   readonly stage: Stage;
   readonly capture: (photo: CapturedPhoto) => void;
@@ -116,6 +142,10 @@ interface CaptureFlowControls {
   readonly submit: (photo: CapturedPhoto, image: PreparedImage, draft: StudyDraft) => void;
   /** Abandona la captura sin haber tomado nada. */
   readonly close: () => void;
+  /** Cierto mientras se prepara el recorte. */
+  readonly isCropping: boolean;
+  /** Cierto si el ultimo recorte no salio. */
+  readonly hasCropFailed: boolean;
 }
 
 /**
@@ -131,12 +161,15 @@ interface CaptureFlowControls {
  */
 function useCaptureFlow(): CaptureFlowControls {
   const goBack = useGoBack('/home');
+  const crop = useTask('[capture] no se pudo recortar');
   const addToQueue = useUploadQueue((state) => state.add);
   const [stage, setStage] = useState<Stage>({ kind: 'camera' });
 
   return {
     stage,
     close: goBack,
+    isCropping: crop.isBusy,
+    hasCropFailed: crop.hasFailed,
 
     capture: (photo) => setStage({ kind: 'review', photo }),
 
@@ -145,15 +178,9 @@ function useCaptureFlow(): CaptureFlowControls {
       setStage({ kind: 'camera' });
     },
 
-    adjust: (photo, quad) => {
-      void cropToQuad(photo, quad)
-        .then((image) => {
-          setStage({ kind: 'confirm', photo, image, anonymousId: createAnonymousId(new Date()) });
-        })
-        // No se avanza y no se pierde nada: la revision sigue en pantalla con
-        // las esquinas donde estaban, y se puede reintentar.
-        .catch((error: unknown) => console.error('[capture] no se pudo recortar', error));
-    },
+    // Si no sale no se avanza y no se pierde nada: la revision sigue en pantalla
+    // con las esquinas donde estaban, y ahora ademas lo dice.
+    adjust: (photo, quad) => crop.run(() => cropAndAdvance(photo, quad, setStage)),
 
     back: (photo, image) => {
       discardCapture(image);

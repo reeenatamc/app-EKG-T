@@ -36,6 +36,16 @@ export const CAMERA_TEXT = {
    * salida en pantalla, solo el botón físico de Android.
    */
   closeLabel: 'Cerrar la cámara',
+  /**
+   * Avisos de acción fallida, en una línea.
+   *
+   * Van en una línea y no en el bloque de título y acción que usa el resto de la
+   * aplicación porque comparten sitio con los avisos en vivo, justo encima del
+   * obturador: ahí el usuario está mirando el papel, no la pantalla, y un
+   * párrafo no se lee.
+   */
+  shutterFailure: 'La foto no se llegó a tomar. Vuelve a pulsar',
+  importFailure: 'No se pudo abrir esa imagen. Prueba con otra',
 } as const;
 
 export interface MountCopy {
@@ -145,6 +155,17 @@ export const REVIEW_TEXT = {
   discard: 'Repetir la foto',
   continueAction: 'Continuar',
   imageLabel: 'Fotografia del electrocardiograma con las esquinas ajustables',
+  /**
+   * El recorte no salió.
+   *
+   * Lo primero que se dice es que la foto sigue ahí. Quien acaba de fotografiar
+   * un registro necesita saber eso antes que nada: el fallo cuesta un toque, no
+   * el viaje hasta el paciente.
+   */
+  cropFailure: {
+    title: 'No se pudo preparar el recorte',
+    action: 'La foto y las esquinas siguen como estaban. Vuelve a darle a continuar.',
+  },
 } as const;
 
 export const CONFIRM_TEXT = {
