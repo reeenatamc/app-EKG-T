@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
+import { ActionButton } from '@/components/ActionButton';
 import { MeasurementList } from '@/components/MeasurementList';
 import { ObservationList } from '@/components/ObservationList';
 import { ProcessingIndicator } from '@/components/ProcessingIndicator';
@@ -12,6 +13,7 @@ import {
   STATUS_TEXT,
   STUDY_TEXT,
 } from '@/constants/studyText';
+import { useAnalyses } from '@/ecg/analyses';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
 import { gap, radius } from '@/design/tokens';
@@ -43,7 +45,7 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
   }
 
   if (analysis.status === 'failed') {
-    return <AnalysisFailure analysis={analysis} />;
+    return <AnalysisFailure studyId={study.id} analysis={analysis} />;
   }
 
   return <ReadyAnalysis study={study} analysis={analysis} />;
@@ -76,14 +78,26 @@ function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgA
   );
 }
 
+interface AnalysisFailureProps {
+  readonly studyId: string;
+  readonly analysis: EcgAnalysis;
+}
+
 /**
  * Un analisis que no salio.
  *
  * Se dice la causa y, sobre todo, que el estudio no se ha perdido. Quien acaba
  * de fotografiar un registro necesita saber eso antes que el motivo tecnico.
+ *
+ * Y AHORA TIENE SALIDA. Antes decia la causa y ahi se acababa la pantalla: la
+ * unica forma de volver a intentarlo era cerrar la aplicacion, y ni siquiera
+ * eso, porque el estudio ya constaba como pedido. La imagen sigue en el
+ * dispositivo y el estudio sigue subido, asi que reintentar es barato y no
+ * arriesga nada.
  */
-function AnalysisFailure({ analysis }: { readonly analysis: EcgAnalysis }) {
+function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
   const theme = useTheme();
+  const retry = useAnalyses((state) => state.retry);
 
   return (
     <View style={[styles.failure, { backgroundColor: theme.surface }]}>
@@ -91,6 +105,14 @@ function AnalysisFailure({ analysis }: { readonly analysis: EcgAnalysis }) {
       <Text style={[type.caption, { color: theme.textLow }]}>
         {analysis.failure === null ? STATUS_DETAIL.failed : ANALYSIS_FAILURE_COPY[analysis.failure]}
       </Text>
+
+      <View style={styles.failureAction}>
+        <ActionButton
+          label={STUDY_TEXT.retryAnalysis}
+          onPress={() => retry(studyId)}
+          variant="primary"
+        />
+      </View>
     </View>
   );
 }
@@ -98,4 +120,7 @@ function AnalysisFailure({ analysis }: { readonly analysis: EcgAnalysis }) {
 const styles = StyleSheet.create({
   ready: { gap: gap.xl },
   failure: { padding: gap.lg, borderRadius: radius.tile, gap: gap.xs },
+  // En fila para que el boton no se estire al ancho de la tarjeta: dentro de un
+  // aviso, un boton a sangre pesa mas que el propio aviso.
+  failureAction: { flexDirection: 'row', marginTop: gap.sm },
 });
