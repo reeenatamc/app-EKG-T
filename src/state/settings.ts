@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { useStoreHydrated } from '@/state/hydration';
 
 /**
  * Preferencias de presentacion de la aplicacion.
@@ -91,11 +92,5 @@ export const useSettings = create<SettingsState>()(
  * @returns Cierto cuando la hidratacion ha terminado.
  */
 export function useSettingsHydrated(): boolean {
-  const [isHydrated, setIsHydrated] = useState(() => useSettings.persist.hasHydrated());
-
-  useEffect(() => {
-    return useSettings.persist.onFinishHydration(() => setIsHydrated(true));
-  }, []);
-
-  return isHydrated;
+  return useStoreHydrated(useSettings);
 }
