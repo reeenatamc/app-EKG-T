@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
 import { studyActions, type StudyActions } from '@/capture/studyActions';
@@ -12,6 +12,7 @@ import { rowShadow } from '@/design/elevation';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
+import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 
 interface StudyListRowProps {
   readonly study: QueuedStudy;
@@ -54,6 +55,9 @@ export function StudyListRow({ study }: StudyListRowProps) {
 /**
  * El cuerpo de la fila, pulsable solo si hay detalle que abrir.
  *
+ * Solo se hunde el que se puede abrir. Un bloque que responde al dedo y no
+ * lleva a ningun sitio promete algo que no cumple.
+ *
  * Cuando no lo hay se renderiza como bloque y no como boton desactivado: un
  * boton en gris invita a insistir, y ademas un lector de pantalla lo anunciaria
  * como control cuando ahi no hay ningun control. Se marca `accessible` para que
@@ -66,28 +70,55 @@ function StudyOpener({
   readonly study: QueuedStudy;
   readonly canOpen: boolean;
 }) {
-  const router = useRouter();
   const analysis = useAnalyses((state) => state.byStudy[study.id]);
   const status = canOpen && analysis !== undefined ? STATUS_TEXT[analysis.status] : null;
-  const label = `${study.metadata.anonymousId}. ${status ?? QUEUE_TEXT[study.status]}`;
+  const shown = status ?? QUEUE_TEXT[study.status];
+  const label = `${study.metadata.anonymousId}. ${shown}`;
 
   if (!canOpen) {
     return (
       <View accessible accessibilityLabel={label} style={styles.opener}>
-        <RowContent study={study} status={QUEUE_TEXT[study.status]} />
+        <RowContent study={study} status={shown} />
       </View>
     );
   }
 
+  return <OpenableRow study={study} status={shown} label={label} />;
+}
+
+interface OpenableRowProps {
+  readonly study: QueuedStudy;
+  readonly status: string;
+  readonly label: string;
+}
+
+/**
+ * La fila de un estudio que ya se puede leer.
+ *
+ * Separada para que `usePressMotion` solo se llame donde hace falta: en la otra
+ * rama no hay pulsable que hundir, y un gancho antes de un return condicional
+ * tendria que ejecutarse igual.
+ *
+ * @param study Estudio de la fila.
+ * @param status Estado ya traducido a texto.
+ * @param label Etiqueta accesible de la fila entera.
+ * @returns La fila pulsable.
+ */
+function OpenableRow({ study, status, label }: OpenableRowProps) {
+  const router = useRouter();
+  const press = usePressMotion();
+
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={() => router.push(`/study/${study.id}`)}
-      style={styles.opener}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[styles.opener, press.style]}
     >
-      <RowContent study={study} status={status ?? QUEUE_TEXT[study.status]} />
-    </Pressable>
+      <RowContent study={study} status={status} />
+    </AnimatedPressable>
   );
 }
 

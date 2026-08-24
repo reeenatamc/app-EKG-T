@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { LineIcon } from '@/components/icons/LineIcon';
 import { NAV_ICON_PATHS, NAV_ICON_VIEWBOX, type NavIconName } from '@/components/icons/navIcons';
-import { opacity, radius, size } from '@/design/tokens';
+import { radius, size } from '@/design/tokens';
+import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 
 interface IconButtonProps {
   readonly icon: NavIconName;
@@ -36,8 +37,9 @@ const GLYPH_SIZE = 20;
  * El area tactil es la de §7 completa aunque el glifo mida veinte puntos: lo que
  * se toca es el circulo, no el dibujo.
  *
- * El estado pulsado lo resuelve la funcion de estilo de Pressable, en el hilo
- * nativo, para que la respuesta no dependa de un renderizado de React.
+ * Se hunde al tocarlo, con el muelle unico de §11 y en el hilo de interfaz: es
+ * el mismo gesto que hace `ActionButton`, y en un boton de salida importa mas
+ * que en ningun otro que se note que el toque llego.
  *
  * @param icon Glifo a dibujar.
  * @param label Etiqueta accesible.
@@ -47,15 +49,16 @@ const GLYPH_SIZE = 20;
  * @returns El boton renderizado.
  */
 export function IconButton({ icon, label, onPress, color, background }: IconButtonProps) {
+  const press = usePressMotion();
+
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        { backgroundColor: background, opacity: pressed ? opacity.pressed : 1 },
-      ]}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[styles.button, { backgroundColor: background }, press.style]}
     >
       <LineIcon
         path={NAV_ICON_PATHS[icon]}
@@ -63,7 +66,7 @@ export function IconButton({ icon, label, onPress, color, background }: IconButt
         viewBox={NAV_ICON_VIEWBOX}
         side={GLYPH_SIZE}
       />
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

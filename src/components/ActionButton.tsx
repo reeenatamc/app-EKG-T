@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { useTheme } from '@/design/theme';
+import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 import { brand, gap, opacity, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
@@ -40,8 +41,10 @@ interface ActionButtonProps {
  * contra el lienzo en ambos temas, que es lo que pide la WCAG 1.4.11 para el
  * contorno de un control.
  *
- * El estado pulsado lo resuelve la funcion de estilo de Pressable, en el hilo
- * nativo, para que la respuesta no dependa de un renderizado de React.
+ * EL ESTADO PULSADO SE HUNDE, ya no se apaga. Un salto de opacidad de 1 a 0.7
+ * es un interruptor: informa de que el toque llego pero no se parece a nada
+ * fisico. El muelle de §11 lo baja un 3 % y lo devuelve, y corre en el hilo de
+ * interfaz, asi que la respuesta no depende de que React llegue a tiempo.
  *
  * @param label Texto visible del boton.
  * @param onPress Accion a ejecutar al pulsarlo.
@@ -51,6 +54,7 @@ interface ActionButtonProps {
  */
 export function ActionButton({ label, onPress, variant, disabled = false }: ActionButtonProps) {
   const theme = useTheme();
+  const press = usePressMotion();
 
   const surface = {
     primary: { backgroundColor: brand.carmine, borderColor: brand.edge },
@@ -65,21 +69,18 @@ export function ActionButton({ label, onPress, variant, disabled = false }: Acti
   }[variant];
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
       onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
       disabled={disabled}
-      style={({ pressed }) => [
-        styles.base,
-        surface,
-        pressed ? styles.pressed : null,
-        disabled ? styles.disabled : null,
-      ]}
+      style={[styles.base, surface, disabled ? styles.disabled : null, press.style]}
     >
       <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -97,7 +98,6 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: size.hairline,
   },
-  pressed: { opacity: opacity.pressed },
   disabled: { opacity: opacity.disabled },
   label: { ...type.body, fontFamily: 'Inter_500Medium' },
 });
