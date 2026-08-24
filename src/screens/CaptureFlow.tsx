@@ -1,4 +1,3 @@
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import type { CapturedPhoto } from '@/camera/capturePhoto';
@@ -13,6 +12,7 @@ import { Background } from '@/design/Background';
 import { CameraScreen } from '@/screens/CameraScreen';
 import { ConfirmScreen } from '@/screens/ConfirmScreen';
 import { ReviewScreen } from '@/screens/ReviewScreen';
+import { useGoBack } from '@/shell/useGoBack';
 
 /**
  * Los tres pasos del flujo de captura.
@@ -51,9 +51,41 @@ export function CaptureFlow() {
   const { stage } = flow;
 
   if (stage.kind === 'camera') {
-    return <CameraScreen onCaptured={flow.capture} mount={mount} onMountChange={setMount} />;
+    return (
+      <CameraScreen
+        onCaptured={flow.capture}
+        mount={mount}
+        onMountChange={setMount}
+        onClose={flow.close}
+      />
+    );
   }
 
+  return <PhotoStage stage={stage} mount={mount} flow={flow} />;
+}
+
+interface PhotoStageProps {
+  /** Los pasos que ya tienen foto. `Exclude` los deriva del propio flujo: si
+   *  manana aparece un cuarto paso con imagen, entra aqui solo. */
+  readonly stage: Exclude<Stage, { kind: 'camera' }>;
+  readonly mount: MountId;
+  readonly flow: CaptureFlowControls;
+}
+
+/**
+ * Los dos pasos que ya tienen foto: ajustar las esquinas y confirmar.
+ *
+ * Comparten fondo Skia, y por eso comparten componente: el lienzo se monta una
+ * vez para los dos en lugar de montarse y desmontarse al pasar de uno al otro.
+ * Va sin el latido difuso, porque la foto ya es un trazado y un segundo trazado
+ * decorativo detras solo confundiria.
+ *
+ * @param stage Paso activo, ya con foto.
+ * @param mount Montaje elegido en la camara.
+ * @param flow Transiciones del flujo.
+ * @returns El paso renderizado sobre su fondo.
+ */
+function PhotoStage({ stage, mount, flow }: PhotoStageProps) {
   return (
     <Background atmosphere={false}>
       {stage.kind === 'review' ? (
@@ -82,6 +114,8 @@ interface CaptureFlowControls {
   readonly adjust: (photo: CapturedPhoto, quad: Quad) => void;
   readonly back: (photo: CapturedPhoto, image: PreparedImage) => void;
   readonly submit: (photo: CapturedPhoto, image: PreparedImage, draft: StudyDraft) => void;
+  /** Abandona la captura sin haber tomado nada. */
+  readonly close: () => void;
 }
 
 /**
@@ -96,12 +130,13 @@ interface CaptureFlowControls {
  * @returns El paso actual y las transiciones disponibles.
  */
 function useCaptureFlow(): CaptureFlowControls {
-  const router = useRouter();
+  const goBack = useGoBack('/home');
   const addToQueue = useUploadQueue((state) => state.add);
   const [stage, setStage] = useState<Stage>({ kind: 'camera' });
 
   return {
     stage,
+    close: goBack,
 
     capture: (photo) => setStage({ kind: 'review', photo }),
 
@@ -128,7 +163,7 @@ function useCaptureFlow(): CaptureFlowControls {
     submit: (photo, image, draft) => {
       addToQueue(submitStudy(image, draft, new Date()));
       discardCapture(photo);
-      router.back();
+      goBack();
     },
   };
 }

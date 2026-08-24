@@ -28,6 +28,14 @@ export const CAMERA_TEXT = {
   dimWarning: 'Hay poca luz para fotografiar papel',
   fromGallery: 'Elegir de la galeria',
   shutterLabel: 'Capturar',
+  /**
+   * Salida de la captura.
+   *
+   * La cámara se abre como modal a pantalla completa, que en iOS no se cierra
+   * deslizando y no lleva cabecera del router: sin este control no hay ninguna
+   * salida en pantalla, solo el botón físico de Android.
+   */
+  closeLabel: 'Cerrar la cámara',
 } as const;
 
 export interface MountCopy {
