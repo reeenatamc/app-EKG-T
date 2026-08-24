@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useUploadQueue } from '@/capture/uploadQueue';
+import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
 import { AppTabBar } from '@/components/AppTabBar';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -14,13 +14,17 @@ import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
+import { historyView, type HistoryView } from '@/shell/queueSummary';
 
 const TAB_BAR_CLEARANCE = 96;
 
 /**
  * Historial de estudios.
  *
- * Mientras no haya nada, el estado vacio es lo mas importante de la pantalla:
+ * Tres estados, no dos. Mientras la cola se lee del disco no se ensena
+ * ninguno: el vacio afirma que no hay estudios, y eso no se sabe todavia.
+ *
+ * Cuando de verdad no hay nada, el estado vacio es lo mas importante de la pantalla:
  * es lo primero que ve alguien que abre la aplicacion por primera vez. Por eso
  * **invita a capturar** en lugar de informar de que no hay datos. "Sin
  * resultados" seria tecnicamente cierto y completamente inutil. El texto habla
@@ -35,6 +39,7 @@ const TAB_BAR_CLEARANCE = 96;
  */
 export function HistoryScreen() {
   const insets = useSafeAreaInsets();
+  const hasHydrated = useQueueHydrated();
   const studies = useUploadQueue((state) => state.studies);
 
   const padding: ViewStyle = {
@@ -44,9 +49,35 @@ export function HistoryScreen() {
 
   return (
     <Background atmosphere={false} chrome={<AppTabBar />}>
-      {studies.length === 0 ? <EmptyHistory padding={padding} /> : <StudyList padding={padding} />}
+      <HistoryBody view={historyView(hasHydrated, studies.length)} padding={padding} />
     </Background>
   );
+}
+
+/**
+ * Reparte entre los tres estados de la pantalla.
+ *
+ * El de carga no dibuja nada. Es una lectura de AsyncStorage, unos
+ * milisegundos: un indicador que aparece y desaparece en ese tiempo es un
+ * parpadeo mas, no una explicacion. Y ensenar el vacio mientras tanto seria
+ * peor, porque invita a capturar a quien ya tiene estudios guardados.
+ *
+ * @param view Estado resuelto por `historyView`.
+ * @param padding Margenes de area segura y hueco de la barra.
+ * @returns El cuerpo de la pantalla.
+ */
+function HistoryBody({
+  view,
+  padding,
+}: {
+  readonly view: HistoryView;
+  readonly padding: ViewStyle;
+}) {
+  if (view === 'loading') {
+    return null;
+  }
+
+  return view === 'empty' ? <EmptyHistory padding={padding} /> : <StudyList padding={padding} />;
 }
 
 /**
