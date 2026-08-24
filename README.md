@@ -1,6 +1,6 @@
 # app-EKG
 
-*[Léeme en español](README.es.md)*
+_[Léeme en español](README.es.md)_
 
 Mobile client for reading paper electrocardiograms.
 
@@ -28,27 +28,27 @@ worded is decided by the app's presentation layer, not by the models.
 
 `API_BASE_URL` depends on where you run it:
 
-| Running on        | Value                       |
-| ----------------- | --------------------------- |
-| Android emulator  | `http://10.0.2.2:8000`      |
-| iOS simulator     | `http://localhost:8000`     |
-| Physical device   | `http://<your-PC-IP>:8000`  |
+| Running on       | Value                      |
+| ---------------- | -------------------------- |
+| Android emulator | `http://10.0.2.2:8000`     |
+| iOS simulator    | `http://localhost:8000`    |
+| Physical device  | `http://<your-PC-IP>:8000` |
 
 On a physical device `localhost` is the phone itself, so you need your
 computer's address on the local network and both on the same network.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `npm run android` | Builds the native app and installs it on the connected device |
-| `npm run ios` | The same for iOS. macOS only |
-| `npm start` | Starts Metro for an already installed build |
-| `npm run typecheck` | TypeScript, no emit |
-| `npm run lint` / `lint:fix` | ESLint, optionally fixing |
-| `npm run format` / `format:check` | Prettier |
-| `npm test` / `test:watch` | Unit tests |
-| `npm run verify` | **All four checks in sequence.** Run it before committing |
+| Command                           | What it does                                                  |
+| --------------------------------- | ------------------------------------------------------------- |
+| `npm run android`                 | Builds the native app and installs it on the connected device |
+| `npm run ios`                     | The same for iOS. macOS only                                  |
+| `npm start`                       | Starts Metro for an already installed build                   |
+| `npm run typecheck`               | TypeScript, no emit                                           |
+| `npm run lint` / `lint:fix`       | ESLint, optionally fixing                                     |
+| `npm run format` / `format:check` | Prettier                                                      |
+| `npm test` / `test:watch`         | Unit tests                                                    |
+| `npm run verify`                  | **All four checks in sequence.** Run it before committing     |
 
 `npm start` passes `--dev-client` because this is a development build, not
 Expo Go.
