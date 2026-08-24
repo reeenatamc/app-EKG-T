@@ -16,16 +16,30 @@ import { join } from 'node:path';
  * de comprobar dos nombres a mano: la proxima accion que se anada al almacen y
  * se olvide de conectar rompe la suite el mismo dia.
  *
+ * QUE CUENTA COMO CONSUMO. Que la accion se lea por selector, o sea
+ * `state.<nombre>`, que es la unica forma en que la usa quien esta fuera del
+ * creador. Dentro del creador un almacen se llama a si mismo con `get().<algo>`,
+ * asi que esa forma no cuenta y el guardia no se enmascara solo.
+ *
+ * No se exige que el consumidor este en OTRO archivo: `analyses.ts` alberga a
+ * proposito el gancho que sondea —una pantalla montada dos veces no debe abrir
+ * dos sondeos—, y esa cercania es correcta.
+ *
  * QUE NO PRUEBA. Que se pueda llegar al boton, ni que este visible, ni que haga
- * lo correcto. Solo que alguien fuera del almacen lo invoca. Es un guardarrail
- * contra el codigo muerto, no una prueba de interfaz.
+ * lo correcto. Es un guardarrail contra el codigo muerto, no una prueba de
+ * interfaz.
  */
 
-/** Archivo del almacen cuya superficie se audita. */
-const STORE = 'src/capture/uploadQueue.ts';
+/** Almacen a auditar: archivo e interfaz de estado dentro de el. */
+interface AuditedStore {
+  readonly file: string;
+  readonly state: string;
+}
 
-/** Nombre de la interfaz de estado dentro de ese archivo. */
-const STATE_INTERFACE = 'UploadQueueState';
+const STORES: readonly AuditedStore[] = [
+  { file: 'src/capture/uploadQueue.ts', state: 'UploadQueueState' },
+  { file: 'src/ecg/analyses.ts', state: 'AnalysesState' },
+];
 
 /** Donde puede vivir un consumidor legitimo. */
 const CONSUMER_ROOTS = ['src', 'app'];
@@ -40,8 +54,8 @@ const CONSUMER_ROOTS = ['src', 'app'];
  * @param source Contenido del archivo del almacen.
  * @returns Los nombres de las acciones, sin el campo de datos.
  */
-function actionNames(source: string): readonly string[] {
-  const block = source.split(`interface ${STATE_INTERFACE} {`)[1]?.split('\n}')[0] ?? '';
+function actionNames(source: string, stateInterface: string): readonly string[] {
+  const block = source.split(`interface ${stateInterface} {`)[1]?.split('\n}')[0] ?? '';
   const declarations = block.matchAll(/readonly (\w+): \(/g);
 
   // El grupo siempre existe si hubo coincidencia, pero el modo estricto no lo
@@ -49,7 +63,7 @@ function actionNames(source: string): readonly string[] {
   return [...declarations].flatMap((match) => (match[1] === undefined ? [] : [match[1]]));
 }
 
-/** Todos los archivos de codigo bajo las raices, menos el propio almacen. */
+/** Todos los archivos de codigo bajo las raices. */
 function consumerFiles(): readonly string[] {
   const found: string[] = [];
 
@@ -67,14 +81,11 @@ function consumerFiles(): readonly string[] {
 
   CONSUMER_ROOTS.forEach(walk);
 
-  // El propio almacen queda fuera: dentro se llama a si mismo con `get().drain()`
-  // y eso no demuestra que nadie de la interfaz lo use.
-  return found.filter((path) => !path.endsWith('uploadQueue.ts'));
+  return found;
 }
 
-describe('acciones de la cola de subida', () => {
-  const source = readFileSync(STORE, 'utf8');
-  const names = actionNames(source);
+describe.each(STORES)('acciones de $file', ({ file, state }) => {
+  const names = actionNames(readFileSync(file, 'utf8'), state);
   const consumers = consumerFiles().map((path) => readFileSync(path, 'utf8'));
 
   it('la interfaz declara acciones que auditar', () => {
@@ -83,9 +94,9 @@ describe('acciones de la cola de subida', () => {
     expect(names.length).toBeGreaterThan(0);
   });
 
-  it.each(names)('%s se invoca desde fuera del almacen', (name) => {
-    const isCalled = consumers.some((file) => file.includes(`state.${name}`));
+  it.each(names)('%s se consume por selector', (name) => {
+    const isConsumed = consumers.some((code) => code.includes(`state.${name}`));
 
-    expect(isCalled).toBe(true);
+    expect(isConsumed).toBe(true);
   });
 });
