@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { QueuedStudy } from '@/capture/study';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { AnalysisSection } from '@/components/AnalysisSection';
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyNotes } from '@/components/StudyNotes';
 import { StudyReportActions } from '@/components/StudyReportActions';
@@ -48,21 +49,23 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
 
   return (
     <Background atmosphere={false}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <StudyHeader study={study} onBack={goBack} />
+      <KeyboardLift>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <StudyHeader study={study} onBack={goBack} />
 
-        <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
-          {STUDY_TEXT.supportOnly}
-        </Text>
+          <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
+            {STUDY_TEXT.supportOnly}
+          </Text>
 
-        <AnalysisSection study={study} analysis={analysis} />
+          <AnalysisSection study={study} analysis={analysis} />
 
-        {analysis?.status === 'ready' ? (
-          <StudyReportActions study={study} analysis={analysis} />
-        ) : null}
+          {analysis?.status === 'ready' ? (
+            <StudyReportActions study={study} analysis={analysis} />
+          ) : null}
 
-        <StudyNotes studyId={studyId} />
-      </ScrollView>
+          <StudyNotes studyId={studyId} />
+        </ScrollView>
+      </KeyboardLift>
     </Background>
   );
 }

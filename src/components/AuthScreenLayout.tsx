@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { Background } from '@/design/Background';
 import { gap } from '@/design/tokens';
@@ -42,6 +43,9 @@ interface AuthScreenLayoutProps {
  * —Inter 24— y por eso estas cinco pantallas eran indistinguibles entre si en la
  * lamina de contacto de D.1.
  *
+ * EL PIE VA DENTRO DEL AJUSTE DE TECLADO, no solo el scroll. Es donde vive el
+ * boton de enviar, o sea lo que el teclado tapa primero en iOS.
+ *
  * DOS BLOQUES ANCLADOS, no uno pegado arriba. El titular se ancla al borde
  * superior y el cuerpo se empuja hacia abajo, junto a la accion. Es la correccion
  * del segundo hallazgo de la lamina: en cinco pantallas el contenido ocupaba el
@@ -72,17 +76,19 @@ export function AuthScreenLayout({
 
   return (
     <Background atmosphere={atmosphere}>
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.xl }]}
-        keyboardShouldPersistTaps="handled"
-      >
-        <ScreenHeader title={title} eyebrow={eyebrow} onBack={onBack} />
-        <View style={styles.body}>{children}</View>
-      </ScrollView>
+      <KeyboardLift>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.xl }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <ScreenHeader title={title} eyebrow={eyebrow} onBack={onBack} />
+          <View style={styles.body}>{children}</View>
+        </ScrollView>
 
-      {footer === undefined ? null : (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + gap.lg }]}>{footer}</View>
-      )}
+        {footer === undefined ? null : (
+          <View style={[styles.footer, { paddingBottom: insets.bottom + gap.lg }]}>{footer}</View>
+        )}
+      </KeyboardLift>
     </Background>
   );
 }
