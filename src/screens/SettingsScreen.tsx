@@ -8,6 +8,7 @@ import { AuthScreenLayout } from '@/components/AuthScreenLayout';
 import { ClinicalSettingsSection } from '@/components/ClinicalSettingsSection';
 import { SettingsSection } from '@/components/SettingsSection';
 import { SETTINGS_TEXT } from '@/constants/shellText';
+import { useGoBack } from '@/shell/useGoBack';
 
 /**
  * Pantalla de ajustes.
@@ -18,20 +19,22 @@ import { SETTINGS_TEXT } from '@/constants/shellText';
  *
  * VA SOBRE LIENZO PLANO aunque comparta composicion con las pantallas de acceso:
  * se llega desde Perfil, o sea que esta dentro del producto y no en la entrada
- * (D-20).
+ * (D-20). Y por lo mismo lleva salida: esta apilada encima de Perfil, y sin
+ * cabecera del router el gesto del sistema era la unica forma de volver.
  *
  * @returns La pantalla de ajustes.
  */
 export function SettingsScreen() {
   const router = useRouter();
   const closeSession = useSession((state) => state.close);
+  const goBack = useGoBack('/profile');
 
   const signOut = () => {
     void closeSession().then(() => router.replace('/login'));
   };
 
   return (
-    <AuthScreenLayout title={SETTINGS_TEXT.title} atmosphere={false}>
+    <AuthScreenLayout title={SETTINGS_TEXT.title} atmosphere={false} onBack={goBack}>
       <AppearanceSettingsSection />
       <AccessibilitySettingsSection />
       <ClinicalSettingsSection />

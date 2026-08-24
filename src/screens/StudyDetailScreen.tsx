@@ -13,6 +13,7 @@ import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useGoBack } from '@/shell/useGoBack';
 
 interface StudyDetailScreenProps {
   readonly studyId: string;
@@ -30,6 +31,7 @@ interface StudyDetailScreenProps {
  */
 export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   const theme = useTheme();
+  const goBack = useGoBack('/history');
   const study = useUploadQueue((state) => state.studies.find((item) => item.id === studyId));
   const analysis = useAnalysis(studyId);
 
@@ -47,7 +49,7 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   return (
     <Background atmosphere={false}>
       <ScrollView contentContainerStyle={styles.content}>
-        <StudyHeader study={study} />
+        <StudyHeader study={study} onBack={goBack} />
 
         <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
           {STUDY_TEXT.supportOnly}
@@ -74,13 +76,19 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
  * El identificador y la calibracion van en monoespaciada, que es lo que §6 pide
  * para cifras e identificadores.
  */
-function StudyHeader({ study }: { readonly study: QueuedStudy }) {
+function StudyHeader({
+  study,
+  onBack,
+}: {
+  readonly study: QueuedStudy;
+  readonly onBack: () => void;
+}) {
   const theme = useTheme();
   const { calibration, capturedAt, mount, anonymousId } = study.metadata;
 
   return (
     <View style={styles.header}>
-      <ScreenHeader title={MOUNT_COPY[mount].label} eyebrow={anonymousId} />
+      <ScreenHeader title={MOUNT_COPY[mount].label} eyebrow={anonymousId} onBack={onBack} />
       <Text style={[type.data, { color: theme.textLow }]}>
         {new Date(capturedAt).toLocaleString()} · {calibration.speedMmPerSecond} mm/s ·{' '}
         {calibration.gainMmPerMillivolt} mm/mV

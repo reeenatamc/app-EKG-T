@@ -21,6 +21,13 @@ interface AuthScreenLayoutProps {
   readonly atmosphere?: boolean;
   /** Acciones fijadas al pie, fuera del scroll. */
   readonly footer?: ReactNode;
+  /**
+   * Salida de la pantalla, si esta apilada encima de otra.
+   *
+   * Lo usa Ajustes, que se abre desde Perfil. Las cinco pantallas de acceso no
+   * lo pasan: son el arranque de la aplicacion y debajo no hay nada.
+   */
+  readonly onBack?: () => void;
 }
 
 /**
@@ -50,6 +57,7 @@ interface AuthScreenLayoutProps {
  * @param eyebrow Micro-etiqueta opcional sobre el titular.
  * @param atmosphere Falso para lienzo plano; lo usa Ajustes.
  * @param footer Acciones fijas al pie, opcionales.
+ * @param onBack Salida opcional, solo si la pantalla esta apilada.
  * @returns La pantalla compuesta.
  */
 export function AuthScreenLayout({
@@ -58,6 +66,7 @@ export function AuthScreenLayout({
   eyebrow,
   atmosphere = true,
   footer,
+  onBack,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets();
 
@@ -67,7 +76,7 @@ export function AuthScreenLayout({
         contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.xl }]}
         keyboardShouldPersistTaps="handled"
       >
-        <ScreenHeader title={title} eyebrow={eyebrow} />
+        <ScreenHeader title={title} eyebrow={eyebrow} onBack={onBack} />
         <View style={styles.body}>{children}</View>
       </ScrollView>
 

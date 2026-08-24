@@ -9,6 +9,19 @@ export const TAB_TEXT = {
 } as const;
 
 /**
+ * Etiquetas de las salidas de pantalla.
+ *
+ * Son las que oye un lector de pantalla, porque en pantalla estos dos controles
+ * son solo un dibujo. «Volver» a secas y no «volver a Historial»: la pantalla de
+ * la que se sale no siempre es la misma —al detalle de un estudio se puede
+ * llegar por enlace profundo— y una etiqueta que nombra un destino equivocado es
+ * peor que una que no nombra ninguno.
+ */
+export const NAV_TEXT = {
+  back: 'Volver',
+} as const;
+
+/**
  * Saludo de inicio, por franja del día.
  *
  * Las tres formas estándar del español, con los cortes en 6, 12 y 20. La lógica
