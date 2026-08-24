@@ -112,6 +112,8 @@ export const SETTINGS_TEXT = {
   reduceTransparencyHint: 'Sustituye el vidrio por superficies opacas.',
   reduceMotion: 'Reducir movimiento',
   reduceMotionHint: 'Las animaciones aparecen en su estado final.',
+  haptics: 'Vibración al tocar',
+  hapticsHint: 'Confirma con un toque el obturador, los envíos y los errores.',
   clinicalSection: 'Clínico',
   electrodeLabel: 'Estándar de electrodos',
   electrodeHint: 'Los dos códigos de color son incompatibles; elige el que usas.',
