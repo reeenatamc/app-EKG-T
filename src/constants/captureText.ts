@@ -206,6 +206,17 @@ export const QUEUE_TEXT = {
   retry: 'Reintentar',
   discard: 'Descartar',
   discardedNote: 'Descartar borra la foto del dispositivo.',
+  /**
+   * El vaciado manual de la cola ni siquiera arrancó.
+   *
+   * No es lo mismo que un envío fallido: eso lo cuenta cada estudio en su fila,
+   * con su causa. Esto es que el intento se rompió antes de llegar a ninguna,
+   * así que no hay ninguna fila donde contarlo.
+   */
+  drainFailure: {
+    title: 'El envío no llegó a empezar',
+    action: 'Comprueba la conexión y vuelve a deslizar hacia abajo.',
+  },
 } as const;
 
 /**

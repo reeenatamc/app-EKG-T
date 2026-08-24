@@ -5,9 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
+import { Notice } from '@/components/Notice';
 import { AppTabBar } from '@/components/AppTabBar';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyListRow } from '@/components/StudyListRow';
+import { QUEUE_TEXT } from '@/constants/captureText';
 import { HISTORY_LIST_TEXT } from '@/constants/studyText';
 import { HISTORY_TEXT } from '@/constants/shellText';
 import { Background } from '@/design/Background';
@@ -15,6 +17,7 @@ import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
 import { historyView, type HistoryView } from '@/shell/queueSummary';
+import { useTask } from '@/shell/useTask';
 
 const TAB_BAR_CLEARANCE = 96;
 
@@ -104,9 +107,22 @@ function EmptyHistory({ padding }: { readonly padding: ViewStyle }) {
   );
 }
 
-/** Los estudios, del mas reciente al mas antiguo. */
+/**
+ * Los estudios, del mas reciente al mas antiguo.
+ *
+ * DESLIZAR HACIA ABAJO VUELVE A INTENTAR LOS ENVIOS. La cola no detecta la red:
+ * reintenta al volver la aplicacion al primer plano y al pulsar reintentar en
+ * una fila fallida, no al recuperar cobertura. Este es el tercer disparador, y
+ * el unico que sirve para «acabo de recuperar senal, intentalo ya» sin tener
+ * que salir de la aplicacion y volver a entrar.
+ *
+ * @param padding Margenes de area segura y hueco de la barra.
+ * @returns La lista de estudios.
+ */
 function StudyList({ padding }: { readonly padding: ViewStyle }) {
   const studies = useUploadQueue((state) => state.studies);
+  const drain = useUploadQueue((state) => state.drain);
+  const task = useTask('[cola] el vaciado manual no salio');
   const ordered = [...studies].reverse();
 
   return (
@@ -116,8 +132,33 @@ function StudyList({ padding }: { readonly padding: ViewStyle }) {
       renderItem={({ item }) => <StudyListRow study={item} />}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       contentContainerStyle={{ ...padding, paddingHorizontal: gap.lg }}
-      ListHeaderComponent={<ScreenHeader title={HISTORY_LIST_TEXT.title} />}
+      refreshing={task.isBusy}
+      onRefresh={() => task.run(drain)}
+      ListHeaderComponent={<StudyListHeader hasFailed={task.hasFailed} />}
     />
+  );
+}
+
+/**
+ * Titular de la lista y, si toca, el aviso de que el intento no arranco.
+ *
+ * El aviso va aqui y no por fila porque no pertenece a ningun estudio: un envio
+ * que falla lo cuenta su propia fila con su causa, y esto es que el intento se
+ * rompio antes de llegar a ninguna.
+ *
+ * @param hasFailed Cierto si el ultimo vaciado manual no salio.
+ * @returns La cabecera de la lista.
+ */
+function StudyListHeader({ hasFailed }: { readonly hasFailed: boolean }) {
+  return (
+    <>
+      <ScreenHeader title={HISTORY_LIST_TEXT.title} />
+      {hasFailed ? (
+        <View style={styles.headerNotice}>
+          <Notice title={QUEUE_TEXT.drainFailure.title} action={QUEUE_TEXT.drainFailure.action} />
+        </View>
+      ) : null}
+    </>
   );
 }
 
@@ -127,4 +168,6 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: 'center', paddingHorizontal: gap.lg, gap: gap.md },
   action: { flexDirection: 'row', marginTop: gap.lg },
   separator: { height: gap.md },
+  // La cabecera no lleva separador detras, asi que el hueco lo pone el aviso.
+  headerNotice: { marginBottom: gap.md },
 });
