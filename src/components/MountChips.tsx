@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { MOUNTS, type MountId } from '@/camera/mounts';
 import { MOUNT_COPY } from '@/constants/captureText';
+import { playHaptic } from '@/design/haptics';
 import { gap, opacity, paperDark, paperLight, radius, scrim, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
@@ -34,26 +35,54 @@ export function MountChips({ value, onChange }: MountChipsProps) {
       accessibilityRole="radiogroup"
       contentContainerStyle={styles.row}
     >
-      {MOUNTS.map((mount) => {
-        const copy = MOUNT_COPY[mount.id];
-        const isActive = mount.id === value;
-
-        return (
-          <Pressable
-            key={mount.id}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={`${copy.label}. ${copy.hint}`}
-            onPress={() => onChange(mount.id)}
-            style={[styles.chip, isActive ? styles.chipActive : null]}
-          >
-            <Text style={[type.caption, { color: isActive ? paperLight.ink : paperDark.textHigh }]}>
-              {copy.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+      {MOUNTS.map((mount) => (
+        <MountChip
+          key={mount.id}
+          mount={mount.id}
+          isActive={mount.id === value}
+          onPress={() => {
+            playHaptic('selection');
+            onChange(mount.id);
+          }}
+        />
+      ))}
     </ScrollView>
+  );
+}
+
+interface MountChipProps {
+  readonly mount: MountId;
+  readonly isActive: boolean;
+  readonly onPress: () => void;
+}
+
+/**
+ * Un montaje de la fila.
+ *
+ * La etiqueta accesible lleva ademas la linea de apoyo: quien no reconozca el
+ * nombre del reparto no puede elegir bien, y en un lector de pantalla el nombre
+ * solo no basta.
+ *
+ * @param mount Montaje que representa.
+ * @param isActive Cierto si es el elegido.
+ * @param onPress Accion al pulsarlo.
+ * @returns El chip renderizado.
+ */
+function MountChip({ mount, isActive, onPress }: MountChipProps) {
+  const copy = MOUNT_COPY[mount];
+
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={`${copy.label}. ${copy.hint}`}
+      onPress={onPress}
+      style={[styles.chip, isActive ? styles.chipActive : null]}
+    >
+      <Text style={[type.caption, { color: isActive ? paperLight.ink : paperDark.textHigh }]}>
+        {copy.label}
+      </Text>
+    </Pressable>
   );
 }
 

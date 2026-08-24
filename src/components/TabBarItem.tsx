@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { TabIcon } from '@/components/icons/TabIcon';
 import type { TabIconName } from '@/components/icons/tabIcons';
 import { useTheme } from '@/design/theme';
+import { playHaptic } from '@/design/haptics';
+import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 import { brand, gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
@@ -43,6 +45,11 @@ interface TabBarItemProps {
  * en el arbol: `selected=true` en la pestana buena. El problema era de contraste,
  * no de logica. Medido, el carmin sobre el vidrio claro da 7.4:1.
  *
+ * NO TENIA NINGUNA RESPUESTA AL DEDO. Ni opacidad ni nada: se tocaba una
+ * pestana y no ocurria absolutamente nada hasta que la ruta cambiaba, o sea que
+ * en una navegacion lenta el toque parecia perdido. Ahora se hunde con el muelle
+ * de §11, igual que el resto de controles.
+ *
  * @param label Texto del elemento.
  * @param icon Icono del elemento.
  * @param onPress Accion al pulsarlo.
@@ -52,21 +59,27 @@ interface TabBarItemProps {
  */
 export function TabBarItem({ label, icon, onPress, isActive, isPrimary = false }: TabBarItemProps) {
   const theme = useTheme();
+  const press = usePressMotion();
   const color = isPrimary ? theme.canvas : isActive ? brand.carmine : theme.textLow;
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole={isPrimary ? 'button' : 'tab'}
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={label}
-      onPress={onPress}
-      style={[styles.item, isPrimary ? { backgroundColor: theme.textHigh } : null]}
+      onPress={() => {
+        playHaptic('selection');
+        onPress();
+      }}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[styles.item, isPrimary ? { backgroundColor: theme.textHigh } : null, press.style]}
     >
       <TabIcon name={icon} color={color} />
       <Text style={[type.caption, { color }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

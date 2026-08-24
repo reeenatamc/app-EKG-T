@@ -17,6 +17,7 @@ import { FramingGuide } from '@/components/FramingGuide';
 import { MountChips } from '@/components/MountChips';
 import { TiltIndicator } from '@/components/TiltIndicator';
 import { CAMERA_TEXT } from '@/constants/captureText';
+import { playHaptic } from '@/design/haptics';
 import { gap, paperDark, scrim, size } from '@/design/tokens';
 
 interface CameraScreenProps {
@@ -201,6 +202,10 @@ function useShutter(
 ): () => void {
   return () => {
     if (camera.current !== null && container !== null && frame !== null) {
+      // Antes de disparar, no despues. El obturador se pulsa mirando el papel:
+      // el golpe tiene que llegar con el dedo, no cuando el modulo nativo
+      // termine de escribir el archivo.
+      playHaptic('shutter');
       capture({ camera: camera.current, container, frame });
     }
   };

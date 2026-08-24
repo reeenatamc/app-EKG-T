@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 
+import { playHaptic } from '@/design/haptics';
 import { IDLE_TASK, taskFailed, taskStarted, taskSucceeded, type TaskState } from '@/shell/task';
 
 export interface Task extends TaskState {
@@ -39,6 +40,10 @@ export function useTask(diagnostic: string): Task {
         .then(() => setState(taskSucceeded()))
         .catch((error: unknown) => {
           console.error(diagnostic, error);
+          // Un solo sitio para la respuesta tactil de todas las acciones que
+          // pueden fallar: recortar, disparar, importar, exportar y vaciar la
+          // cola. Llega antes de que el ojo encuentre el aviso.
+          playHaptic('failure');
           setState(taskFailed());
         });
     },

@@ -9,6 +9,7 @@ import { cropToQuad, type PreparedImage } from '@/capture/prepareStudy';
 import { submitStudy, type StudyDraft } from '@/capture/submitStudy';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { Background } from '@/design/Background';
+import { playHaptic } from '@/design/haptics';
 import { CameraScreen } from '@/screens/CameraScreen';
 import { ConfirmScreen } from '@/screens/ConfirmScreen';
 import { ReviewScreen } from '@/screens/ReviewScreen';
@@ -190,6 +191,10 @@ function useCaptureFlow(): CaptureFlowControls {
     submit: (photo, image, draft) => {
       addToQueue(submitStudy(image, draft, new Date()));
       discardCapture(photo);
+      // El unico acierto que se confirma con vibracion en toda la aplicacion.
+      // La pantalla se cierra en el mismo gesto, asi que sin esto el envio se
+      // parece demasiado a cancelar.
+      playHaptic('success');
       goBack();
     },
   };
