@@ -1,26 +1,31 @@
 import { CameraView } from 'expo-camera';
 import { useRef, type RefObject } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CaptureRequest, CapturedPhoto } from '@/camera/capturePhoto';
 import type { Rect, Size } from '@/camera/framing';
 import type { MountId } from '@/camera/mounts';
-import { useAmbientLight } from '@/camera/useAmbientLight';
+import { useAmbientLight, type AmbientLight } from '@/camera/useAmbientLight';
 import { useCameraCapture } from '@/camera/useCameraCapture';
 import { useLargestPictureSize } from '@/camera/useLargestPictureSize';
 import { usePreviewFrame } from '@/camera/usePreviewFrame';
 import { useTilt, type Tilt } from '@/camera/useTilt';
 import { CaptureControls } from '@/components/CaptureControls';
+import { IconButton } from '@/components/IconButton';
 import { FramingGuide } from '@/components/FramingGuide';
 import { MountChips } from '@/components/MountChips';
 import { TiltIndicator } from '@/components/TiltIndicator';
-import { gap, paperDark, size } from '@/design/tokens';
+import { CAMERA_TEXT } from '@/constants/captureText';
+import { playHaptic } from '@/design/haptics';
+import { gap, paperDark, scrim, size } from '@/design/tokens';
 
 interface CameraScreenProps {
   readonly onCaptured: (photo: CapturedPhoto) => void;
   readonly mount: MountId;
   readonly onMountChange: (mount: MountId) => void;
+  /** Abandona la captura y devuelve al sitio del que se vino. */
+  readonly onClose: () => void;
 }
 
 /**
@@ -47,37 +52,133 @@ interface CameraScreenProps {
  * @param onMountChange Se invoca al cambiar de montaje.
  * @returns La pantalla de captura.
  */
-export function CameraScreen({ onCaptured, mount, onMountChange }: CameraScreenProps) {
+export function CameraScreen({ onCaptured, mount, onMountChange, onClose }: CameraScreenProps) {
+  // La referencia se crea aqui y se le presta al gancho, en vez de nacer dentro
+  // y volver en el paquete: una referencia dentro del objeto de estado convierte
+  // cualquier lectura de ese objeto en una lectura de referencia durante el
+  // renderizado, que es justo lo que la regla `react-hooks/refs` prohibe.
   const cameraRef = useRef<CameraView>(null);
+  const stage = useCameraStage(cameraRef, mount, onCaptured);
+
+  return (
+    <View style={styles.container} onLayout={stage.handleLayout}>
+      <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        facing="back"
+        pictureSize={stage.pictureSize}
+        onCameraReady={stage.handlePreviewReady}
+      />
+
+      <CameraChrome
+        stage={stage}
+        mount={mount}
+        onMountChange={onMountChange}
+        onClose={onClose}
+        onImported={onCaptured}
+      />
+    </View>
+  );
+}
+
+interface CameraChromeProps {
+  readonly stage: CameraStage;
+  readonly mount: MountId;
+  readonly onMountChange: (mount: MountId) => void;
+  readonly onClose: () => void;
+  readonly onImported: (photo: CapturedPhoto) => void;
+}
+
+/**
+ * Todo lo que se dibuja encima de la imagen en vivo.
+ *
+ * Agrupa el velo de arriba y los controles de abajo para que la pantalla se lea
+ * como lo que es: una vista previa y su chrome. Recibe el estado entero porque
+ * no decide nada con el, solo lo reparte entre sus dos mitades.
+ *
+ * @param stage Estado de la camara.
+ * @param mount Montaje elegido.
+ * @param onMountChange Se invoca al cambiar de montaje.
+ * @param onClose Abandona la captura.
+ * @param onImported Se invoca con una foto traida de la galeria.
+ * @returns El chrome de la captura.
+ */
+function CameraChrome({ stage, mount, onMountChange, onClose, onImported }: CameraChromeProps) {
+  return (
+    <>
+      <CameraOverlay
+        frame={stage.frame}
+        tilt={stage.tilt}
+        mount={mount}
+        onMountChange={onMountChange}
+        onClose={onClose}
+      />
+
+      <CaptureControls
+        isReady={stage.isReady}
+        isCapturing={stage.isCapturing}
+        hasCaptureFailed={stage.hasFailed}
+        isDim={stage.light.isDim}
+        isTilted={stage.tilt.isAvailable && !stage.tilt.isAligned}
+        onShutter={stage.shoot}
+        onImported={onImported}
+      />
+    </>
+  );
+}
+
+/** Lo que la pantalla necesita saber de la camara para pintarse. */
+interface CameraStage {
+  readonly frame: Rect | null;
+  readonly tilt: Tilt;
+  readonly light: AmbientLight;
+  readonly isReady: boolean;
+  readonly isCapturing: boolean;
+  readonly hasFailed: boolean;
+  readonly pictureSize: string | undefined;
+  readonly handleLayout: (event: LayoutChangeEvent) => void;
+  readonly handlePreviewReady: () => void;
+  readonly shoot: () => void;
+}
+
+/**
+ * Reune la fontaneria de la camara: referencia, medidas, sensores y disparo.
+ *
+ * Existe para que `CameraScreen` sea solo composicion. Siete llamadas a hooks
+ * mas la composicion no caben en una funcion legible, y separarlas ademas deja
+ * claro que el orden entre ellas si importa: el tamano de captura depende de que
+ * la camara este lista, y el disparo depende del contenedor ya medido.
+ *
+ * @param cameraRef Referencia a la vista de camara, creada por la pantalla.
+ * @param mount Montaje elegido, que decide la forma del marco.
+ * @param onCaptured Se invoca con la foto ya recortada al marco.
+ * @returns Todo lo que la pantalla necesita para pintarse.
+ */
+function useCameraStage(
+  cameraRef: RefObject<CameraView | null>,
+  mount: MountId,
+  onCaptured: (photo: CapturedPhoto) => void,
+): CameraStage {
   const { container, frame, handleLayout } = usePreviewFrame(mount);
-  const { isReady, isCapturing, capture, handlePreviewReady } = useCameraCapture(onCaptured);
+  const { isReady, isCapturing, hasFailed, capture, handlePreviewReady } =
+    useCameraCapture(onCaptured);
   const pictureSize = useLargestPictureSize(cameraRef, isReady);
   const tilt = useTilt();
   const light = useAmbientLight();
   const shoot = useShutter(cameraRef, container, frame, capture);
 
-  return (
-    <View style={styles.container} onLayout={handleLayout}>
-      <CameraView
-        ref={cameraRef}
-        style={StyleSheet.absoluteFill}
-        facing="back"
-        pictureSize={pictureSize}
-        onCameraReady={handlePreviewReady}
-      />
-
-      <CameraOverlay frame={frame} tilt={tilt} mount={mount} onMountChange={onMountChange} />
-
-      <CaptureControls
-        isReady={isReady}
-        isCapturing={isCapturing}
-        isDim={light.isDim}
-        isTilted={tilt.isAvailable && !tilt.isAligned}
-        onShutter={shoot}
-        onImported={onCaptured}
-      />
-    </View>
-  );
+  return {
+    frame,
+    tilt,
+    light,
+    isReady,
+    isCapturing,
+    hasFailed,
+    pictureSize,
+    handleLayout,
+    handlePreviewReady,
+    shoot,
+  };
 }
 
 /**
@@ -101,6 +202,10 @@ function useShutter(
 ): () => void {
   return () => {
     if (camera.current !== null && container !== null && frame !== null) {
+      // Antes de disparar, no despues. El obturador se pulsa mirando el papel:
+      // el golpe tiene que llegar con el dedo, no cuando el modulo nativo
+      // termine de escribir el archivo.
+      playHaptic('shutter');
       capture({ camera: camera.current, container, frame });
     }
   };
@@ -111,17 +216,22 @@ interface CameraOverlayProps {
   readonly tilt: Tilt;
   readonly mount: MountId;
   readonly onMountChange: (mount: MountId) => void;
+  readonly onClose: () => void;
 }
 
 /**
  * Lo que se superpone a la imagen en vivo.
  *
- * Guia de encuadre, eleccion de montaje y nivel de burbuja. Los tres son datos
- * operativos, asi que van en trazo solido sobre velo y no en vidrio: el vidrio
- * sobre imagen viva cambia de contraste cada vez que se mueve la camara, justo
- * cuando hace falta leerlo.
+ * Guia de encuadre, eleccion de montaje, nivel de burbuja y la salida. Los
+ * cuatro son datos o controles operativos, asi que van en trazo solido sobre
+ * velo y no en vidrio: el vidrio sobre imagen viva cambia de contraste cada vez
+ * que se mueve la camara, justo cuando hace falta leerlo.
+ *
+ * EL ASPA NO ES DECORACION. Esta ruta se presenta como `fullScreenModal`, que en
+ * iOS no se cierra deslizando y no lleva cabecera del router: sin este boton la
+ * unica salida era el boton fisico de Android, o sea ninguna en iOS.
  */
-function CameraOverlay({ frame, tilt, mount, onMountChange }: CameraOverlayProps) {
+function CameraOverlay({ frame, tilt, mount, onMountChange, onClose }: CameraOverlayProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -129,7 +239,16 @@ function CameraOverlay({ frame, tilt, mount, onMountChange }: CameraOverlayProps
       {frame === null ? null : <FramingGuide frame={frame} isAligned={tilt.isAligned} />}
 
       <View style={[styles.top, { paddingTop: insets.top + gap.md }]}>
-        <MountChips value={mount} onChange={onMountChange} />
+        <IconButton
+          icon="close"
+          label={CAMERA_TEXT.closeLabel}
+          onPress={onClose}
+          color={paperDark.textHigh}
+          background={scrim.strong}
+        />
+        <View style={styles.mounts}>
+          <MountChips value={mount} onChange={onMountChange} />
+        </View>
       </View>
 
       {tilt.isAvailable ? (
@@ -146,6 +265,19 @@ const LEVEL_TOP_OFFSET = gap.md + size.touchTarget + gap.xl;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: paperDark.canvas },
-  top: { position: 'absolute', left: 0, right: 0, top: 0 },
+  // El aspa y los montajes comparten fila: la franja de arriba es la unica
+  // banda libre que deja la guia de encuadre, y dos bandas apiladas se comerian
+  // el encuadre que el usuario tiene que ver.
+  top: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: gap.lg,
+  },
+  // Los montajes se quedan con el ancho sobrante y siguen desplazandose dentro.
+  mounts: { flex: 1 },
   level: { position: 'absolute', right: gap.lg },
 });

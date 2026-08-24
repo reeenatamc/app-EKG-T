@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { QueuedStudy } from '@/capture/study';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { AnalysisSection } from '@/components/AnalysisSection';
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyNotes } from '@/components/StudyNotes';
 import { StudyReportActions } from '@/components/StudyReportActions';
@@ -13,6 +14,7 @@ import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useGoBack } from '@/shell/useGoBack';
 
 interface StudyDetailScreenProps {
   readonly studyId: string;
@@ -30,6 +32,7 @@ interface StudyDetailScreenProps {
  */
 export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   const theme = useTheme();
+  const goBack = useGoBack('/history');
   const study = useUploadQueue((state) => state.studies.find((item) => item.id === studyId));
   const analysis = useAnalysis(studyId);
 
@@ -46,21 +49,23 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
 
   return (
     <Background atmosphere={false}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <StudyHeader study={study} />
+      <KeyboardLift>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <StudyHeader study={study} onBack={goBack} />
 
-        <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
-          {STUDY_TEXT.supportOnly}
-        </Text>
+          <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
+            {STUDY_TEXT.supportOnly}
+          </Text>
 
-        <AnalysisSection study={study} analysis={analysis} />
+          <AnalysisSection study={study} analysis={analysis} />
 
-        {analysis?.status === 'ready' ? (
-          <StudyReportActions study={study} analysis={analysis} />
-        ) : null}
+          {analysis?.status === 'ready' ? (
+            <StudyReportActions study={study} analysis={analysis} />
+          ) : null}
 
-        <StudyNotes studyId={studyId} />
-      </ScrollView>
+          <StudyNotes studyId={studyId} />
+        </ScrollView>
+      </KeyboardLift>
     </Background>
   );
 }
@@ -74,13 +79,19 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
  * El identificador y la calibracion van en monoespaciada, que es lo que §6 pide
  * para cifras e identificadores.
  */
-function StudyHeader({ study }: { readonly study: QueuedStudy }) {
+function StudyHeader({
+  study,
+  onBack,
+}: {
+  readonly study: QueuedStudy;
+  readonly onBack: () => void;
+}) {
   const theme = useTheme();
   const { calibration, capturedAt, mount, anonymousId } = study.metadata;
 
   return (
     <View style={styles.header}>
-      <ScreenHeader title={MOUNT_COPY[mount].label} eyebrow={anonymousId} />
+      <ScreenHeader title={MOUNT_COPY[mount].label} eyebrow={anonymousId} onBack={onBack} />
       <Text style={[type.data, { color: theme.textLow }]}>
         {new Date(capturedAt).toLocaleString()} · {calibration.speedMmPerSecond} mm/s ·{' '}
         {calibration.gainMmPerMillivolt} mm/mV

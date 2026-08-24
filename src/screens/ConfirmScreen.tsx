@@ -9,6 +9,7 @@ import { normalizeAnonymousId, STANDARD_CALIBRATION, type Calibration } from '@/
 import { ActionButton } from '@/components/ActionButton';
 import { CalibrationFields } from '@/components/CalibrationFields';
 import { FormField } from '@/components/FormField';
+import { KeyboardLift } from '@/components/KeyboardLift';
 import { MountPicker } from '@/components/MountPicker';
 import { QualityReport } from '@/components/QualityReport';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -63,31 +64,66 @@ export function ConfirmScreen({ image, mount, suggestedId, onBack, onSubmit }: C
   const [draft, setDraft] = useState<StudyDraft>(() => initialDraft(mount, suggestedId));
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.lg }]}>
-      <ScreenHeader title={CONFIRM_TEXT.title} />
+    <KeyboardLift>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.lg }]}
+        keyboardShouldPersistTaps="handled"
+      >
+        <ScreenHeader title={CONFIRM_TEXT.title} />
 
-      <Image
-        source={{ uri: image.uri }}
-        style={[styles.thumbnail, { backgroundColor: theme.surface }]}
-        resizeMode="contain"
-      />
-
-      <SettingsSection title={CONFIRM_TEXT.qualitySection}>
-        <QualityReport findings={findings} isAnalyzing={isAnalyzing} />
-      </SettingsSection>
-
-      <StudyMetadataFields draft={draft} onChange={setDraft} />
-
-      <View style={styles.actions}>
-        <ActionButton label={CONFIRM_TEXT.back} onPress={onBack} variant="secondary" />
-        <ActionButton
-          label={CONFIRM_TEXT.submit}
-          variant="primary"
-          disabled={draft.anonymousId.length === 0 || isAnalyzing}
-          onPress={() => onSubmit(draft)}
+        <Image
+          source={{ uri: image.uri }}
+          style={[styles.thumbnail, { backgroundColor: theme.surface }]}
+          resizeMode="contain"
         />
-      </View>
-    </ScrollView>
+
+        <SettingsSection title={CONFIRM_TEXT.qualitySection}>
+          <QualityReport findings={findings} isAnalyzing={isAnalyzing} />
+        </SettingsSection>
+
+        <StudyMetadataFields draft={draft} onChange={setDraft} />
+
+        <ConfirmActions
+          canSubmit={draft.anonymousId.length > 0 && !isAnalyzing}
+          onBack={onBack}
+          onSubmit={() => onSubmit(draft)}
+        />
+      </ScrollView>
+    </KeyboardLift>
+  );
+}
+
+interface ConfirmActionsProps {
+  readonly canSubmit: boolean;
+  readonly onBack: () => void;
+  readonly onSubmit: () => void;
+}
+
+/**
+ * Las dos salidas de la confirmacion.
+ *
+ * ENVIAR SE BLOQUEA POR DOS COSAS Y NINGUNA ES LA CALIDAD DE LA FOTO. Sin
+ * identificador no habria con que referirse al estudio, y con el analisis de
+ * calidad todavia en marcha el aviso llegaria despues del envio, o sea tarde.
+ * Los hallazgos de calidad, en cambio, advierten y no bloquean: quien captura
+ * puede estar en una guardia, delante de una hoja que no va a volver a tener.
+ *
+ * @param canSubmit Cierto si el estudio se puede enviar ya.
+ * @param onBack Vuelve al ajuste de esquinas.
+ * @param onSubmit Acepta el estudio.
+ * @returns Las acciones del pie.
+ */
+function ConfirmActions({ canSubmit, onBack, onSubmit }: ConfirmActionsProps) {
+  return (
+    <View style={styles.actions}>
+      <ActionButton label={CONFIRM_TEXT.back} onPress={onBack} variant="secondary" />
+      <ActionButton
+        label={CONFIRM_TEXT.submit}
+        variant="primary"
+        disabled={!canSubmit}
+        onPress={onSubmit}
+      />
+    </View>
   );
 }
 

@@ -2,12 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { capturePhoto, type CaptureRequest, type CapturedPhoto } from '@/camera/capturePhoto';
 import { reportCaptureCompleted, reportPreviewReady } from '@/camera/captureTimings';
+import { useTask } from '@/shell/useTask';
 
 export interface CameraCapture {
   /** Cierto cuando la vista previa ya puede tomar fotos. */
   readonly isReady: boolean;
   /** Cierto mientras hay una captura en curso. */
   readonly isCapturing: boolean;
+  /** Cierto si el ultimo disparo se quedo sin foto. */
+  readonly hasFailed: boolean;
   readonly capture: (request: CaptureRequest) => void;
   readonly handlePreviewReady: () => void;
 }
@@ -20,13 +23,18 @@ export interface CameraCapture {
  * forma sincrona, antes de tocar la camara, para que la retroalimentacion del
  * obturador no dependa de cuanto tarde el modulo nativo.
  *
+ * UN DISPARO QUE NO DA FOTO SE DICE EN PANTALLA. Antes solo se liberaba el
+ * obturador y se anotaba en consola: desde fuera, un disparo fallido y uno que
+ * no se llego a registrar se ven exactamente igual, y quien esta delante del
+ * papel no sabe si tiene la foto o no.
+ *
  * @param onCaptured Se invoca con la foto ya recortada.
  * @returns Estado de la captura y sus manejadores.
  */
 export function useCameraCapture(onCaptured: (photo: CapturedPhoto) => void): CameraCapture {
   const mountedAt = useRef(0);
   const [isReady, setIsReady] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
+  const { isBusy, hasFailed, run } = useTask('[capture] no se pudo completar la captura');
 
   // El cronometro arranca en un efecto y no en el cuerpo del hook: leer el
   // reloj durante el renderizado lo haria impuro y React puede repetirlo.
@@ -42,22 +50,17 @@ export function useCameraCapture(onCaptured: (photo: CapturedPhoto) => void): Ca
   const capture = useCallback(
     (request: CaptureRequest) => {
       const startedAt = Date.now();
-      setIsCapturing(true);
 
-      void capturePhoto(request)
-        .then((photo) => {
-          reportCaptureCompleted(startedAt);
-          setIsCapturing(false);
-          onCaptured(photo);
-        })
-        .catch((error: unknown) => {
-          // No se bloquea al usuario: se libera el obturador para reintentar.
-          setIsCapturing(false);
-          console.error('[capture] no se pudo completar la captura', error);
-        });
+      // El obturador se libera solo, salga o no: `taskFailed` deja `isBusy` en
+      // falso, que es lo que hace falta para poder reintentar.
+      run(async () => {
+        const photo = await capturePhoto(request);
+        reportCaptureCompleted(startedAt);
+        onCaptured(photo);
+      });
     },
-    [onCaptured],
+    [run, onCaptured],
   );
 
-  return { isReady, isCapturing, capture, handlePreviewReady };
+  return { isReady, isCapturing: isBusy, hasFailed, capture, handlePreviewReady };
 }

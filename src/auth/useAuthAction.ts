@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import type { AuthFailureReason, AuthResult } from '@/auth/AuthService';
+import { playHaptic } from '@/design/haptics';
 
 export interface AuthAction {
   /** Cierto mientras la peticion esta en curso. */
@@ -41,9 +42,11 @@ export function useAuthAction(): AuthAction {
           onSuccess(result.value);
           return;
         }
+        playHaptic('failure');
         setFailureReason(result.failure.reason);
       } catch (error) {
         console.error('[auth] la peticion fallo de forma inesperada', error);
+        playHaptic('failure');
         setFailureReason('unexpected');
       } finally {
         setIsBusy(false);

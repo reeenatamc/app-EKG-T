@@ -1,5 +1,4 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 
 import type { CapturedPhoto } from '@/camera/capturePhoto';
 import { discardCapture } from '@/camera/discardCapture';
@@ -10,9 +9,12 @@ import { cropToQuad, type PreparedImage } from '@/capture/prepareStudy';
 import { submitStudy, type StudyDraft } from '@/capture/submitStudy';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { Background } from '@/design/Background';
+import { playHaptic } from '@/design/haptics';
 import { CameraScreen } from '@/screens/CameraScreen';
 import { ConfirmScreen } from '@/screens/ConfirmScreen';
 import { ReviewScreen } from '@/screens/ReviewScreen';
+import { useGoBack } from '@/shell/useGoBack';
+import { useTask } from '@/shell/useTask';
 
 /**
  * Los tres pasos del flujo de captura.
@@ -51,14 +53,48 @@ export function CaptureFlow() {
   const { stage } = flow;
 
   if (stage.kind === 'camera') {
-    return <CameraScreen onCaptured={flow.capture} mount={mount} onMountChange={setMount} />;
+    return (
+      <CameraScreen
+        onCaptured={flow.capture}
+        mount={mount}
+        onMountChange={setMount}
+        onClose={flow.close}
+      />
+    );
   }
 
+  return <PhotoStage stage={stage} mount={mount} flow={flow} />;
+}
+
+interface PhotoStageProps {
+  /** Los pasos que ya tienen foto. `Exclude` los deriva del propio flujo: si
+   *  manana aparece un cuarto paso con imagen, entra aqui solo. */
+  readonly stage: Exclude<Stage, { kind: 'camera' }>;
+  readonly mount: MountId;
+  readonly flow: CaptureFlowControls;
+}
+
+/**
+ * Los dos pasos que ya tienen foto: ajustar las esquinas y confirmar.
+ *
+ * Comparten fondo Skia, y por eso comparten componente: el lienzo se monta una
+ * vez para los dos en lugar de montarse y desmontarse al pasar de uno al otro.
+ * Va sin el latido difuso, porque la foto ya es un trazado y un segundo trazado
+ * decorativo detras solo confundiria.
+ *
+ * @param stage Paso activo, ya con foto.
+ * @param mount Montaje elegido en la camara.
+ * @param flow Transiciones del flujo.
+ * @returns El paso renderizado sobre su fondo.
+ */
+function PhotoStage({ stage, mount, flow }: PhotoStageProps) {
   return (
     <Background atmosphere={false}>
       {stage.kind === 'review' ? (
         <ReviewScreen
           photo={stage.photo}
+          isCropping={flow.isCropping}
+          hasCropFailed={flow.hasCropFailed}
           onDiscard={() => flow.discard(stage.photo)}
           onConfirm={(quad) => flow.adjust(stage.photo, quad)}
         />
@@ -75,6 +111,29 @@ export function CaptureFlow() {
   );
 }
 
+/**
+ * Recorta la foto y avanza a la confirmacion.
+ *
+ * Vive fuera del gancho porque no necesita nada de React salvo el actualizador,
+ * y dentro engordaba el cuerpo del gancho hasta hacerlo ilegible.
+ *
+ * El identificador anonimo se genera aqui, cuando el recorte ya existe: hacerlo
+ * antes gastaria uno cada vez que el recorte falla.
+ *
+ * @param photo Foto de partida.
+ * @param quad Esquinas elegidas, en pixeles de la foto.
+ * @param setStage Actualizador del paso del flujo.
+ */
+async function cropAndAdvance(
+  photo: CapturedPhoto,
+  quad: Quad,
+  setStage: Dispatch<SetStateAction<Stage>>,
+): Promise<void> {
+  const image = await cropToQuad(photo, quad);
+
+  setStage({ kind: 'confirm', photo, image, anonymousId: createAnonymousId(new Date()) });
+}
+
 interface CaptureFlowControls {
   readonly stage: Stage;
   readonly capture: (photo: CapturedPhoto) => void;
@@ -82,6 +141,12 @@ interface CaptureFlowControls {
   readonly adjust: (photo: CapturedPhoto, quad: Quad) => void;
   readonly back: (photo: CapturedPhoto, image: PreparedImage) => void;
   readonly submit: (photo: CapturedPhoto, image: PreparedImage, draft: StudyDraft) => void;
+  /** Abandona la captura sin haber tomado nada. */
+  readonly close: () => void;
+  /** Cierto mientras se prepara el recorte. */
+  readonly isCropping: boolean;
+  /** Cierto si el ultimo recorte no salio. */
+  readonly hasCropFailed: boolean;
 }
 
 /**
@@ -96,12 +161,16 @@ interface CaptureFlowControls {
  * @returns El paso actual y las transiciones disponibles.
  */
 function useCaptureFlow(): CaptureFlowControls {
-  const router = useRouter();
+  const goBack = useGoBack('/home');
+  const crop = useTask('[capture] no se pudo recortar');
   const addToQueue = useUploadQueue((state) => state.add);
   const [stage, setStage] = useState<Stage>({ kind: 'camera' });
 
   return {
     stage,
+    close: goBack,
+    isCropping: crop.isBusy,
+    hasCropFailed: crop.hasFailed,
 
     capture: (photo) => setStage({ kind: 'review', photo }),
 
@@ -110,15 +179,9 @@ function useCaptureFlow(): CaptureFlowControls {
       setStage({ kind: 'camera' });
     },
 
-    adjust: (photo, quad) => {
-      void cropToQuad(photo, quad)
-        .then((image) => {
-          setStage({ kind: 'confirm', photo, image, anonymousId: createAnonymousId(new Date()) });
-        })
-        // No se avanza y no se pierde nada: la revision sigue en pantalla con
-        // las esquinas donde estaban, y se puede reintentar.
-        .catch((error: unknown) => console.error('[capture] no se pudo recortar', error));
-    },
+    // Si no sale no se avanza y no se pierde nada: la revision sigue en pantalla
+    // con las esquinas donde estaban, y ahora ademas lo dice.
+    adjust: (photo, quad) => crop.run(() => cropAndAdvance(photo, quad, setStage)),
 
     back: (photo, image) => {
       discardCapture(image);
@@ -128,7 +191,11 @@ function useCaptureFlow(): CaptureFlowControls {
     submit: (photo, image, draft) => {
       addToQueue(submitStudy(image, draft, new Date()));
       discardCapture(photo);
-      router.back();
+      // El unico acierto que se confirma con vibracion en toda la aplicacion.
+      // La pantalla se cierra en el mismo gesto, asi que sin esto el envio se
+      // parece demasiado a cancelar.
+      playHaptic('success');
+      goBack();
     },
   };
 }

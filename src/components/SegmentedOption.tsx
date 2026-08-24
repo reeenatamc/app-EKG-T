@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { playHaptic } from '@/design/haptics';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
@@ -34,7 +35,10 @@ export function SegmentedOptionButton({ label, isActive, onPress }: SegmentedOpt
       accessibilityRole="radio"
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={label}
-      onPress={onPress}
+      onPress={() => {
+        playHaptic('selection');
+        onPress();
+      }}
       style={[styles.option, isActive ? { backgroundColor: theme.textHigh } : null]}
     >
       <Text style={[type.caption, { color: isActive ? theme.canvas : theme.textHigh }]}>

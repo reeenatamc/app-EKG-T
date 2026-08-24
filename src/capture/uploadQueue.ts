@@ -14,6 +14,7 @@ import {
 } from '@/capture/queue';
 import type { QueuedStudy } from '@/capture/study';
 import { deleteOrphanImages, deleteStudyImage } from '@/capture/studyFiles';
+import { useStoreHydrated } from '@/state/hydration';
 import type { UploadService } from '@/capture/UploadService';
 
 /**
@@ -184,3 +185,16 @@ export const useUploadQueue = create<UploadQueueState>()(
     },
   ),
 );
+
+/**
+ * Indica si la cola ya se leyo del disco.
+ *
+ * Lo consultan Inicio e Historial antes de afirmar nada sobre los estudios
+ * guardados. Sin esto, los primeros fotogramas de las dos pantallas describen
+ * una cola vacia que solo esta vacia porque el disco no ha llegado todavia.
+ *
+ * @returns Cierto cuando la rehidratacion ha terminado.
+ */
+export function useQueueHydrated(): boolean {
+  return useStoreHydrated(useUploadQueue);
+}

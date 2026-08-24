@@ -28,6 +28,24 @@ export const CAMERA_TEXT = {
   dimWarning: 'Hay poca luz para fotografiar papel',
   fromGallery: 'Elegir de la galeria',
   shutterLabel: 'Capturar',
+  /**
+   * Salida de la captura.
+   *
+   * La cámara se abre como modal a pantalla completa, que en iOS no se cierra
+   * deslizando y no lleva cabecera del router: sin este control no hay ninguna
+   * salida en pantalla, solo el botón físico de Android.
+   */
+  closeLabel: 'Cerrar la cámara',
+  /**
+   * Avisos de acción fallida, en una línea.
+   *
+   * Van en una línea y no en el bloque de título y acción que usa el resto de la
+   * aplicación porque comparten sitio con los avisos en vivo, justo encima del
+   * obturador: ahí el usuario está mirando el papel, no la pantalla, y un
+   * párrafo no se lee.
+   */
+  shutterFailure: 'La foto no se llegó a tomar. Vuelve a pulsar',
+  importFailure: 'No se pudo abrir esa imagen. Prueba con otra',
 } as const;
 
 export interface MountCopy {
@@ -137,6 +155,17 @@ export const REVIEW_TEXT = {
   discard: 'Repetir la foto',
   continueAction: 'Continuar',
   imageLabel: 'Fotografia del electrocardiograma con las esquinas ajustables',
+  /**
+   * El recorte no salió.
+   *
+   * Lo primero que se dice es que la foto sigue ahí. Quien acaba de fotografiar
+   * un registro necesita saber eso antes que nada: el fallo cuesta un toque, no
+   * el viaje hasta el paciente.
+   */
+  cropFailure: {
+    title: 'No se pudo preparar el recorte',
+    action: 'La foto y las esquinas siguen como estaban. Vuelve a darle a continuar.',
+  },
 } as const;
 
 export const CONFIRM_TEXT = {
@@ -177,6 +206,17 @@ export const QUEUE_TEXT = {
   retry: 'Reintentar',
   discard: 'Descartar',
   discardedNote: 'Descartar borra la foto del dispositivo.',
+  /**
+   * El vaciado manual de la cola ni siquiera arrancó.
+   *
+   * No es lo mismo que un envío fallido: eso lo cuenta cada estudio en su fila,
+   * con su causa. Esto es que el intento se rompió antes de llegar a ninguna,
+   * así que no hay ninguna fila donde contarlo.
+   */
+  drainFailure: {
+    title: 'El envío no llegó a empezar',
+    action: 'Comprueba la conexión y vuelve a deslizar hacia abajo.',
+  },
 } as const;
 
 /**

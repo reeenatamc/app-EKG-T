@@ -27,23 +27,47 @@ const POLL_INTERVAL_MS = 1000;
 
 interface AnalysesState {
   readonly byStudy: Readonly<Record<string, EcgAnalysis>>;
+  /**
+   * Estudios ya pedidos, para no pedirlos dos veces al remontar una pantalla.
+   *
+   * VIVE EN EL ESTADO Y NO EN UN `Set` DE MODULO, que es donde estaba. Un
+   * conjunto a nivel de modulo es una variable global escondida: sobrevive a
+   * todo, nadie puede reiniciarla y por tanto la deduplicacion no se podia
+   * probar. Aqui ademas deja obvio que reintentar es olvidar en los dos sitios.
+   *
+   * Hace falta separado de `byStudy` porque la peticion es asincrona: entre
+   * pedir y recibir no hay entrada en `byStudy`, y sin esto una pantalla que se
+   * monta dos veces abriria dos peticiones sobre el mismo estudio.
+   */
+  readonly requested: Readonly<Record<string, true>>;
   /** Pide el analisis de un estudio si no se ha pedido ya. */
   readonly request: (studyId: string) => void;
   /** Vuelve a consultar el estado de un analisis. */
   readonly refresh: (studyId: string) => Promise<void>;
+  /** Vuelve a pedir desde cero el analisis de un estudio. */
+  readonly retry: (studyId: string) => void;
 }
 
-/** Estudios ya pedidos, para no pedirlos dos veces al remontar una pantalla. */
-const requested = new Set<string>();
+/**
+ * Devuelve el registro sin una clave, sin tocar el original.
+ *
+ * @param record Registro de partida.
+ * @param key Clave a olvidar.
+ * @returns Un registro nuevo sin esa clave.
+ */
+function forget<T>(record: Readonly<Record<string, T>>, key: string): Readonly<Record<string, T>> {
+  return Object.fromEntries(Object.entries(record).filter(([id]) => id !== key));
+}
 
-export const useAnalyses = create<AnalysesState>()((set) => ({
+export const useAnalyses = create<AnalysesState>()((set, get) => ({
   byStudy: {},
+  requested: {},
 
   request: (studyId) => {
-    if (requested.has(studyId)) {
+    if (get().requested[studyId] === true) {
       return;
     }
-    requested.add(studyId);
+    set((state) => ({ requested: { ...state.requested, [studyId]: true } }));
 
     void service.request(studyId).then((analysis) => {
       set((state) => ({ byStudy: { ...state.byStudy, [studyId]: analysis } }));
@@ -55,6 +79,18 @@ export const useAnalyses = create<AnalysesState>()((set) => ({
     if (analysis !== null) {
       set((state) => ({ byStudy: { ...state.byStudy, [studyId]: analysis } }));
     }
+  },
+
+  // Olvidar en los dos sitios y volver a pedir. Sin borrar de `requested`, la
+  // peticion nueva se descartaria por duplicada y el estudio se quedaria sin
+  // analisis para siempre: el fallo mas facil de cometer aqui.
+  retry: (studyId) => {
+    set((state) => ({
+      byStudy: forget(state.byStudy, studyId),
+      requested: forget(state.requested, studyId),
+    }));
+
+    get().request(studyId);
   },
 }));
 

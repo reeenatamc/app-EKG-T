@@ -1,7 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
+import { useStoreHydrated } from '@/state/hydration';
 
 /**
  * Preferencias de presentacion de la aplicacion.
@@ -47,10 +48,20 @@ interface SettingsState {
   readonly reduceTransparency: boolean;
   /** Interruptor manual de movimiento reducido, simetrico al anterior. */
   readonly reduceMotion: boolean;
+  /**
+   * Respuesta tactil al tocar.
+   *
+   * Empieza encendida porque es lo que hace que un control se sienta pulsado, y
+   * se puede apagar porque un telefono que vibra no siempre es aceptable donde
+   * se usa esta aplicacion: una guardia de noche, una sala con el paciente
+   * dormido. Ningun otro ajuste de la aplicacion depende de donde estas.
+   */
+  readonly haptics: boolean;
   readonly setMode: (mode: ThemeMode | null) => void;
   readonly setElectrodeStandard: (standard: ElectrodeStandard) => void;
   readonly setReduceTransparency: (value: boolean) => void;
   readonly setReduceMotion: (value: boolean) => void;
+  readonly setHaptics: (value: boolean) => void;
 }
 
 export const useSettings = create<SettingsState>()(
@@ -60,10 +71,12 @@ export const useSettings = create<SettingsState>()(
       electrodeStandard: 'AHA',
       reduceTransparency: false,
       reduceMotion: false,
+      haptics: true,
       setMode: (mode) => set({ mode }),
       setElectrodeStandard: (electrodeStandard) => set({ electrodeStandard }),
       setReduceTransparency: (reduceTransparency) => set({ reduceTransparency }),
       setReduceMotion: (reduceMotion) => set({ reduceMotion }),
+      setHaptics: (haptics) => set({ haptics }),
     }),
     {
       name: 'ekg.settings',
@@ -75,6 +88,7 @@ export const useSettings = create<SettingsState>()(
         electrodeStandard: state.electrodeStandard,
         reduceTransparency: state.reduceTransparency,
         reduceMotion: state.reduceMotion,
+        haptics: state.haptics,
       }),
     },
   ),
@@ -91,11 +105,5 @@ export const useSettings = create<SettingsState>()(
  * @returns Cierto cuando la hidratacion ha terminado.
  */
 export function useSettingsHydrated(): boolean {
-  const [isHydrated, setIsHydrated] = useState(() => useSettings.persist.hasHydrated());
-
-  useEffect(() => {
-    return useSettings.persist.onFinishHydration(() => setIsHydrated(true));
-  }, []);
-
-  return isHydrated;
+  return useStoreHydrated(useSettings);
 }

@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSession } from '@/auth/session';
-import { useUploadQueue } from '@/capture/uploadQueue';
+import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
 import { AppTabBar } from '@/components/AppTabBar';
 import { BentoTile } from '@/components/BentoTile';
@@ -13,6 +13,7 @@ import { Background } from '@/design/Background';
 import { gap, tinted } from '@/design/tokens';
 import { type } from '@/design/type';
 import { longDate, welcomeLine } from '@/shell/greeting';
+import { describePending, describeSaved } from '@/shell/queueSummary';
 
 /** Hueco bajo el scroll para que la barra de pestanas flotante no tape contenido. */
 const TAB_BAR_CLEARANCE = 96;
@@ -108,6 +109,7 @@ function HomeModules() {
  * se lee sola.
  */
 function StatusModules() {
+  const hasHydrated = useQueueHydrated();
   const studies = useUploadQueue((state) => state.studies);
   const pendingCount = studies.filter((study) => study.status !== 'uploaded').length;
   const latest = studies[studies.length - 1];
@@ -118,13 +120,13 @@ function StatusModules() {
         size="half"
         tone="tinted"
         title={HOME_TEXT.pendingTitle}
-        body={describePending(pendingCount)}
+        body={describePending(hasHydrated, pendingCount)}
       />
       <BentoTile
         size="half"
         tone="tinted"
         title={HOME_TEXT.recentTitle}
-        body={describeRecent(studies.length)}
+        body={describeSaved(hasHydrated, studies.length)}
       >
         {/*
           EL ULTIMO ESTUDIO, DE VERDAD. Este modulo decia "Todavia ninguno" fijo
@@ -132,7 +134,7 @@ function StatusModules() {
           que hay guardado. El identificador va en monoespaciada porque es un
           identificador (§6).
         */}
-        {latest === undefined ? null : (
+        {!hasHydrated || latest === undefined ? null : (
           <Text style={[type.data, { color: tinted.body }]} numberOfLines={1}>
             {latest.metadata.anonymousId}
           </Text>
@@ -140,36 +142,6 @@ function StatusModules() {
       </BentoTile>
     </View>
   );
-}
-
-/**
- * Describe cuantos estudios esperan a subirse.
- *
- * Se cuenta en palabras y no con un numero suelto porque el modulo tiene que
- * poder leerse de un vistazo: "1 estudio esperando" se entiende sin mirar el
- * titulo del modulo, "1" no.
- *
- * @param count Estudios sin subir.
- * @returns La linea del modulo.
- */
-function describePending(count: number): string {
-  if (count === 0) {
-    return HOME_TEXT.pendingEmpty;
-  }
-  return count === 1 ? HOME_TEXT.pendingOne : `${count} ${HOME_TEXT.pendingMany}`;
-}
-
-/**
- * Cuantos estudios hay guardados.
- *
- * @param count Estudios en la cola, enviados o no.
- * @returns La linea del modulo.
- */
-function describeRecent(count: number): string {
-  if (count === 0) {
-    return HOME_TEXT.recentEmpty;
-  }
-  return count === 1 ? HOME_TEXT.recentOne : `${count} ${HOME_TEXT.recentMany}`;
 }
 
 const styles = StyleSheet.create({
