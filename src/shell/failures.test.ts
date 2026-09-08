@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 
 /**
  * Ningun fallo se queda solo en la consola.
@@ -51,7 +51,10 @@ function sourceFiles(): readonly SourceFile[] {
 
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir)) {
-      const path = join(dir, entry);
+      // Normalizado a barras normales: join() usa la barra invertida en
+      // Windows, y FAILURE_MODULES esta escrito con barra normal. Sin esto los
+      // dos modulos de fallo no se reconocen y el test los denuncia.
+      const path = join(dir, entry).split(sep).join('/');
 
       if (statSync(path).isDirectory()) {
         walk(path);
