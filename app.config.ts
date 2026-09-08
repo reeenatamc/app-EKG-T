@@ -73,6 +73,10 @@ const config: ExpoConfig = {
   },
 
   plugins: [
+    // Solo actua en Windows: saca la carpeta de compilacion nativa a una ruta
+    // corta. El motivo completo esta en el propio plugin.
+    './plugins/withShortNativeBuildDir',
+
     // Renuncia al modo oscuro forzado de Android. `userInterfaceStyle` solo curo
     // la mitad del problema; el motivo completo esta en el propio plugin.
     './plugins/withoutForcedDark',
