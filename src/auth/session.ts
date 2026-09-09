@@ -2,6 +2,8 @@ import { create } from 'zustand';
 
 import type { Session } from '@/auth/AuthService';
 import { authService } from '@/auth/service';
+import { useUploadQueue } from '@/capture/uploadQueue';
+import { useStudyNotes } from '@/ecg/notes';
 
 /**
  * Estado de la sesion.
@@ -45,6 +47,15 @@ export const useSession = create<SessionState>((set) => ({
 
   close: async () => {
     await authService.signOut();
+
+    // EL HISTORIAL LOCAL SE VA CON LA SESION. Los estudios y sus notas se
+    // guardan por dispositivo y no por cuenta, asi que sin esto quien entrase
+    // despues en el mismo telefono veria los electrocardiogramas del anterior,
+    // con sus notas. Lo que ya se envio sigue en el servidor a nombre de su
+    // dueno; lo que no, se pierde, y por eso ajustes avisa antes de llegar aqui.
+    useUploadQueue.getState().clearAll();
+    useStudyNotes.getState().clearAll();
+
     set({ status: 'anonymous', session: null });
   },
 }));

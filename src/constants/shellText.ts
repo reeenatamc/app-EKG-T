@@ -122,4 +122,17 @@ export const SETTINGS_TEXT = {
   languageNote: 'La aplicación está en un solo idioma.',
   accountSection: 'Cuenta',
   signOut: 'Cerrar sesión',
+
+  /**
+   * Cerrar sesión con estudios sin enviar.
+   *
+   * El historial se guarda por dispositivo y no por cuenta, así que cerrar
+   * sesión lo borra: sin eso, quien entrara después en el mismo teléfono vería
+   * los electrocardiogramas del anterior. Lo enviado sigue en el servidor; lo
+   * pendiente se pierde, y eso hay que decirlo antes y no después.
+   */
+  pendingOnSignOut: {
+    title: 'Tienes estudios sin enviar',
+    action: 'Al cerrar sesión se borrarán del teléfono. Envíalos primero desde el historial.',
+  },
 } as const;

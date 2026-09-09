@@ -136,6 +136,14 @@ interface UploadQueueState {
   readonly refresh: () => Promise<void>;
   /** Descarta un estudio y borra su imagen. */
   readonly discard: (id: string) => void;
+  /**
+   * Vacia la cola y borra todas las imagenes del dispositivo.
+   *
+   * Es lo que hace cerrar sesion. Lo que ya se envio vive en el servidor, a
+   * nombre de quien lo envio; lo que no, se pierde, y por eso la pantalla avisa
+   * antes de dejar cerrar con estudios pendientes.
+   */
+  readonly clearAll: () => void;
 }
 
 export const useUploadQueue = create<UploadQueueState>()(
@@ -162,6 +170,10 @@ export const useUploadQueue = create<UploadQueueState>()(
           return get().drain();
         },
         discard: (id) => discardStudy(id, read, apply),
+        clearAll: () => {
+          read().forEach((study) => deleteStudyImage(study.imageUri));
+          apply(() => []);
+        },
       };
     },
     {
