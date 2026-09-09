@@ -16,6 +16,7 @@ function studyWith(status: StudyStatus): QueuedStudy {
       quad: rectToQuad({ x: 0, y: 0, width: 3000, height: 2000 }),
     },
     status,
+    remoteId: null,
     attempts: 0,
     lastFailure: null,
   };

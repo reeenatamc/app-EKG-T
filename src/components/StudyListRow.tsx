@@ -70,7 +70,9 @@ function StudyOpener({
   readonly study: QueuedStudy;
   readonly canOpen: boolean;
 }) {
-  const analysis = useAnalyses((state) => state.byStudy[study.id]);
+  const analysis = useAnalyses((state) =>
+    study.remoteId === null ? undefined : state.byStudy[study.remoteId],
+  );
   const status = canOpen && analysis !== undefined ? STATUS_TEXT[analysis.status] : null;
   const shown = status ?? QUEUE_TEXT[study.status];
   const label = `${study.metadata.anonymousId}. ${shown}`;

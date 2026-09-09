@@ -34,7 +34,7 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   const theme = useTheme();
   const goBack = useGoBack('/history');
   const study = useUploadQueue((state) => state.studies.find((item) => item.id === studyId));
-  const analysis = useAnalysis(studyId);
+  const analysis = useAnalysis(study?.remoteId ?? null);
 
   // Puede pasar de verdad: si el estudio se descarta desde el historial
   // mientras su detalle esta abierto, esta pantalla sobrevive un fotograma sin

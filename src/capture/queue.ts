@@ -70,14 +70,29 @@ export function markUploading(queue: readonly QueuedStudy[], id: string): readon
 }
 
 /**
- * Marca un estudio como subido.
+ * Marca un estudio como subido y guarda el identificador que dio el servidor.
+ *
+ * El identificador remoto se guarda AQUI y no en otro sitio porque este es el
+ * unico momento en que existe: llega en el acuse de recibo y no vuelve a estar
+ * disponible. Sin el no se puede pedir el analisis, que el servidor indexa por
+ * el suyo y no por el del dispositivo.
  *
  * @param queue Cola actual.
- * @param id Identificador del estudio.
+ * @param id Identificador local del estudio.
+ * @param remoteId Identificador que asigno el servidor.
  * @returns La cola actualizada.
  */
-export function markUploaded(queue: readonly QueuedStudy[], id: string): readonly QueuedStudy[] {
-  return update(queue, id, (study) => ({ ...study, status: 'uploaded', lastFailure: null }));
+export function markUploaded(
+  queue: readonly QueuedStudy[],
+  id: string,
+  remoteId: string,
+): readonly QueuedStudy[] {
+  return update(queue, id, (study) => ({
+    ...study,
+    status: 'uploaded',
+    remoteId,
+    lastFailure: null,
+  }));
 }
 
 /**

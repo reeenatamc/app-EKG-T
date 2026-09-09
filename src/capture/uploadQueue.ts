@@ -75,7 +75,7 @@ async function send(study: QueuedStudy, apply: ApplyChange): Promise<void> {
   // sin nadie que la reclamase, y es la foto de un paciente. En este orden, lo
   // peor que puede pasar es repetir un envio.
   deleteStudyImage(study.imageUri);
-  apply((studies) => markUploaded(studies, study.id));
+  apply((studies) => markUploaded(studies, study.id, result.value.remoteId));
 }
 
 /**
@@ -180,9 +180,16 @@ export const useUploadQueue = create<UploadQueueState>()(
 
         return {
           ...current,
-          studies: stored.map((study) =>
-            study.status === 'uploading' ? { ...study, status: 'pending' as const } : study,
-          ),
+          studies: stored.map((study) => ({
+            ...study,
+            status: study.status === 'uploading' ? ('pending' as const) : study.status,
+
+            // Los estudios guardados antes de que existiera este campo lo leen
+            // como undefined, y el tipo dice `string | null`. Se normaliza aqui,
+            // al entrar, para que ninguna pantalla tenga que contemplar un tercer
+            // valor que solo existe por la edad del dato.
+            remoteId: study.remoteId ?? null,
+          })),
         };
       },
 

@@ -64,6 +64,21 @@ export type StudyStatus = 'pending' | 'uploading' | 'failed' | 'uploaded';
 
 export interface QueuedStudy {
   readonly id: string;
+  /**
+   * Identificador que asigno el servidor al recibirlo. Nulo hasta que se envia.
+   *
+   * NO ES EL MISMO QUE `id`, y esa es justo la razon de que exista. El de arriba
+   * lo genera el dispositivo antes de que exista ninguna conexion, porque un
+   * estudio tiene que poder encolarse, guardarse y reintentarse sin servidor. El
+   * servidor asigna el suyo al recibir la imagen, y es el unico que sirve para
+   * pedirle nada despues: el analisis se pide por este.
+   *
+   * Antes se descartaba al confirmar el envio, y la aplicacion pedia el analisis
+   * con su propio identificador. El servidor respondia 404 y el estudio aparecia
+   * como no procesable, sin nada en la interfaz que insinuara que se le estaba
+   * preguntando por algo que no era.
+   */
+  readonly remoteId: string | null;
   /** Ruta local de la imagen, en almacenamiento privado de la aplicacion. */
   readonly imageUri: string;
   readonly imageWidth: number;

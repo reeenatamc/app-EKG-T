@@ -74,6 +74,7 @@ const STUDY: QueuedStudy = {
       { x: 20, y: 1980 },
     ],
   },
+  remoteId: null,
   status: 'pending',
   attempts: 0,
   lastFailure: null,

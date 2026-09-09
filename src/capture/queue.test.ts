@@ -16,6 +16,7 @@ import { rectToQuad } from '@/camera/quad';
 function studyWith(id: string, status: StudyStatus = 'pending', attempts = 0): QueuedStudy {
   return {
     id,
+    remoteId: null,
     imageUri: `file:///studies/${id}.jpg`,
     imageWidth: 3000,
     imageHeight: 2000,
@@ -141,10 +142,24 @@ describe('retryAllFailed', () => {
 describe('markUploaded', () => {
   it('limpia el ultimo fallo al conseguirlo', () => {
     const failed = markFailed([studyWith('a', 'uploading', 1)], 'a', 'server-error');
-    const queue = markUploaded(failed, 'a');
+    const queue = markUploaded(failed, 'a', 'remoto-1');
 
     expect(queue[0]?.status).toBe('uploaded');
     expect(queue[0]?.lastFailure).toBeNull();
+  });
+
+  it('GUARDA EL IDENTIFICADOR QUE DIO EL SERVIDOR', () => {
+    // Es el unico momento en que existe: llega en el acuse de recibo y no
+    // vuelve. Sin el, la aplicacion pide el analisis con su propio
+    // identificador, el servidor responde 404, y el estudio aparece como no
+    // procesable sin que nada insinue que se le pregunto por otra cosa.
+    const queue = markUploaded([studyWith('a', 'uploading', 1)], 'a', 'remoto-1');
+
+    expect(queue[0]?.remoteId).toBe('remoto-1');
+  });
+
+  it('un estudio sin enviar no tiene identificador remoto', () => {
+    expect(studyWith('a').remoteId).toBeNull();
   });
 });
 
