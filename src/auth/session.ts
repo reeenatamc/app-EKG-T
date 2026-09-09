@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { Session } from '@/auth/AuthService';
-import { mockAuthService } from '@/auth/MockAuthService';
+import { authService } from '@/auth/service';
 
 /**
  * Estado de la sesion.
@@ -33,7 +33,7 @@ export const useSession = create<SessionState>((set) => ({
   session: null,
 
   restore: async () => {
-    const session = await mockAuthService.restoreSession();
+    const session = await authService.restoreSession();
     set(
       session === null
         ? { status: 'anonymous', session: null }
@@ -44,7 +44,7 @@ export const useSession = create<SessionState>((set) => ({
   open: (session) => set({ status: 'authenticated', session }),
 
   close: async () => {
-    await mockAuthService.signOut();
+    await authService.signOut();
     set({ status: 'anonymous', session: null });
   },
 }));

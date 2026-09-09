@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { mockAuthService } from '@/auth/MockAuthService';
+import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
 import { useEnterApp } from '@/auth/useEnterApp';
 import { AuthLink } from '@/components/AuthLink';
@@ -23,7 +23,7 @@ export function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const submit = () => run(() => mockAuthService.signIn({ email, password }), enterApp);
+  const submit = () => run(() => authService.signIn({ email, password }), enterApp);
 
   return (
     <AuthScreenLayout
