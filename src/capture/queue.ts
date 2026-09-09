@@ -117,6 +117,31 @@ export function retry(queue: readonly QueuedStudy[], id: string): readonly Queue
 }
 
 /**
+ * Devuelve a la cola todos los estudios fallidos.
+ *
+ * Es el gesto de deslizar hacia abajo, que existe para «acabo de recuperar
+ * senal, intentalo ya». Los estudios que fallaron por falta de cobertura son
+ * justo los que ese gesto quiere reintentar, y son los unicos a los que no
+ * llegaba: `nextPending` solo mira los pendientes, asi que la cola se recorria
+ * entera sin encontrar nada y el gesto no hacia nada ni lo decia.
+ *
+ * Reinicia el contador de intentos por el mismo motivo que `retry`: quien hace
+ * el gesto ha cambiado algo. El vaciado automatico -- al volver la aplicacion al
+ * primer plano -- no pasa por aqui y sigue sin resucitar nada, que es lo que
+ * impide que un estudio imposible se reintente sin fin.
+ *
+ * @param queue Cola actual.
+ * @returns La cola con los fallidos de vuelta a pendientes.
+ */
+export function retryAllFailed(queue: readonly QueuedStudy[]): readonly QueuedStudy[] {
+  return queue.map((study) =>
+    study.status === 'failed'
+      ? { ...study, status: 'pending' as const, attempts: 0, lastFailure: null }
+      : study,
+  );
+}
+
+/**
  * Saca un estudio de la cola.
  *
  * @param queue Cola actual.

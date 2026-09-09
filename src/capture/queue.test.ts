@@ -7,6 +7,7 @@ import {
   nextPending,
   remove,
   retry,
+  retryAllFailed,
   unresolved,
 } from '@/capture/queue';
 import { STANDARD_CALIBRATION, type QueuedStudy, type StudyStatus } from '@/capture/study';
@@ -97,6 +98,43 @@ describe('retry', () => {
     expect(queue[0]?.attempts).toBe(0);
     expect(queue[0]?.lastFailure).toBeNull();
     expect(nextPending(queue)?.id).toBe('a');
+  });
+});
+
+describe('retryAllFailed', () => {
+  // Es el gesto de deslizar hacia abajo: «acabo de recuperar senal, intentalo
+  // ya». Los fallidos son justo los que ese gesto quiere mover, y eran los
+  // unicos a los que no llegaba.
+  it('devuelve a la cola todos los estudios fallidos', () => {
+    const queue = [studyWith('a', 'failed', 3), studyWith('b', 'failed', 3)];
+
+    expect(retryAllFailed(queue).map((study) => study.status)).toEqual(['pending', 'pending']);
+  });
+
+  it('les devuelve la tanda completa de intentos automaticos', () => {
+    // Por el mismo motivo que `retry`: quien hace el gesto ha cambiado algo.
+    const queue = [studyWith('a', 'failed', MAX_AUTOMATIC_ATTEMPTS)];
+
+    expect(retryAllFailed(queue)[0]?.attempts).toBe(0);
+  });
+
+  it('no toca los que no han fallado', () => {
+    const queue = [
+      studyWith('a', 'uploaded'),
+      studyWith('b', 'uploading', 1),
+      studyWith('c', 'pending', 2),
+    ];
+
+    expect(retryAllFailed(queue)).toEqual(queue);
+  });
+
+  it('un estudio revivido vuelve a ser elegible para envio', () => {
+    // La consecuencia que importa: antes de esto, nextPending recorria la cola
+    // entera sin encontrar nada y el gesto no hacia nada ni lo decia.
+    const queue = [studyWith('a', 'failed', MAX_AUTOMATIC_ATTEMPTS)];
+
+    expect(nextPending(queue)).toBeNull();
+    expect(nextPending(retryAllFailed(queue))?.id).toBe('a');
   });
 });
 

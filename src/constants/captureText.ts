@@ -217,6 +217,18 @@ export const QUEUE_TEXT = {
     title: 'El envío no llegó a empezar',
     action: 'Comprueba la conexión y vuelve a deslizar hacia abajo.',
   },
+
+  /**
+   * Deslizar hacia abajo cuando ya no queda nada por enviar.
+   *
+   * Un gesto que no responde se lee como una aplicación rota, y este no tenía
+   * forma de distinguirse de eso: la cola se recorría entera, no encontraba
+   * nada y terminaba en silencio.
+   */
+  nothingToSend: {
+    title: 'No queda nada por enviar',
+    action: 'Todos los estudios están en el servidor.',
+  },
 } as const;
 
 /**

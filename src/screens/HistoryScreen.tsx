@@ -1,4 +1,5 @@
 import { FlashList } from '@shopify/flash-list';
+import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -121,9 +122,22 @@ function EmptyHistory({ padding }: { readonly padding: ViewStyle }) {
  */
 function StudyList({ padding }: { readonly padding: ViewStyle }) {
   const studies = useUploadQueue((state) => state.studies);
-  const drain = useUploadQueue((state) => state.drain);
+  const refresh = useUploadQueue((state) => state.refresh);
   const task = useTask('[cola] el vaciado manual no salio');
+  const [foundNothing, setFoundNothing] = useState(false);
   const ordered = [...studies].reverse();
+
+  // Un estudio enviado ya no vuelve a salir. Cualquier otro estado -- en
+  // espera, enviandose o fallido -- es algo que este gesto puede mover.
+  const hasPending = studies.some((study) => study.status !== 'uploaded');
+
+  const onRefresh = () => {
+    setFoundNothing(!hasPending);
+
+    if (hasPending) {
+      task.run(refresh);
+    }
+  };
 
   return (
     <FlashList
@@ -133,8 +147,10 @@ function StudyList({ padding }: { readonly padding: ViewStyle }) {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       contentContainerStyle={{ ...padding, paddingHorizontal: gap.lg }}
       refreshing={task.isBusy}
-      onRefresh={() => task.run(drain)}
-      ListHeaderComponent={<StudyListHeader hasFailed={task.hasFailed} />}
+      onRefresh={onRefresh}
+      ListHeaderComponent={
+        <StudyListHeader hasFailed={task.hasFailed} foundNothing={foundNothing} />
+      }
     />
   );
 }
@@ -149,15 +165,27 @@ function StudyList({ padding }: { readonly padding: ViewStyle }) {
  * @param hasFailed Cierto si el ultimo vaciado manual no salio.
  * @returns La cabecera de la lista.
  */
-function StudyListHeader({ hasFailed }: { readonly hasFailed: boolean }) {
+function StudyListHeader({
+  hasFailed,
+  foundNothing,
+}: {
+  readonly hasFailed: boolean;
+  readonly foundNothing: boolean;
+}) {
+  const notice = hasFailed
+    ? QUEUE_TEXT.drainFailure
+    : foundNothing
+      ? QUEUE_TEXT.nothingToSend
+      : null;
+
   return (
     <>
       <ScreenHeader title={HISTORY_LIST_TEXT.title} />
-      {hasFailed ? (
+      {notice === null ? null : (
         <View style={styles.headerNotice}>
-          <Notice title={QUEUE_TEXT.drainFailure.title} action={QUEUE_TEXT.drainFailure.action} />
+          <Notice title={notice.title} action={notice.action} />
         </View>
-      ) : null}
+      )}
     </>
   );
 }

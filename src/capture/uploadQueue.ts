@@ -11,6 +11,7 @@ import {
   nextPending,
   remove,
   retry,
+  retryAllFailed,
 } from '@/capture/queue';
 import type { QueuedStudy } from '@/capture/study';
 import { deleteOrphanImages, deleteStudyImage } from '@/capture/studyFiles';
@@ -125,6 +126,14 @@ interface UploadQueueState {
   readonly drain: () => Promise<void>;
   /** Devuelve un estudio fallido a la cola por peticion del usuario. */
   readonly retryStudy: (id: string) => void;
+  /**
+   * Reintenta todo lo que quedo sin enviar, fallidos incluidos.
+   *
+   * Es lo que hace el gesto de deslizar hacia abajo, y por eso no es lo mismo
+   * que `drain`: aquel es automatico y no resucita nada, este lo pide el
+   * usuario.
+   */
+  readonly refresh: () => Promise<void>;
   /** Descarta un estudio y borra su imagen. */
   readonly discard: (id: string) => void;
 }
@@ -147,6 +156,10 @@ export const useUploadQueue = create<UploadQueueState>()(
         retryStudy: (id) => {
           apply((studies) => retry(studies, id));
           void get().drain();
+        },
+        refresh: () => {
+          apply(retryAllFailed);
+          return get().drain();
         },
         discard: (id) => discardStudy(id, read, apply),
       };
