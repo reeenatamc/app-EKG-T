@@ -132,7 +132,8 @@ export const SETTINGS_TEXT = {
    * pendiente se pierde, y eso hay que decirlo antes y no después.
    */
   pendingOnSignOut: {
-    title: 'Tienes estudios sin enviar',
-    action: 'Al cerrar sesión se borrarán del teléfono. Envíalos primero desde el historial.',
+    title: 'Tienes estudios sin terminar',
+    action:
+      'Al cerrar sesión se borran del teléfono. Lo que no se ha enviado se pierde, y el resultado que aún falta ya no se podrá recoger.',
   },
 } as const;

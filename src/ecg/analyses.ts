@@ -94,6 +94,25 @@ export const useAnalyses = create<AnalysesState>()((set, get) => ({
   },
 }));
 
+/**
+ * Cierto si hay un analisis en marcha del que todavia se espera respuesta.
+ *
+ * Un analisis pedido y sin resolver es lo unico que se pierde de verdad al
+ * cerrar sesion. La imagen no: esa vive en el servidor a nombre de quien la
+ * envio. Lo que se pierde es poder recogerlo, porque al vaciar el historial la
+ * aplicacion olvida el identificador remoto y ya no hay por donde preguntar.
+ *
+ * Un estudio que nunca se abrio no cuenta: no se le pidio analisis a nadie, asi
+ * que no hay proceso que interrumpir. La regla coincide con lo que se ve en
+ * pantalla, que es lo que hace que el aviso se entienda.
+ *
+ * @param analysis Analisis del estudio, o undefined si no se pidio.
+ * @returns Cierto si se esta esperando su resultado.
+ */
+export function isAwaiting(analysis: EcgAnalysis | undefined): boolean {
+  return analysis !== undefined && !isSettled(analysis);
+}
+
 /** Cierto cuando el analisis ya no va a cambiar solo. */
 function isSettled(analysis: EcgAnalysis | undefined): boolean {
   return analysis?.status === 'ready' || analysis?.status === 'failed';
