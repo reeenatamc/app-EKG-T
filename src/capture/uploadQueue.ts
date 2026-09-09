@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { mockUploadService } from '@/capture/MockUploadService';
+import { httpUploadService } from '@/capture/HttpUploadService';
 import {
   enqueue,
   markFailed,
@@ -36,7 +36,7 @@ import type { UploadService } from '@/capture/UploadService';
  * Es una variable de modulo y no una inyeccion por parametro porque la cola es
  * un singleton: sustituirlo en la Etapa 5 es cambiar esta linea.
  */
-const uploadService: UploadService = mockUploadService;
+const uploadService: UploadService = httpUploadService;
 
 /**
  * Cierre para que dos vaciados no corran a la vez.

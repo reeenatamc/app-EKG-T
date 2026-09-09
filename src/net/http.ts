@@ -52,8 +52,15 @@ export interface HttpRequest {
  * `.env` se escribe a mano y acaba con barra la mitad de las veces; una URL con
  * doble barra no falla de forma visible, responde 404 y parece que el endpoint
  * no existe.
+ *
+ * Se exporta porque la subida de imagenes no pasa por `httpRequest`: la hace el
+ * modulo nativo de archivos, que necesita la URL ya compuesta. La direccion del
+ * servidor sigue resolviendose en un unico sitio.
+ *
+ * @param path Ruta relativa, con o sin barra inicial.
+ * @returns La URL absoluta del endpoint.
  */
-function urlFor(path: string): string {
+export function apiUrl(path: string): string {
   const base = getAppEnvironment().apiBaseUrl.replace(/\/+$/, '');
   return `${base}/${path.replace(/^\/+/, '')}`;
 }
@@ -111,7 +118,7 @@ export async function httpRequest(path: string, request: HttpRequest = {}): Prom
   let response: Response;
 
   try {
-    response = await fetch(urlFor(path), {
+    response = await fetch(apiUrl(path), {
       method,
       headers,
       body: json !== undefined ? JSON.stringify(json) : form,
