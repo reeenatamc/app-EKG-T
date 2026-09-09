@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 
 import type { EcgAnalysis, EcgAnalysisService } from '@/ecg/EcgAnalysisService';
-import { mockEcgAnalysisService } from '@/ecg/MockEcgAnalysisService';
+import { httpEcgAnalysisService } from '@/ecg/HttpEcgAnalysisService';
 
 /**
  * Analisis en curso y terminados.
@@ -20,7 +20,7 @@ import { mockEcgAnalysisService } from '@/ecg/MockEcgAnalysisService';
  * Servicio en uso. Sustituirlo en la Etapa 5 es cambiar esta linea, y ninguna
  * pantalla se entera: todas hablan con EcgAnalysisService.
  */
-const service: EcgAnalysisService = mockEcgAnalysisService;
+const service: EcgAnalysisService = httpEcgAnalysisService;
 
 /** Cada cuanto se pregunta al servidor mientras un analisis no termina. */
 const POLL_INTERVAL_MS = 1000;
@@ -106,22 +106,29 @@ function isSettled(analysis: EcgAnalysis | undefined): boolean {
  * para solo: un intervalo que sigue vivo despues de que el estudio este listo es
  * bateria y datos gastados en preguntar algo que ya se sabe.
  *
- * @param studyId Identificador del estudio.
+ * SE PIDE POR EL IDENTIFICADOR DEL SERVIDOR, no por el del dispositivo: es el
+ * unico que el servidor conoce. Un estudio que todavia no se ha enviado no
+ * tiene ninguno, y entonces aqui no se pide ni se sondea nada, porque no hay a
+ * quien preguntar.
+ *
+ * @param studyId Identificador remoto del estudio, o null si aun no se envio.
  * @returns El analisis, o undefined mientras no haya llegado el primero.
  */
-export function useAnalysis(studyId: string): EcgAnalysis | undefined {
-  const analysis = useAnalyses((state) => state.byStudy[studyId]);
+export function useAnalysis(studyId: string | null): EcgAnalysis | undefined {
+  const analysis = useAnalyses((state) => (studyId === null ? undefined : state.byStudy[studyId]));
   const request = useAnalyses((state) => state.request);
   const refresh = useAnalyses((state) => state.refresh);
 
   useEffect(() => {
-    request(studyId);
+    if (studyId !== null) {
+      request(studyId);
+    }
   }, [request, studyId]);
 
   const settled = isSettled(analysis);
 
   useEffect(() => {
-    if (settled) {
+    if (settled || studyId === null) {
       return;
     }
 
