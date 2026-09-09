@@ -45,7 +45,10 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
   }
 
   if (analysis.status === 'failed') {
-    return <AnalysisFailure studyId={study.id} analysis={analysis} />;
+    // El identificador del servidor, no el del dispositivo: es el unico por el que
+    // se le puede pedir nada. Pedir con el local devuelve 404, y desde fuera eso se
+    // ve como un boton que no hace nada.
+    return <AnalysisFailure studyId={study.remoteId} analysis={analysis} />;
   }
 
   return <ReadyAnalysis study={study} analysis={analysis} />;
@@ -79,7 +82,8 @@ function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgA
 }
 
 interface AnalysisFailureProps {
-  readonly studyId: string;
+  /** Identificador remoto. Nulo si el estudio nunca llego al servidor. */
+  readonly studyId: string | null;
   readonly analysis: EcgAnalysis;
 }
 
@@ -106,13 +110,15 @@ function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
         {analysis.failure === null ? STATUS_DETAIL.failed : ANALYSIS_FAILURE_COPY[analysis.failure]}
       </Text>
 
-      <View style={styles.failureAction}>
-        <ActionButton
-          label={STUDY_TEXT.retryAnalysis}
-          onPress={() => retry(studyId)}
-          variant="primary"
-        />
-      </View>
+      {studyId === null ? null : (
+        <View style={styles.failureAction}>
+          <ActionButton
+            label={STUDY_TEXT.retryAnalysis}
+            onPress={() => retry(studyId)}
+            variant="primary"
+          />
+        </View>
+      )}
     </View>
   );
 }
