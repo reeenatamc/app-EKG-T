@@ -63,6 +63,7 @@ export function computeViewerLayout(
   mount: MountId,
   availableWidth: number,
   calibration: Calibration,
+  rhythmLead: LeadName | null = RHYTHM_LEAD,
 ): ViewerLayout {
   const placements = layoutFor(mount);
   const columns = Math.max(...placements.map((placement) => placement.column)) + 1;
@@ -82,9 +83,13 @@ export function computeViewerLayout(
   );
 
   const gridHeight = rows * rowHeight;
-  const stripCells = hasRhythmStrip(mount)
-    ? [rhythmCell(availableWidth, rowHeight, gridHeight)]
-    : [];
+  // La tira solo se pinta si el montaje la lleva Y hay una derivacion entera
+  // que ponerle. Dibujar la fila con una derivacion incompleta da una tira
+  // cortada a un cuarto, que se lee como senal perdida y no como lo que es.
+  const stripCells =
+    hasRhythmStrip(mount) && rhythmLead !== null
+      ? [rhythmCell(availableWidth, rowHeight, gridHeight, rhythmLead)]
+      : [];
 
   return {
     cells: [...cells, ...stripCells],
@@ -123,9 +128,9 @@ function toCell(
  * Existe para poder valorar el ritmo sobre un tramo continuo en lugar de sobre
  * los 2,5 s sueltos de la rejilla, que es justo para lo que se imprime.
  */
-function rhythmCell(width: number, rowHeight: number, top: number): ViewerCell {
+function rhythmCell(width: number, rowHeight: number, top: number, lead: LeadName): ViewerCell {
   return {
-    lead: RHYTHM_LEAD,
+    lead,
     x: 0,
     y: top,
     width,

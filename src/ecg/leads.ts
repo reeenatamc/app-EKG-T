@@ -122,3 +122,42 @@ export function presentLeads(
 
   return present.length === 0 ? null : present;
 }
+
+/** Fraccion del registro que hay que cubrir para considerarse una tira continua. */
+const FULL_LENGTH_COVERAGE = 0.9;
+
+/**
+ * La derivacion que sirve de tira de ritmo en una senal ya digitalizada.
+ *
+ * NO SE ASUME `RHYTHM_LEAD`, Y ESA ES LA CORRECCION. II es la eleccion correcta
+ * para la guia de encuadre, donde todavia no se sabe que trae el papel, y estaba
+ * bien mientras el visor solo dibujaba senal inventada. Sobre una senal real es
+ * un dato conocido: la digitalizacion dice cuales volvieron enteras.
+ *
+ * Medido en una hoja real: las tiras eran V1, V5 y V6, y el visor pintaba una
+ * tira rotulada II con dos segundos y medio de trazo, porque de II solo existia
+ * su celda de la rejilla. Una tira que se corta a un cuarto parece señal
+ * perdida, no un rotulo equivocado.
+ *
+ * Se prefiere II cuando esta entera porque es la convencion -- muestra la onda P
+ * con claridad -- y si no, la primera que lo este. Si ninguna lo esta no hay tira
+ * que pintar, y decirlo es mejor que dibujar un muñon.
+ *
+ * @param signal Senal digitalizada.
+ * @returns La derivacion de la tira, o null si ninguna cubre el registro.
+ */
+export function rhythmLeadFor(signal: EcgSignal): LeadName | null {
+  const covered = (lead: EcgSignal['leads'][number]): number =>
+    lead.segments.reduce((total, segment) => total + segment.values.length, 0);
+
+  const full = signal.leads.filter(
+    (lead) =>
+      covered(lead) >= signal.durationSeconds * signal.samplingRateHz * FULL_LENGTH_COVERAGE,
+  );
+
+  if (full.length === 0) {
+    return null;
+  }
+
+  return full.some((lead) => lead.name === RHYTHM_LEAD) ? RHYTHM_LEAD : (full[0]?.name ?? null);
+}

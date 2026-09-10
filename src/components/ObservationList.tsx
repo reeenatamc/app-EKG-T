@@ -10,7 +10,15 @@ interface ObservationListProps {
   readonly observations: readonly EcgObservation[];
 }
 
-/** Fraccion a porcentaje, para mostrar la confianza. */
+/**
+ * Fraccion a porcentaje, para mostrar la confianza.
+ *
+ * SE TRUNCA, NO SE REDONDEA. Redondear convierte 0,996 en «100%», y eso es una
+ * certeza que el modelo no ha afirmado: sus salidas no son probabilidades
+ * calibradas, y ni siquiera las que lo fueran llegan al uno. Una aplicacion que
+ * repite en cada fila que hay que confirmar la lectura no puede a la vez
+ * escribir un cien por cien.
+ */
 const PERCENT = 100;
 
 /**
@@ -58,7 +66,7 @@ export function ObservationList({ observations }: ObservationListProps) {
           <Text style={[type.body, { color: theme.textHigh }]}>{observation.label}</Text>
 
           <Text style={[type.caption, { color: theme.textLow }]}>
-            {Math.round(observation.confidence * PERCENT)}% {STUDY_TEXT.confidenceLabel}
+            {Math.floor(observation.confidence * PERCENT)}% {STUDY_TEXT.confidenceLabel}
           </Text>
 
           <Text style={[type.caption, { color: theme.textHigh }]}>

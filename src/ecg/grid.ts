@@ -104,3 +104,17 @@ export function computeGridGeometry(scale: TraceScale): GridGeometry {
 export function visibleSeconds(widthPx: number, scale: TraceScale): number {
   return widthPx / scale.pixelsPerSecond;
 }
+
+/**
+ * Cada cuantas lineas de la retícula cae una gruesa.
+ *
+ * Se cuenta en lineas y no se mide el resto de la posicion, porque la posicion
+ * se acumula en coma flotante: con un milimetro a 1,28 px, cinco pasos suman
+ * 6,3999... y el resto contra 6,4 devuelve 6,3999 en vez de 0.
+ *
+ * @param geometry Pasos de la retícula.
+ * @returns El intervalo, en numero de lineas.
+ */
+export function boldLineInterval(geometry: GridGeometry): number {
+  return Math.max(1, Math.round(geometry.boldStepPx / geometry.smallStepPx));
+}

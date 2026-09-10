@@ -1,4 +1,4 @@
-import { presentLeads } from '@/ecg/leads';
+import { presentLeads, rhythmLeadFor } from '@/ecg/leads';
 import type { EcgSignal } from '@/ecg/signal';
 
 /** Una senal con las derivaciones que se le pidan y un tramo cualquiera. */
@@ -48,5 +48,57 @@ describe('presentLeads', () => {
     const signal = signalWith('I', 'II', 'III');
 
     expect(presentLeads(signal, ['III', 'I'])).toEqual(['I', 'III']);
+  });
+});
+
+describe('rhythmLeadFor', () => {
+  /** Una senal donde cada derivacion cubre la fraccion que se le diga. */
+  function signalCovering(coverage: Readonly<Record<string, number>>): EcgSignal {
+    const samplingRateHz = 500;
+    const durationSeconds = 10;
+
+    return {
+      samplingRateHz,
+      durationSeconds,
+      leads: Object.entries(coverage).map(([name, fraction]) => ({
+        name: name as EcgSignal['leads'][number]['name'],
+        segments: [
+          {
+            startSecond: 0,
+            values: Array<number>(Math.round(fraction * durationSeconds * samplingRateHz)).fill(0),
+          },
+        ],
+      })),
+    };
+  }
+
+  it('LA TIRA SALE DE LA SENAL, NO DEL MONTAJE', () => {
+    // Medido en una hoja real: las tiras eran V1, V5 y V6, y el visor pintaba
+    // una rotulada II con dos segundos y medio, porque de II solo existia su
+    // celda de la rejilla. Una tira cortada a un cuarto parece senal perdida.
+    const signal = signalCovering({ I: 0.25, II: 0.25, V1: 1, V5: 1, V6: 1 });
+
+    expect(rhythmLeadFor(signal)).toBe('V1');
+  });
+
+  it('prefiere II cuando esta entera, que es la convencion', () => {
+    const signal = signalCovering({ II: 1, V1: 1, V5: 1 });
+
+    expect(rhythmLeadFor(signal)).toBe('II');
+  });
+
+  it('sin ninguna entera no hay tira que pintar', () => {
+    // Mejor no dibujar la fila que dibujar un muñon.
+    const signal = signalCovering({ I: 0.25, II: 0.25, V1: 0.25 });
+
+    expect(rhythmLeadFor(signal)).toBeNull();
+  });
+
+  it('una derivacion casi entera cuenta como entera', () => {
+    // La digitalizacion pierde muestras en los bordes; exigir el cien por cien
+    // dejaria sin tira a hojas que si la tienen.
+    const signal = signalCovering({ II: 0.95 });
+
+    expect(rhythmLeadFor(signal)).toBe('II');
   });
 });

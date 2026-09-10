@@ -1,10 +1,12 @@
 import { STANDARD_CALIBRATION } from '@/capture/study';
 import {
+  boldLineInterval,
   computeGridGeometry,
   computeTraceScale,
   millivoltsPerMillimetre,
   secondsPerMillimetre,
   visibleSeconds,
+  type GridGeometry,
 } from '@/ecg/grid';
 
 const PIXELS_PER_MM = 4;
@@ -80,5 +82,46 @@ describe('visibleSeconds', () => {
 
     // 25 mm/s a 4 px/mm son 100 px por segundo.
     expect(visibleSeconds(400, scale)).toBeCloseTo(4);
+  });
+});
+
+describe('boldLineInterval', () => {
+  /** Cuantas lineas gruesas salen al recorrer un ancho, como hace el visor. */
+  function boldLinesAcross(geometry: GridGeometry, width: number): number {
+    const every = boldLineInterval(geometry);
+    let count = 0;
+
+    for (let i = 0; i * geometry.smallStepPx <= width; i += 1) {
+      if (i % every === 0) {
+        count += 1;
+      }
+    }
+
+    return count;
+  }
+
+  it('UNA GRUESA CADA CINCO, SIEMPRE', () => {
+    // La retícula son cuadros de un milimetro con una gruesa cada cinco. Es una
+    // proporcion fija del papel, no algo que dependa del tamano de la pantalla.
+    const geometry = computeGridGeometry(computeTraceScale(STANDARD_CALIBRATION, 1.28));
+
+    expect(boldLineInterval(geometry)).toBe(5);
+  });
+
+  it('no se pierde ninguna gruesa a lo ancho de un movil', () => {
+    // De donde sale: midiendo el resto de una posicion acumulada, 61 de 101
+    // lineas se clasificaban como finas. Y con la retícula fina oculta, que es
+    // el caso a este tamano, una gruesa mal clasificada no se dibuja mas
+    // delgada: desaparece, y deja bandas de papel en blanco.
+    const geometry = computeGridGeometry(computeTraceScale(STANDARD_CALIBRATION, 1.28));
+    const width = 640;
+
+    expect(boldLinesAcross(geometry, width)).toBe(Math.floor(width / geometry.boldStepPx) + 1);
+  });
+
+  it('aguanta escalas donde el paso grueso no es multiplo exacto del fino', () => {
+    const geometry = computeGridGeometry(computeTraceScale(STANDARD_CALIBRATION, 3.7));
+
+    expect(boldLineInterval(geometry)).toBe(5);
   });
 });

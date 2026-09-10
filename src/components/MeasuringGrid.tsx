@@ -2,6 +2,7 @@ import { Path, Skia, type SkPath } from '@shopify/react-native-skia';
 import { useMemo } from 'react';
 
 import type { GridGeometry } from '@/ecg/grid';
+import { boldLineInterval } from '@/ecg/grid';
 import { size } from '@/design/tokens';
 
 interface MeasuringGridProps {
@@ -87,21 +88,29 @@ function buildGridPaths(width: number, height: number, geometry: GridGeometry): 
   const fine = Skia.PathBuilder.Make();
   const bold = Skia.PathBuilder.Make();
 
-  const isBold = (position: number): boolean =>
-    Math.abs(position % geometry.boldStepPx) < HALF_PIXEL;
+  // SE CUENTAN LINEAS, NO SE MIDEN RESTOS. Antes la posicion se acumulaba en
+  // coma flotante y se preguntaba si su resto contra el paso grueso era casi
+  // cero. Con un milimetro a 1,28 px, cinco pasos suman 6,3999... y el resto
+  // devuelve 6,3999 en vez de 0: la linea se clasificaba como fina. El error se
+  // acumula, asi que fallaba a rachas.
+  //
+  // Y no era un fallo de matiz. Cuando la retícula fina esta oculta -- que es el
+  // caso a ancho de telefono -- una gruesa mal clasificada no se dibuja mas
+  // delgada: no se dibuja. Medido sobre un 3x4 en un movil, 61 de 101 lineas
+  // desaparecian, dejando bandas enteras de papel en blanco.
+  const boldEvery = boldLineInterval(geometry);
 
-  for (let x = 0; x <= width; x += geometry.smallStepPx) {
-    const target = isBold(x) ? bold : fine;
+  for (let i = 0; i * geometry.smallStepPx <= width; i += 1) {
+    const x = i * geometry.smallStepPx;
+    const target = i % boldEvery === 0 ? bold : fine;
     target.moveTo(x, 0).lineTo(x, height);
   }
 
-  for (let y = 0; y <= height; y += geometry.smallStepPx) {
-    const target = isBold(y) ? bold : fine;
+  for (let i = 0; i * geometry.smallStepPx <= height; i += 1) {
+    const y = i * geometry.smallStepPx;
+    const target = i % boldEvery === 0 ? bold : fine;
     target.moveTo(0, y).lineTo(width, y);
   }
 
   return { fine: fine.detach(), bold: bold.detach() };
 }
-
-/** Tolerancia al comparar posiciones acumuladas en coma flotante. */
-const HALF_PIXEL = 0.5;
