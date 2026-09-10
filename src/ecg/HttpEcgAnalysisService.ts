@@ -31,6 +31,7 @@ const FAILURE_REASONS: readonly AnalysisFailureReason[] = [
   'unreadable-image',
   'grid-not-detected',
   'unsupported-mount',
+  'no-full-length-lead',
   'network-unreachable',
   'server-error',
   'unexpected',

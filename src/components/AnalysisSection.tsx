@@ -17,6 +17,7 @@ import {
   STUDY_TEXT,
 } from '@/constants/studyText';
 import { useAnalyses } from '@/ecg/analyses';
+import { isWorthRetrying } from '@/ecg/retryable';
 import type { EcgAnalysis, EcgObservation } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
 import { gap, radius } from '@/design/tokens';
@@ -202,6 +203,11 @@ interface AnalysisFailureProps {
  * eso, porque el estudio ya constaba como pedido. La imagen sigue en el
  * dispositivo y el estudio sigue subido, asi que reintentar es barato y no
  * arriesga nada.
+ *
+ * SALIDA SOLO CUANDO LA HAY. El boton no aparece en las causas que no pueden
+ * terminar de otra manera -- ver isWorthRetrying. En esas, lo que hay que hacer
+ * lo dice el texto de la causa, y un boton al lado solo invita a pulsarlo en
+ * lugar de leerlo.
  */
 function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
   const theme = useTheme();
@@ -214,7 +220,7 @@ function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
         {analysis.failure === null ? STATUS_DETAIL.failed : ANALYSIS_FAILURE_COPY[analysis.failure]}
       </Text>
 
-      {studyId === null ? null : (
+      {studyId === null || !isWorthRetrying(analysis.failure) ? null : (
         <View style={styles.failureAction}>
           <ActionButton
             label={STUDY_TEXT.retryAnalysis}

@@ -91,6 +91,8 @@ export const ANALYSIS_FAILURE_COPY: Record<AnalysisFailureReason, string> = {
     'No se ha encontrado la reticula milimetrada. Comprueba que la hoja salga completa y sin reflejos.',
   'unsupported-mount':
     'El montaje indicado no coincide con lo que hay en la imagen. Revisalo y vuelve a enviarlo.',
+  'no-full-length-lead':
+    'Esta hoja no trae ninguna derivacion completa: cada una dura unos 2,5 segundos, y con eso no se puede leer el ritmo. Hace falta un registro con tira de ritmo, la linea larga que cruza la hoja de lado a lado.',
   'network-unreachable': 'No hay conexion. El estudio sigue guardado y se reintenta al volver.',
   'server-error': 'El servidor no responde ahora mismo. El estudio no se ha perdido.',
   unexpected: 'Algo fallo al procesar. El estudio sigue guardado y se puede reintentar.',
