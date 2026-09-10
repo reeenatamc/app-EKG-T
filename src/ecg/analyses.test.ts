@@ -1,5 +1,5 @@
 import type { AnalysisStatus, EcgAnalysis } from '@/ecg/EcgAnalysisService';
-import { isAwaiting, useAnalyses } from '@/ecg/analyses';
+import { isAwaiting, pollDelayMs, useAnalyses } from '@/ecg/analyses';
 
 /**
  * Peticion, deduplicacion y reintento del analisis.
@@ -133,5 +133,53 @@ describe('isAwaiting', () => {
   it('listo y fallido ya no esperan nada', () => {
     expect(isAwaiting(analysisWith('ready'))).toBe(false);
     expect(isAwaiting(analysisWith('failed'))).toBe(false);
+  });
+});
+
+describe('espaciado del sondeo', () => {
+  /** Consultas que se harian esperando `seconds` segundos a un resultado. */
+  function pollsWithin(seconds: number): number {
+    let elapsed = 0;
+    let attempt = 0;
+
+    while (elapsed < seconds * 1000) {
+      elapsed += pollDelayMs(attempt);
+      attempt += 1;
+    }
+
+    return attempt;
+  }
+
+  it('las dos primeras consultas van seguidas', () => {
+    // Un analisis puede resolverse en un segundo. Si la segunda consulta ya
+    // fuese a los dos, el resultado tardaria mas en verse que en calcularse.
+    expect(pollDelayMs(0)).toBe(1000);
+    expect(pollDelayMs(1)).toBe(1000);
+  });
+
+  it('a partir de ahi se dobla', () => {
+    expect(pollDelayMs(2)).toBe(2000);
+    expect(pollDelayMs(3)).toBe(4000);
+    expect(pollDelayMs(4)).toBe(8000);
+  });
+
+  it('NO CRECE SIN LIMITE', () => {
+    // Doblando sin techo, la consulta veinte caeria a los seis dias. Un analisis
+    // que termina en el minuto seis se veria al dia siguiente.
+    expect(pollDelayMs(10)).toBe(15_000);
+    expect(pollDelayMs(100)).toBe(15_000);
+  });
+
+  it('cinco minutos de espera no son trescientas peticiones', () => {
+    // Es el numero medido en el telefono: la foto de Ron tardo 296,8 segundos
+    // con los dos modelos en una CPU. A un segundo fijo eso era una peticion por
+    // segundo, con la radio encendiendose cada vez.
+    expect(pollsWithin(300)).toBeLessThan(30);
+  });
+
+  it('un resultado inmediato no espera un tiempo raro', () => {
+    // El coste del espaciado es que un resultado listo tarda en verse. Que ese
+    // coste tenga techo es justo lo que hace aceptable el cambio.
+    expect(pollDelayMs(0)).toBeLessThanOrEqual(1000);
   });
 });

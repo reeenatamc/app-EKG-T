@@ -22,8 +22,37 @@ import { httpEcgAnalysisService } from '@/ecg/HttpEcgAnalysisService';
  */
 const service: EcgAnalysisService = httpEcgAnalysisService;
 
-/** Cada cuanto se pregunta al servidor mientras un analisis no termina. */
-const POLL_INTERVAL_MS = 1000;
+/** Primera espera. Un analisis puede resolverse en un segundo y hay que verlo. */
+const FIRST_POLL_MS = 1000;
+
+/** Techo de la espera. Mas alla, el usuario nota que la pantalla va por detras. */
+const MAX_POLL_MS = 15_000;
+
+/**
+ * Cuanto esperar antes de la consulta numero `attempt`.
+ *
+ * SE VA ESPACIANDO, y no por elegancia. Preguntar cada segundo estaba bien contra
+ * la simulacion, que resolvia en cinco; contra el servidor real un estudio tarda
+ * minutos -- medido: cinco, con los dos modelos en una CPU-- y eso son trescientas
+ * peticiones y trescientas radios encendidas para una sola respuesta, en la
+ * bateria de quien esta mirando.
+ *
+ * Las dos primeras van seguidas porque un analisis puede terminar enseguida y esa
+ * es la unica forma de que se vea al momento. A partir de ahi se dobla hasta el
+ * techo: sobre cinco minutos, unas veinticuatro consultas en vez de trescientas.
+ *
+ * Lo que se paga es que un resultado puede tardar hasta quince segundos en
+ * aparecer despues de estar listo. Sobre una espera de cinco minutos, eso no se
+ * nota; trescientas peticiones si.
+ *
+ * @param attempt Consulta que se va a hacer, empezando en cero.
+ * @returns La espera, en milisegundos.
+ */
+export function pollDelayMs(attempt: number): number {
+  const doublings = Math.max(0, attempt - 1);
+
+  return Math.min(MAX_POLL_MS, FIRST_POLL_MS * 2 ** doublings);
+}
 
 interface AnalysesState {
   readonly byStudy: Readonly<Record<string, EcgAnalysis>>;
@@ -119,6 +148,45 @@ function isSettled(analysis: EcgAnalysis | undefined): boolean {
 }
 
 /**
+ * Consulta un estudio una y otra vez, cada vez mas espaciado.
+ *
+ * ENCADENADO Y NO EN INTERVALO: la siguiente consulta se programa cuando la
+ * anterior ha contestado, asi que una respuesta lenta no acumula peticiones
+ * solapadas preguntando lo mismo.
+ *
+ * @param studyId Identificador remoto del estudio.
+ * @param refresh Consulta al servidor el estado del analisis.
+ * @returns Funcion que detiene el sondeo.
+ */
+function startPolling(studyId: string, refresh: (id: string) => Promise<void>): () => void {
+  let attempt = 0;
+  let timer: ReturnType<typeof setTimeout>;
+  // La consulta en vuelo no se puede cancelar, pero su continuacion si. Sin
+  // esto, cerrar la pantalla mientras una respuesta viene de camino dejaria
+  // programada una consulta mas que ya nadie limpia.
+  let stopped = false;
+
+  const schedule = (): void => {
+    timer = setTimeout(() => {
+      void refresh(studyId).finally(() => {
+        if (stopped) {
+          return;
+        }
+        attempt += 1;
+        schedule();
+      });
+    }, pollDelayMs(attempt));
+  };
+
+  schedule();
+
+  return () => {
+    stopped = true;
+    clearTimeout(timer);
+  };
+}
+
+/**
  * Sigue el analisis de un estudio hasta que termina.
  *
  * Pide el analisis al montar y sondea mientras no este resuelto. El sondeo se
@@ -151,8 +219,7 @@ export function useAnalysis(studyId: string | null): EcgAnalysis | undefined {
       return;
     }
 
-    const interval = setInterval(() => void refresh(studyId), POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    return startPolling(studyId, refresh);
   }, [refresh, settled, studyId]);
 
   return analysis;
