@@ -3,7 +3,14 @@ import { Image, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-nat
 
 import type { CapturedPhoto } from '@/camera/capturePhoto';
 import { computeContainRect, type Rect, type Size } from '@/camera/framing';
-import { rectToQuad, scaleQuad, translateQuadToOrigin, type Quad } from '@/camera/quad';
+import {
+  mapQuad,
+  rectToQuad,
+  remapPointBetweenRects,
+  scaleQuad,
+  translateQuadToOrigin,
+  type Quad,
+} from '@/camera/quad';
 import { useQuadCorners, type CornerValues } from '@/camera/useQuadCorners';
 import { ActionButton } from '@/components/ActionButton';
 import { CornerHandles } from '@/components/CornerHandles';
@@ -127,6 +134,30 @@ interface ReviewState {
   readonly readInPhotoPixels: () => Quad;
 }
 
+/** Un recorte ya ajustado, con el area de pantalla en la que se leyo. */
+interface AdjustedQuad {
+  readonly quad: Quad;
+  readonly bounds: Rect;
+}
+
+/**
+ * Las esquinas que debe dibujar la previsualizacion, en el area actual.
+ *
+ * @param adjusted Recorte ajustado a mano, o null si no se ha tocado.
+ * @param initialRect Marco de partida, para cuando no se ha tocado nada.
+ * @param displayed Area donde se dibuja la foto ahora mismo.
+ * @returns Las esquinas en coordenadas de `displayed`.
+ */
+function previewQuadOf(adjusted: AdjustedQuad | null, initialRect: Rect, displayed: Rect): Quad {
+  if (adjusted === null) {
+    return rectToQuad(initialRect);
+  }
+
+  return mapQuad(adjusted.quad, (point) =>
+    remapPointBetweenRects(point, adjusted.bounds, displayed),
+  );
+}
+
 /**
  * Reune la medida del contenedor, la geometria y las cuatro esquinas.
  *
@@ -143,14 +174,18 @@ function useReviewState(photo: CapturedPhoto): ReviewState {
   const [container, setContainer] = useState<Size | null>(null);
   const { displayed, scale, initialRect } = useReviewGeometry(photo, container);
   const { corners, isValid, read, reset } = useQuadCorners(initialRect);
-  const [adjusted, setAdjusted] = useState<Quad | null>(null);
+  // Se guarda junto al area en la que se leyo. Las esquinas son puntos de
+  // pantalla, asi que en cuanto esa area cambia de tamano dejan de apuntar donde
+  // apuntaban: la previa se dibujaba con unas esquinas viejas sobre un area nueva
+  // y salia torcida. Con el area al lado, se traducen al vuelo y siempre casan.
+  const [adjusted, setAdjusted] = useState<AdjustedQuad | null>(null);
 
   return {
     container,
     displayed,
     corners,
     isValid,
-    previewQuad: adjusted ?? rectToQuad(initialRect),
+    previewQuad: previewQuadOf(adjusted, initialRect, displayed),
     // Se ignora una medida que no cambia nada. onLayout se dispara tambien
     // cuando la previa enderezada de debajo cambia de alto, y devuelve un
     // objeto nuevo cada vez: guardarlo tal cual renderizaba de nuevo toda la
@@ -165,7 +200,7 @@ function useReviewState(photo: CapturedPhoto): ReviewState {
           : { width, height },
       );
     },
-    settle: () => setAdjusted(read()),
+    settle: () => setAdjusted({ quad: read(), bounds: displayed }),
     resetCorners: () => {
       reset();
       setAdjusted(null);

@@ -27,13 +27,19 @@ interface PerspectivePreviewProps {
 }
 
 /**
- * Altura maxima de la previsualizacion.
+ * Altura de la previsualizacion.
  *
  * Deliberadamente pequena. Quien manda en esta pantalla es la imagen con las
  * esquinas encima, que es donde se trabaja; esto es una comprobacion, y una
  * comprobacion que le robe sitio al trabajo esta mal dimensionada.
+ *
+ * Y FIJA, no un maximo, aunque el lienzo de dentro siga ajustandose a la forma
+ * del papel. El alto de este bloque le quitaba o le daba sitio a la imagen de
+ * arriba, que ocupa lo que sobra; asi que al soltar una esquina la previa
+ * cambiaba de alto, la imagen de arriba se volvia a medir, y con la medida nueva
+ * el recorte se rehacia. Un bloque de alto fijo no puede realimentar nada.
  */
-const MAX_PREVIEW_HEIGHT = 140;
+const PREVIEW_HEIGHT = 140;
 
 /**
  * Muestra como quedara el registro una vez enderezado.
@@ -130,11 +136,11 @@ function RectifiedCanvas({ image, matrix, source, layout }: RectifiedCanvasProps
 function computeLayout(quad: Quad, availableWidth: number): Size {
   const rectified = estimateRectifiedSize(quad);
   if (rectified.width === 0 || rectified.height === 0) {
-    return { width: availableWidth, height: MAX_PREVIEW_HEIGHT };
+    return { width: availableWidth, height: PREVIEW_HEIGHT };
   }
 
   const aspect = rectified.width / rectified.height;
-  const height = Math.min(availableWidth / aspect, MAX_PREVIEW_HEIGHT);
+  const height = Math.min(availableWidth / aspect, PREVIEW_HEIGHT);
 
   return { width: height * aspect, height };
 }
@@ -146,6 +152,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: gap.xl,
+    height: PREVIEW_HEIGHT,
   },
 });
