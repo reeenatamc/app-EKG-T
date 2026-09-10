@@ -76,3 +76,29 @@ describe('computeViewerLayout', () => {
     expect(half.scale.pixelsPerMm).toBeCloseTo(standard.scale.pixelsPerMm * 2);
   });
 });
+
+describe('identidad de las celdas', () => {
+  // De donde sale: en un 3x4 con tira de ritmo, la derivacion de la tira aparece
+  // dos veces -- en su celda de la rejilla y abajo, entera-- y las dos empiezan
+  // en el segundo cero. Identificarlas solo por derivacion y comienzo las hacia
+  // indistinguibles, React avisaba de dos hijos con la misma clave, y al
+  // redibujar podia confundir una con otra.
+  const MOUNTS = ['standard-3x4', 'rhythm-3x4', 'right-3x3', 'six-2', 'twelve-1'] as const;
+
+  it.each(MOUNTS)('en %s, derivacion, comienzo y fila distinguen cada celda', (mount) => {
+    const { cells } = computeViewerLayout(mount, WIDTH, STANDARD_CALIBRATION);
+    const identities = cells.map((cell) => `${cell.lead}-${cell.fromSecond}-${cell.y}`);
+
+    expect(new Set(identities).size).toBe(cells.length);
+  });
+
+  it('en un 3x4 con tira, la derivacion de la tira sale dos veces', () => {
+    // La razon de ser del test de arriba, fijada aparte para que se vea que el
+    // caso existe y no es teorico.
+    const { cells } = computeViewerLayout('rhythm-3x4', WIDTH, STANDARD_CALIBRATION);
+    const repeated = cells.filter((cell) => cell.lead === 'II');
+
+    expect(repeated).toHaveLength(2);
+    expect(repeated.every((cell) => cell.fromSecond === 0)).toBe(true);
+  });
+});

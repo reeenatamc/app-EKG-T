@@ -22,6 +22,13 @@ const PERCENT = 100;
  * verde aqui convertirian una sugerencia en un veredicto, ademas de invadir la
  * paleta de alarma de §12.
  *
+ * LAS DERIVACIONES NO SE PINTAN POR FILA, y no por ahorrar sitio. El pipeline
+ * las calcula una vez para la lectura entera y se las pone iguales a todas las
+ * observaciones -- «which leads the reading actually rests on», dice-- porque el
+ * modelo no localiza hallazgos: recibe una senal y devuelve puntuaciones, sin
+ * saber en cual se ve cada cosa. Repetir las mismas tres en cada fila insinuaba
+ * una diferencia que no existe. Se dicen una vez, arriba, junto al foco.
+ *
  * La confianza se muestra porque una observacion al 60% y otra al 95% no piden
  * la misma atencion, y ocultarlo seria decidir por el clinico.
  *
@@ -51,8 +58,7 @@ export function ObservationList({ observations }: ObservationListProps) {
           <Text style={[type.body, { color: theme.textHigh }]}>{observation.label}</Text>
 
           <Text style={[type.caption, { color: theme.textLow }]}>
-            {observation.leads.join(' · ')} — {Math.round(observation.confidence * PERCENT)}%{' '}
-            {STUDY_TEXT.confidenceLabel}
+            {Math.round(observation.confidence * PERCENT)}% {STUDY_TEXT.confidenceLabel}
           </Text>
 
           <Text style={[type.caption, { color: theme.textHigh }]}>

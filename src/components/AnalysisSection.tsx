@@ -1,9 +1,12 @@
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
 import { ActionButton } from '@/components/ActionButton';
 import { MeasurementList } from '@/components/MeasurementList';
 import { ObservationList } from '@/components/ObservationList';
+import { presentLeads } from '@/ecg/leads';
+import type { EcgSignal, LeadName } from '@/ecg/signal';
 import { ProcessingIndicator } from '@/components/ProcessingIndicator';
 import { SettingsSection } from '@/components/SettingsSection';
 import { TwelveLeadViewer } from '@/components/TwelveLeadViewer';
@@ -14,7 +17,7 @@ import {
   STUDY_TEXT,
 } from '@/constants/studyText';
 import { useAnalyses } from '@/ecg/analyses';
-import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
+import type { EcgAnalysis, EcgObservation } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
 import { gap, radius } from '@/design/tokens';
 import { type } from '@/design/type';
@@ -54,18 +57,114 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
   return <ReadyAnalysis study={study} analysis={analysis} />;
 }
 
-/** Trazado, medidas y observaciones de un estudio ya procesado. */
+/**
+ * Las derivaciones de las que sale la lectura.
+ *
+ * Se unen las de todas las observaciones porque el pipeline se las pone iguales
+ * a todas: las calcula una vez para la lectura entera. El modelo no localiza
+ * hallazgos -- recibe una senal y devuelve puntuaciones-- asi que no hay forma de
+ * saber en cual se ve cada cosa. La union deja esto correcto si algun dia las
+ * distingue, sin prometerlo hoy.
+ *
+ * @param signal Senal digitalizada, o null si no la hay.
+ * @param observations Observaciones de la lectura.
+ * @returns Las derivaciones presentes, o null si no se puede decir.
+ */
+function readingBasis(
+  signal: EcgSignal | null,
+  observations: readonly EcgObservation[],
+): readonly LeadName[] | null {
+  if (signal === null) {
+    return null;
+  }
+
+  const named = [...new Set(observations.flatMap((observation) => observation.leads))];
+
+  return presentLeads(signal, named);
+}
+
+interface ReadingBasisProps {
+  readonly basis: readonly LeadName[] | null;
+  readonly isShown: boolean;
+  readonly onToggle: () => void;
+}
+
+/**
+ * De donde sale la lectura, y el interruptor para verlo en el trazado.
+ *
+ * UN SOLO INTERRUPTOR, y no una seleccion por observacion. Tocar cada una
+ * sugeriria que cada una lleva a un sitio distinto, y no puede: todas se apoyan
+ * en las mismas derivaciones porque es lo unico que el pipeline sabe decir.
+ *
+ * Y con estado a la vista. Un foco del que solo se sale repitiendo el gesto que
+ * lo encendio obliga a acordarse de cual fue; este dice en su etiqueta lo que
+ * va a hacer.
+ *
+ * @param basis Derivaciones de las que sale la lectura.
+ * @param isShown Cierto si el foco esta puesto.
+ * @param onToggle Encender o apagar el foco.
+ * @returns La linea, o nada si no se puede decir de donde sale.
+ */
+function ReadingBasis({ basis, isShown, onToggle }: ReadingBasisProps) {
+  const theme = useTheme();
+
+  if (basis === null) {
+    return null;
+  }
+
+  return (
+    <View style={styles.basis}>
+      <Text style={[type.caption, { color: theme.textLow }]}>
+        {STUDY_TEXT.basisLabel} {basis.join(' · ')}
+      </Text>
+      <ActionButton
+        label={isShown ? STUDY_TEXT.hideBasis : STUDY_TEXT.showBasis}
+        onPress={onToggle}
+        variant="secondary"
+      />
+    </View>
+  );
+}
+
+interface SignalViewProps {
+  readonly study: QueuedStudy;
+  readonly signal: EcgSignal | null;
+  readonly focusedLeads: readonly LeadName[] | null;
+}
+
+/** El trazado, con el montaje y la calibracion con que se imprimio. */
+function SignalView({ study, signal, focusedLeads }: SignalViewProps) {
+  if (signal === null) {
+    return null;
+  }
+
+  return (
+    <TwelveLeadViewer
+      signal={signal}
+      mount={study.metadata.mount}
+      calibration={study.metadata.calibration}
+      focusedLeads={focusedLeads}
+    />
+  );
+}
+
+/**
+ * Trazado, medidas y observaciones de un estudio ya procesado.
+ *
+ * TOCAR UNA OBSERVACION LLEVA EL FOCO A SUS DERIVACIONES. El estado vive aqui
+ * porque aqui es donde el visor y la lista son hermanos, y ninguno de los dos
+ * tiene por que saber del otro.
+ */
 function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgAnalysis }) {
+  const [showBasis, setShowBasis] = useState(false);
+
+  const { signal } = analysis;
+  const basis = useMemo(() => readingBasis(signal, analysis.observations), [signal, analysis]);
+
   return (
     <View style={styles.ready}>
       <SettingsSection title={STUDY_TEXT.signalSection}>
-        {analysis.signal === null ? null : (
-          <TwelveLeadViewer
-            signal={analysis.signal}
-            mount={study.metadata.mount}
-            calibration={study.metadata.calibration}
-          />
-        )}
+        <SignalView study={study} signal={signal} focusedLeads={showBasis ? basis : null} />
       </SettingsSection>
 
       {analysis.measurements === null ? null : (
@@ -75,6 +174,11 @@ function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgA
       )}
 
       <SettingsSection title={STUDY_TEXT.observationsSection}>
+        <ReadingBasis
+          basis={basis}
+          isShown={showBasis}
+          onToggle={() => setShowBasis((on) => !on)}
+        />
         <ObservationList observations={analysis.observations} />
       </SettingsSection>
     </View>
@@ -124,6 +228,7 @@ function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
 }
 
 const styles = StyleSheet.create({
+  basis: { gap: gap.sm, marginBottom: gap.md },
   ready: { gap: gap.xl },
   failure: { padding: gap.lg, borderRadius: radius.tile, gap: gap.xs },
   // En fila para que el boton no se estire al ancho de la tarjeta: dentro de un

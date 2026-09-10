@@ -273,6 +273,19 @@ export const opacity = {
    */
   bloom: 0.3,
   disabled: 0.35,
+  /**
+   * Derivación fuera de foco en el visor.
+   *
+   * NO ES `disabled`. Una derivación atenuada no está desactivada ni fuera de
+   * juego: sigue siendo señal registrada del mismo paciente, y hay que poder
+   * leerla para saber que el trazado está completo. Lo único que dice este
+   * valor es «la observación que estás mirando no se apoya en esta».
+   *
+   * Por eso queda por encima de la retícula ambiente y por debajo de lo
+   * desactivado: bastante contraste para seguir el trazo, bastante diferencia
+   * para que el ojo vaya solo a las que importan.
+   */
+  leadUnfocused: 0.25,
   pressed: 0.7,
   /**
    * Guia de encuadre mientras se busca el encuadre.

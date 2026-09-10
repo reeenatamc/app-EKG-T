@@ -13,7 +13,7 @@
  */
 
 import type { MountId } from '@/camera/mounts';
-import type { LeadName } from '@/ecg/signal';
+import type { EcgSignal, LeadName } from '@/ecg/signal';
 
 /** Duracion estandar de un registro de doce derivaciones. */
 export const RECORD_SECONDS = 10;
@@ -100,4 +100,25 @@ function fromColumns(columns: readonly (readonly LeadName[])[]): readonly LeadPl
       durationSeconds,
     })),
   );
+}
+
+/**
+ * Las derivaciones de una observacion que la senal trae de verdad.
+ *
+ * Se cruzan las dos listas en lugar de confiar en los nombres que da la
+ * observacion: el modelo nombra la derivacion en la que se apoya, pero puede
+ * nombrar una que la digitalizacion no recupero. Enfocar sobre una derivacion
+ * ausente atenuaria el trazado entero y pareceria que la aplicacion se apago.
+ *
+ * @param signal Senal digitalizada.
+ * @param named Nombres que da la observacion.
+ * @returns Las presentes, o null si no queda ninguna.
+ */
+export function presentLeads(
+  signal: EcgSignal,
+  named: readonly string[],
+): readonly LeadName[] | null {
+  const present = signal.leads.map((lead) => lead.name).filter((name) => named.includes(name));
+
+  return present.length === 0 ? null : present;
 }

@@ -23,6 +23,18 @@ export const STUDY_TEXT = {
     'Lo que sigue es una lectura automatica de la imagen, no un diagnostico. Confirmalo con el trazado y con el paciente.',
   observationNeedsReview: 'Requiere confirmacion',
   confidenceLabel: 'confianza',
+  /**
+   * De donde sale la lectura.
+   *
+   * El modelo no localiza hallazgos: recibe una senal y devuelve puntuaciones,
+   * sin saber en cual se ve cada cosa. Lo unico que se puede decir es de que
+   * derivaciones salio la lectura entera, y en un 3x4 eso son las tiras de
+   * ritmo: tres de las doce. Ensenarlo hace visible un limite que si no lo es.
+   */
+  basisLabel: 'La lectura sale de',
+  showBasis: 'Ver en cuáles se apoya',
+  hideBasis: 'Ver el trazado completo',
+
   noObservations: 'No se ha observado nada destacable. Revisa el trazado igualmente.',
   notesPlaceholder: 'Lo que quieras recordar de este estudio',
   notesHint: 'Se guardan solo en este dispositivo. No escribas datos que identifiquen al paciente.',
