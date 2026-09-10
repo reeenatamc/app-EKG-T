@@ -22,12 +22,30 @@ import type { CapturedPhoto } from '@/camera/capturePhoto';
 /**
  * Fraccion del borde que se deja fuera del cuadrilatero inicial.
  *
- * En una foto importada nadie encuadro con la guia, asi que no hay marco que
- * heredar. Empezar un poco por dentro del borde deja las cuatro esquinas a la
- * vista y arrastrables desde el primer momento, en lugar de pegadas al canto de
- * la pantalla.
+ * CERO: el recorte de partida es la imagen entera. En una foto importada nadie
+ * encuadro con la guia, y una imagen importada suele venir ya recortada al
+ * electrocardiograma, asi que empezar por dentro corta señal antes de que nadie
+ * toque nada.
+ *
+ * Empezaba en 0.1 para que las esquinas no quedasen pegadas al canto de la
+ * pantalla y se pudieran agarrar. El problema que resolvia es real, pero es de
+ * pantalla y estaba escrito en fraccion de imagen: el tirador mide 44 px y asoma
+ * 22 fuera de la esquina, contra los 16 de margen de la pantalla de revision, o
+ * sea seis pixeles de asomo. Para tapar seis se recortaba el diez por ciento de
+ * la imagen: 180 px por lado en un ECG de 1800, y 400 en uno de 4000, porque
+ * cuanto mejor era la foto mas se comia.
+ *
+ * Medido: la misma imagen importada perdia las seis derivaciones de los miembros
+ * y el digitalizador la leia como un `precordial_6x1`, mientras que fotografiada
+ * con la camara salia `standard_3x4_with_r3` y sin un solo aviso.
+ *
+ * Lo que se paga a cambio son esos seis pixeles del anillo exterior del tirador,
+ * asomando por el borde. El circulo interior, que es lo que se ve y se busca con
+ * el dedo, mide 18 px y queda entero dentro. Entre incluir fondo de mas y cortar
+ * el electrocardiograma, lo primero lo arregla el digitalizador solo y lo segundo
+ * pierde derivaciones sin decirlo.
  */
-const INITIAL_INSET_RATIO = 0.1;
+const INITIAL_INSET_RATIO = 0;
 
 /**
  * Pide una imagen de la galeria y la deja lista para revisar.
