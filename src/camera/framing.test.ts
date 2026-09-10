@@ -2,6 +2,8 @@ import {
   computeContainRect,
   computeCropRegion,
   computeFrameRect,
+  sameRect,
+  type Rect,
   type Size,
 } from '@/camera/framing';
 
@@ -140,5 +142,31 @@ describe('computeContainRect', () => {
       width: 0,
       height: 0,
     });
+  });
+});
+
+describe('sameRect', () => {
+  const rect: Rect = { x: 10, y: 20, width: 300, height: 400 };
+
+  it('DOS OBJETOS DISTINTOS CON LOS MISMOS NUMEROS SON EL MISMO SITIO', () => {
+    // Es toda la razon de existir de la funcion. Medir el contenedor devuelve un
+    // objeto nuevo aunque no se haya movido nada, y compararlo por identidad
+    // hacia que el recorte se reiniciase solo al soltar una esquina.
+    expect(sameRect(rect, { ...rect })).toBe(true);
+  });
+
+  it('distingue un cambio en cualquiera de los cuatro numeros', () => {
+    expect(sameRect(rect, { ...rect, x: 11 })).toBe(false);
+    expect(sameRect(rect, { ...rect, y: 21 })).toBe(false);
+    expect(sameRect(rect, { ...rect, width: 301 })).toBe(false);
+    expect(sameRect(rect, { ...rect, height: 401 })).toBe(false);
+  });
+
+  it('dos nulos son lo mismo, y un nulo no es un rectangulo', () => {
+    // El nulo es "todavia no se ha medido". Tratarlo como igual a un rectangulo
+    // dejaria las esquinas sin colocar la primera vez.
+    expect(sameRect(null, null)).toBe(true);
+    expect(sameRect(null, rect)).toBe(false);
+    expect(sameRect(rect, null)).toBe(false);
   });
 });

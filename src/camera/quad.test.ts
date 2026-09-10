@@ -4,6 +4,7 @@ import {
   isConvexQuad,
   quadBounds,
   rectToQuad,
+  remapPointBetweenRects,
   scaleQuad,
   translateQuadToOrigin,
   type Quad,
@@ -120,5 +121,43 @@ describe('scaleQuad', () => {
 
     expect(scaled[0]).toEqual({ x: 25, y: 25 });
     expect(scaled[2]).toEqual({ x: 275, y: 275 });
+  });
+});
+
+describe('remapPointBetweenRects', () => {
+  const from = { x: 0, y: 0, width: 100, height: 100 };
+
+  it('conserva la posicion relativa cuando el area cambia de tamano', () => {
+    // Es lo que salva un recorte ya ajustado cuando la pantalla se redistribuye:
+    // la esquina sigue apuntando al mismo punto de la fotografia.
+    const to = { x: 0, y: 0, width: 200, height: 50 };
+
+    expect(remapPointBetweenRects({ x: 25, y: 40 }, from, to)).toEqual({ x: 50, y: 20 });
+  });
+
+  it('tiene en cuenta el desplazamiento del origen', () => {
+    const to = { x: 10, y: 5, width: 100, height: 100 };
+
+    expect(remapPointBetweenRects({ x: 30, y: 30 }, from, to)).toEqual({ x: 40, y: 35 });
+  });
+
+  it('un rectangulo identico deja el punto donde estaba', () => {
+    // Con cercania y no con igualdad: dividir y multiplicar por el mismo ancho no
+    // devuelve el numero exacto (7 vuelve como 7.000000000000001). Es deriva de
+    // sub-pixel y no se ve, pero la prueba no debe fingir que no existe. Quien
+    // llama a esto se salta el caso identico antes de llegar aqui, asi que la
+    // deriva no se acumula en un arrastre.
+    const moved = remapPointBetweenRects({ x: 7, y: 9 }, from, { ...from });
+
+    expect(moved.x).toBeCloseTo(7, 9);
+    expect(moved.y).toBeCloseTo(9, 9);
+  });
+
+  it('UN ORIGEN SIN AREA DEVUELVE EL PUNTO TAL CUAL', () => {
+    // Es el estado antes de la primera medida. Dividir por cero daria NaN, y unas
+    // esquinas en NaN no se dibujan: el recorte desapareceria de la pantalla.
+    const empty = { x: 0, y: 0, width: 0, height: 0 };
+
+    expect(remapPointBetweenRects({ x: 7, y: 9 }, empty, from)).toEqual({ x: 7, y: 9 });
   });
 });

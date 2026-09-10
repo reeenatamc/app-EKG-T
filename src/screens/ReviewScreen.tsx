@@ -151,7 +151,20 @@ function useReviewState(photo: CapturedPhoto): ReviewState {
     corners,
     isValid,
     previewQuad: adjusted ?? rectToQuad(initialRect),
-    measure: (event) => setContainer(event.nativeEvent.layout),
+    // Se ignora una medida que no cambia nada. onLayout se dispara tambien
+    // cuando la previa enderezada de debajo cambia de alto, y devuelve un
+    // objeto nuevo cada vez: guardarlo tal cual renderizaba de nuevo toda la
+    // pantalla por nada, y arrastraba consigo el recolocado de las esquinas.
+    // Devolver el anterior hace que React se ahorre la actualizacion entera.
+    measure: (event) => {
+      const { width, height } = event.nativeEvent.layout;
+
+      setContainer((previous) =>
+        previous !== null && previous.width === width && previous.height === height
+          ? previous
+          : { width, height },
+      );
+    },
     settle: () => setAdjusted(read()),
     resetCorners: () => {
       reset();

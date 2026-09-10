@@ -218,6 +218,38 @@ export function scaleQuad(quad: Quad, factor: number): Quad {
 }
 
 /**
+ * Lleva un punto de un rectangulo a la misma posicion relativa en otro.
+ *
+ * Existe para que un cambio de tamano del contenedor no borre un recorte ya
+ * ajustado. Las esquinas viven en puntos de pantalla, asi que cuando el area
+ * donde se dibuja la foto cambia de tamano sus coordenadas viejas apuntan a otro
+ * sitio de la imagen. Recolocarlas en el rectangulo de partida seria tirar el
+ * ajuste del usuario; llevarlas a la posicion equivalente lo conserva.
+ *
+ * La correspondencia es la misma que preserva el recorte en pixeles de la foto:
+ * el area dibujada y el marco de partida se derivan los dos linealmente de la
+ * medida del contenedor, asi que reescalar respecto a uno o al otro da lo mismo.
+ *
+ * Un rectangulo de partida sin area no define ninguna proporcion, y entonces se
+ * devuelve el punto tal cual: no hay nada que conservar y dividir daria infinito.
+ *
+ * @param point Punto en coordenadas de `from`.
+ * @param from Rectangulo de origen.
+ * @param to Rectangulo de destino.
+ * @returns El punto equivalente en coordenadas de `to`.
+ */
+export function remapPointBetweenRects(point: Point, from: Rect, to: Rect): Point {
+  if (from.width === 0 || from.height === 0) {
+    return point;
+  }
+
+  return {
+    x: to.x + ((point.x - from.x) / from.width) * to.width,
+    y: to.y + ((point.y - from.y) / from.height) * to.height,
+  };
+}
+
+/**
  * Aplica una transformacion a las cuatro esquinas conservando el tipo tupla.
  *
  * Array.map devolveria Point[], que pierde la garantia de que hay exactamente

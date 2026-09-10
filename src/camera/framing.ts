@@ -84,6 +84,26 @@ export function computeFrameRect(
 }
 
 /**
+ * Cierto si dos rectangulos ocupan el mismo sitio.
+ *
+ * Por valor y no por identidad, y esa es toda la razon de existir de esta
+ * funcion. Un rectangulo derivado de una medida del contenedor es un objeto
+ * nuevo cada vez que se mide, aunque el contenedor no se haya movido un pixel;
+ * quien lo use como dependencia de un efecto lo vera cambiar constantemente.
+ *
+ * @param a Un rectangulo, o null.
+ * @param b Otro rectangulo, o null.
+ * @returns Cierto si ambos son null o describen la misma region.
+ */
+export function sameRect(a: Rect | null, b: Rect | null): boolean {
+  if (a === null || b === null) {
+    return a === b;
+  }
+
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+}
+
+/**
  * Coloca un contenido dentro de un contenedor sin recortarlo ni deformarlo.
  *
  * Es la transformacion inversa de la que aplica computeCropRegion: alli la capa
