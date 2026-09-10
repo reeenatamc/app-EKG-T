@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { mockUploadService } from '@/capture/MockUploadService';
+import { httpUploadService } from '@/capture/HttpUploadService';
 import {
   enqueue,
   markFailed,
@@ -11,6 +11,7 @@ import {
   nextPending,
   remove,
   retry,
+  retryAllFailed,
 } from '@/capture/queue';
 import type { QueuedStudy } from '@/capture/study';
 import { deleteOrphanImages, deleteStudyImage } from '@/capture/studyFiles';
@@ -36,7 +37,7 @@ import type { UploadService } from '@/capture/UploadService';
  * Es una variable de modulo y no una inyeccion por parametro porque la cola es
  * un singleton: sustituirlo en la Etapa 5 es cambiar esta linea.
  */
-const uploadService: UploadService = mockUploadService;
+const uploadService: UploadService = httpUploadService;
 
 /**
  * Cierre para que dos vaciados no corran a la vez.
@@ -74,7 +75,7 @@ async function send(study: QueuedStudy, apply: ApplyChange): Promise<void> {
   // sin nadie que la reclamase, y es la foto de un paciente. En este orden, lo
   // peor que puede pasar es repetir un envio.
   deleteStudyImage(study.imageUri);
-  apply((studies) => markUploaded(studies, study.id));
+  apply((studies) => markUploaded(studies, study.id, result.value.remoteId));
 }
 
 /**
@@ -125,8 +126,24 @@ interface UploadQueueState {
   readonly drain: () => Promise<void>;
   /** Devuelve un estudio fallido a la cola por peticion del usuario. */
   readonly retryStudy: (id: string) => void;
+  /**
+   * Reintenta todo lo que quedo sin enviar, fallidos incluidos.
+   *
+   * Es lo que hace el gesto de deslizar hacia abajo, y por eso no es lo mismo
+   * que `drain`: aquel es automatico y no resucita nada, este lo pide el
+   * usuario.
+   */
+  readonly refresh: () => Promise<void>;
   /** Descarta un estudio y borra su imagen. */
   readonly discard: (id: string) => void;
+  /**
+   * Vacia la cola y borra todas las imagenes del dispositivo.
+   *
+   * Es lo que hace cerrar sesion. Lo que ya se envio vive en el servidor, a
+   * nombre de quien lo envio; lo que no, se pierde, y por eso la pantalla avisa
+   * antes de dejar cerrar con estudios pendientes.
+   */
+  readonly clearAll: () => void;
 }
 
 export const useUploadQueue = create<UploadQueueState>()(
@@ -148,7 +165,15 @@ export const useUploadQueue = create<UploadQueueState>()(
           apply((studies) => retry(studies, id));
           void get().drain();
         },
+        refresh: () => {
+          apply(retryAllFailed);
+          return get().drain();
+        },
         discard: (id) => discardStudy(id, read, apply),
+        clearAll: () => {
+          read().forEach((study) => deleteStudyImage(study.imageUri));
+          apply(() => []);
+        },
       };
     },
     {
@@ -167,9 +192,16 @@ export const useUploadQueue = create<UploadQueueState>()(
 
         return {
           ...current,
-          studies: stored.map((study) =>
-            study.status === 'uploading' ? { ...study, status: 'pending' as const } : study,
-          ),
+          studies: stored.map((study) => ({
+            ...study,
+            status: study.status === 'uploading' ? ('pending' as const) : study.status,
+
+            // Los estudios guardados antes de que existiera este campo lo leen
+            // como undefined, y el tipo dice `string | null`. Se normaliza aqui,
+            // al entrar, para que ninguna pantalla tenga que contemplar un tercer
+            // valor que solo existe por la edad del dato.
+            remoteId: study.remoteId ?? null,
+          })),
         };
       },
 

@@ -45,6 +45,7 @@ export function submitStudy(
       quad: image.quad,
     },
     status: 'pending',
+    remoteId: null,
     attempts: 0,
     lastFailure: null,
   };

@@ -2,7 +2,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import { mockAuthService } from '@/auth/MockAuthService';
+import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
 import { useEnterApp } from '@/auth/useEnterApp';
 import { AuthLink } from '@/components/AuthLink';
@@ -30,13 +30,13 @@ export function VerifyScreen() {
   const { isBusy, failureReason, run } = useAuthAction();
   const [code, setCode] = useState('');
 
-  const submit = () => run(() => mockAuthService.verifyCode({ email, code }), enterApp);
+  const submit = () => run(() => authService.verifyCode({ email, code }), enterApp);
 
   // Pide un codigo nuevo de verdad. Un enlace que dice "enviar otro codigo" y
   // solo limpia el campo es interfaz que miente.
   const resend = () =>
     run(
-      () => mockAuthService.requestPasswordReset(email),
+      () => authService.requestPasswordReset(email),
       () => setCode(''),
     );
 

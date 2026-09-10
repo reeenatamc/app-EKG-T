@@ -1,13 +1,17 @@
 import { useRouter } from 'expo-router';
 
 import { useSession } from '@/auth/session';
+import { unresolved } from '@/capture/queue';
+import { useUploadQueue } from '@/capture/uploadQueue';
 import { AccessibilitySettingsSection } from '@/components/AccessibilitySettingsSection';
 import { ActionButton } from '@/components/ActionButton';
 import { AppearanceSettingsSection } from '@/components/AppearanceSettingsSection';
 import { AuthScreenLayout } from '@/components/AuthScreenLayout';
 import { ClinicalSettingsSection } from '@/components/ClinicalSettingsSection';
+import { Notice } from '@/components/Notice';
 import { SettingsSection } from '@/components/SettingsSection';
 import { SETTINGS_TEXT } from '@/constants/shellText';
+import { isAwaiting, useAnalyses } from '@/ecg/analyses';
 import { useGoBack } from '@/shell/useGoBack';
 
 /**
@@ -27,7 +31,21 @@ import { useGoBack } from '@/shell/useGoBack';
 export function SettingsScreen() {
   const router = useRouter();
   const closeSession = useSession((state) => state.close);
+  const studies = useUploadQueue((state) => state.studies);
+  const analyses = useAnalyses((state) => state.byStudy);
   const goBack = useGoBack('/profile');
+
+  // Se avisa, no se impide. Quien cierra sesion en un telefono compartido puede
+  // tener una razon para hacerlo con estudios a medias, y bloquearselo le
+  // dejaria sin salida; lo que no puede pasar es que se entere despues.
+  //
+  // Cuentan las dos formas de quedarse a medias, porque las dos pierden algo:
+  // un estudio sin enviar se pierde entero, y de uno que espera resultado se
+  // pierde el resultado, que el servidor calculara para nadie.
+  const awaiting = studies.some(
+    (study) => study.remoteId !== null && isAwaiting(analyses[study.remoteId]),
+  );
+  const hasPending = unresolved(studies).length > 0 || awaiting;
 
   const signOut = () => {
     void closeSession().then(() => router.replace('/login'));
@@ -40,6 +58,12 @@ export function SettingsScreen() {
       <ClinicalSettingsSection />
 
       <SettingsSection title={SETTINGS_TEXT.accountSection}>
+        {hasPending ? (
+          <Notice
+            title={SETTINGS_TEXT.pendingOnSignOut.title}
+            action={SETTINGS_TEXT.pendingOnSignOut.action}
+          />
+        ) : null}
         <ActionButton label={SETTINGS_TEXT.signOut} onPress={signOut} variant="secondary" />
       </SettingsSection>
     </AuthScreenLayout>

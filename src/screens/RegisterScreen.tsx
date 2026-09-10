@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
 import type { UserRole } from '@/auth/AuthService';
-import { mockAuthService } from '@/auth/MockAuthService';
+import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
 import { AuthLink } from '@/components/AuthLink';
 import { AuthScreenLayout } from '@/components/AuthScreenLayout';
@@ -30,7 +30,7 @@ export function RegisterScreen() {
 
   const submit = () =>
     run(
-      () => mockAuthService.register({ email, password, role }),
+      () => authService.register({ email, password, role }),
       (pending) => router.push({ pathname: '/verify', params: { email: pending.email } }),
     );
 

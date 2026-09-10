@@ -1,5 +1,5 @@
-import { useAnalyses } from '@/ecg/analyses';
-import { cancelMockAnalyses } from '@/ecg/MockEcgAnalysisService';
+import type { AnalysisStatus, EcgAnalysis } from '@/ecg/EcgAnalysisService';
+import { isAwaiting, useAnalyses } from '@/ecg/analyses';
 
 /**
  * Peticion, deduplicacion y reintento del analisis.
@@ -13,13 +13,37 @@ import { cancelMockAnalyses } from '@/ecg/MockEcgAnalysisService';
  * no habia forma de devolver el almacen a su estado inicial entre pruebas.
  */
 
-/** Deja correr las microtareas pendientes de la peticion simulada. */
+/**
+ * El servicio se sustituye a proposito.
+ *
+ * Esta suite prueba la coordinacion del almacen, no de donde salen los datos.
+ * Cuando el almacen paso de la simulacion al servidor siguio en verde, pero por
+ * otro camino: sin credencial en el entorno de pruebas, la peticion devolvia un
+ * analisis fallido al instante y el estado quedaba escrito igual. Verde por el
+ * motivo equivocado. Con el servicio fijado aqui, lo que se prueba no depende de
+ * cual este enchufado.
+ */
+jest.mock('@/ecg/HttpEcgAnalysisService', () => ({
+  httpEcgAnalysisService: {
+    request: jest.fn(async (studyId: string) => ({
+      studyId,
+      status: 'queued',
+      signal: null,
+      measurements: null,
+      observations: [],
+      failure: null,
+      completedAt: null,
+    })),
+    get: jest.fn(async () => null),
+  },
+}));
+
+/** Deja correr las microtareas pendientes de la peticion. */
 function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 afterEach(() => {
-  cancelMockAnalyses();
   useAnalyses.setState({ byStudy: {}, requested: {} });
 });
 
@@ -79,5 +103,35 @@ describe('retry', () => {
 
     expect(useAnalyses.getState().byStudy.b).toBeDefined();
     expect(useAnalyses.getState().requested.b).toBe(true);
+  });
+});
+
+describe('isAwaiting', () => {
+  // Un analisis pedido y sin resolver es lo unico que se pierde de verdad al
+  // cerrar sesion: la imagen vive en el servidor, pero al vaciar el historial la
+  // aplicacion olvida el identificador remoto y ya no hay por donde recogerlo.
+  const analysisWith = (status: AnalysisStatus): EcgAnalysis => ({
+    studyId: 's-1',
+    status,
+    signal: null,
+    measurements: null,
+    observations: [],
+    failure: null,
+    completedAt: null,
+  });
+
+  it('un estudio que nunca se abrio no espera nada', () => {
+    // No se le pidio analisis a nadie, asi que no hay proceso que interrumpir.
+    expect(isAwaiting(undefined)).toBe(false);
+  });
+
+  it('en cola y procesando si esperan', () => {
+    expect(isAwaiting(analysisWith('queued'))).toBe(true);
+    expect(isAwaiting(analysisWith('processing'))).toBe(true);
+  });
+
+  it('listo y fallido ya no esperan nada', () => {
+    expect(isAwaiting(analysisWith('ready'))).toBe(false);
+    expect(isAwaiting(analysisWith('failed'))).toBe(false);
   });
 });

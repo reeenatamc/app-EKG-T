@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { create } from 'zustand';
 
 import type { EcgAnalysis, EcgAnalysisService } from '@/ecg/EcgAnalysisService';
-import { mockEcgAnalysisService } from '@/ecg/MockEcgAnalysisService';
+import { httpEcgAnalysisService } from '@/ecg/HttpEcgAnalysisService';
 
 /**
  * Analisis en curso y terminados.
@@ -20,7 +20,7 @@ import { mockEcgAnalysisService } from '@/ecg/MockEcgAnalysisService';
  * Servicio en uso. Sustituirlo en la Etapa 5 es cambiar esta linea, y ninguna
  * pantalla se entera: todas hablan con EcgAnalysisService.
  */
-const service: EcgAnalysisService = mockEcgAnalysisService;
+const service: EcgAnalysisService = httpEcgAnalysisService;
 
 /** Cada cuanto se pregunta al servidor mientras un analisis no termina. */
 const POLL_INTERVAL_MS = 1000;
@@ -94,6 +94,25 @@ export const useAnalyses = create<AnalysesState>()((set, get) => ({
   },
 }));
 
+/**
+ * Cierto si hay un analisis en marcha del que todavia se espera respuesta.
+ *
+ * Un analisis pedido y sin resolver es lo unico que se pierde de verdad al
+ * cerrar sesion. La imagen no: esa vive en el servidor a nombre de quien la
+ * envio. Lo que se pierde es poder recogerlo, porque al vaciar el historial la
+ * aplicacion olvida el identificador remoto y ya no hay por donde preguntar.
+ *
+ * Un estudio que nunca se abrio no cuenta: no se le pidio analisis a nadie, asi
+ * que no hay proceso que interrumpir. La regla coincide con lo que se ve en
+ * pantalla, que es lo que hace que el aviso se entienda.
+ *
+ * @param analysis Analisis del estudio, o undefined si no se pidio.
+ * @returns Cierto si se esta esperando su resultado.
+ */
+export function isAwaiting(analysis: EcgAnalysis | undefined): boolean {
+  return analysis !== undefined && !isSettled(analysis);
+}
+
 /** Cierto cuando el analisis ya no va a cambiar solo. */
 function isSettled(analysis: EcgAnalysis | undefined): boolean {
   return analysis?.status === 'ready' || analysis?.status === 'failed';
@@ -106,22 +125,29 @@ function isSettled(analysis: EcgAnalysis | undefined): boolean {
  * para solo: un intervalo que sigue vivo despues de que el estudio este listo es
  * bateria y datos gastados en preguntar algo que ya se sabe.
  *
- * @param studyId Identificador del estudio.
+ * SE PIDE POR EL IDENTIFICADOR DEL SERVIDOR, no por el del dispositivo: es el
+ * unico que el servidor conoce. Un estudio que todavia no se ha enviado no
+ * tiene ninguno, y entonces aqui no se pide ni se sondea nada, porque no hay a
+ * quien preguntar.
+ *
+ * @param studyId Identificador remoto del estudio, o null si aun no se envio.
  * @returns El analisis, o undefined mientras no haya llegado el primero.
  */
-export function useAnalysis(studyId: string): EcgAnalysis | undefined {
-  const analysis = useAnalyses((state) => state.byStudy[studyId]);
+export function useAnalysis(studyId: string | null): EcgAnalysis | undefined {
+  const analysis = useAnalyses((state) => (studyId === null ? undefined : state.byStudy[studyId]));
   const request = useAnalyses((state) => state.request);
   const refresh = useAnalyses((state) => state.refresh);
 
   useEffect(() => {
-    request(studyId);
+    if (studyId !== null) {
+      request(studyId);
+    }
   }, [request, studyId]);
 
   const settled = isSettled(analysis);
 
   useEffect(() => {
-    if (settled) {
+    if (settled || studyId === null) {
       return;
     }
 

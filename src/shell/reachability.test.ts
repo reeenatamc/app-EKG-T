@@ -16,10 +16,18 @@ import { join } from 'node:path';
  * de comprobar dos nombres a mano: la proxima accion que se anada al almacen y
  * se olvide de conectar rompe la suite el mismo dia.
  *
- * QUE CUENTA COMO CONSUMO. Que la accion se lea por selector, o sea
+ * QUE CUENTA COMO CONSUMO. Dos formas, y solo dos. La primera es el selector,
+ * o sea
  * `state.<nombre>`, que es la unica forma en que la usa quien esta fuera del
  * creador. Dentro del creador un almacen se llama a si mismo con `get().<algo>`,
  * asi que esa forma no cuenta y el guardia no se enmascara solo.
+ *
+ * La segunda es `getState().<nombre>`, que es como lee un almacen quien no es
+ * un componente. Cerrar sesion vacia la cola de subida desde `session.ts`, que
+ * no es React y no tiene selectores; esa puerta es tan puerta como un boton, y
+ * exigirle la forma de las pantallas obligaria a mover la decision a una de
+ * ellas, dejando sin limpiar cualquier otro camino que cierre sesion. Tampoco
+ * afloja el guardia: para llamarse a si mismo un almacen usa `get()`.
  *
  * No se exige que el consumidor este en OTRO archivo: `analyses.ts` alberga a
  * proposito el gancho que sondea —una pantalla montada dos veces no debe abrir
@@ -95,7 +103,9 @@ describe.each(STORES)('acciones de $file', ({ file, state }) => {
   });
 
   it.each(names)('%s se consume por selector', (name) => {
-    const isConsumed = consumers.some((code) => code.includes(`state.${name}`));
+    const isConsumed = consumers.some(
+      (code) => code.includes(`state.${name}`) || code.includes(`getState().${name}`),
+    );
 
     expect(isConsumed).toBe(true);
   });

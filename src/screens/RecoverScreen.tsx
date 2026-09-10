@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import { mockAuthService } from '@/auth/MockAuthService';
+import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
 import { AuthLink } from '@/components/AuthLink';
 import { AuthScreenLayout } from '@/components/AuthScreenLayout';
@@ -26,7 +26,7 @@ export function RecoverScreen() {
 
   const submit = () =>
     run(
-      () => mockAuthService.requestPasswordReset(email),
+      () => authService.requestPasswordReset(email),
       (pending) => router.push({ pathname: '/verify', params: { email: pending.email } }),
     );
 

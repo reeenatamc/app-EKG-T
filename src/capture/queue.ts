@@ -70,14 +70,29 @@ export function markUploading(queue: readonly QueuedStudy[], id: string): readon
 }
 
 /**
- * Marca un estudio como subido.
+ * Marca un estudio como subido y guarda el identificador que dio el servidor.
+ *
+ * El identificador remoto se guarda AQUI y no en otro sitio porque este es el
+ * unico momento en que existe: llega en el acuse de recibo y no vuelve a estar
+ * disponible. Sin el no se puede pedir el analisis, que el servidor indexa por
+ * el suyo y no por el del dispositivo.
  *
  * @param queue Cola actual.
- * @param id Identificador del estudio.
+ * @param id Identificador local del estudio.
+ * @param remoteId Identificador que asigno el servidor.
  * @returns La cola actualizada.
  */
-export function markUploaded(queue: readonly QueuedStudy[], id: string): readonly QueuedStudy[] {
-  return update(queue, id, (study) => ({ ...study, status: 'uploaded', lastFailure: null }));
+export function markUploaded(
+  queue: readonly QueuedStudy[],
+  id: string,
+  remoteId: string,
+): readonly QueuedStudy[] {
+  return update(queue, id, (study) => ({
+    ...study,
+    status: 'uploaded',
+    remoteId,
+    lastFailure: null,
+  }));
 }
 
 /**
@@ -114,6 +129,31 @@ export function retry(queue: readonly QueuedStudy[], id: string): readonly Queue
     attempts: 0,
     lastFailure: null,
   }));
+}
+
+/**
+ * Devuelve a la cola todos los estudios fallidos.
+ *
+ * Es el gesto de deslizar hacia abajo, que existe para «acabo de recuperar
+ * senal, intentalo ya». Los estudios que fallaron por falta de cobertura son
+ * justo los que ese gesto quiere reintentar, y son los unicos a los que no
+ * llegaba: `nextPending` solo mira los pendientes, asi que la cola se recorria
+ * entera sin encontrar nada y el gesto no hacia nada ni lo decia.
+ *
+ * Reinicia el contador de intentos por el mismo motivo que `retry`: quien hace
+ * el gesto ha cambiado algo. El vaciado automatico -- al volver la aplicacion al
+ * primer plano -- no pasa por aqui y sigue sin resucitar nada, que es lo que
+ * impide que un estudio imposible se reintente sin fin.
+ *
+ * @param queue Cola actual.
+ * @returns La cola con los fallidos de vuelta a pendientes.
+ */
+export function retryAllFailed(queue: readonly QueuedStudy[]): readonly QueuedStudy[] {
+  return queue.map((study) =>
+    study.status === 'failed'
+      ? { ...study, status: 'pending' as const, attempts: 0, lastFailure: null }
+      : study,
+  );
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   nextPending,
   remove,
   retry,
+  retryAllFailed,
   unresolved,
 } from '@/capture/queue';
 import { STANDARD_CALIBRATION, type QueuedStudy, type StudyStatus } from '@/capture/study';
@@ -15,6 +16,7 @@ import { rectToQuad } from '@/camera/quad';
 function studyWith(id: string, status: StudyStatus = 'pending', attempts = 0): QueuedStudy {
   return {
     id,
+    remoteId: null,
     imageUri: `file:///studies/${id}.jpg`,
     imageWidth: 3000,
     imageHeight: 2000,
@@ -100,13 +102,64 @@ describe('retry', () => {
   });
 });
 
+describe('retryAllFailed', () => {
+  // Es el gesto de deslizar hacia abajo: «acabo de recuperar senal, intentalo
+  // ya». Los fallidos son justo los que ese gesto quiere mover, y eran los
+  // unicos a los que no llegaba.
+  it('devuelve a la cola todos los estudios fallidos', () => {
+    const queue = [studyWith('a', 'failed', 3), studyWith('b', 'failed', 3)];
+
+    expect(retryAllFailed(queue).map((study) => study.status)).toEqual(['pending', 'pending']);
+  });
+
+  it('les devuelve la tanda completa de intentos automaticos', () => {
+    // Por el mismo motivo que `retry`: quien hace el gesto ha cambiado algo.
+    const queue = [studyWith('a', 'failed', MAX_AUTOMATIC_ATTEMPTS)];
+
+    expect(retryAllFailed(queue)[0]?.attempts).toBe(0);
+  });
+
+  it('no toca los que no han fallado', () => {
+    const queue = [
+      studyWith('a', 'uploaded'),
+      studyWith('b', 'uploading', 1),
+      studyWith('c', 'pending', 2),
+    ];
+
+    expect(retryAllFailed(queue)).toEqual(queue);
+  });
+
+  it('un estudio revivido vuelve a ser elegible para envio', () => {
+    // La consecuencia que importa: antes de esto, nextPending recorria la cola
+    // entera sin encontrar nada y el gesto no hacia nada ni lo decia.
+    const queue = [studyWith('a', 'failed', MAX_AUTOMATIC_ATTEMPTS)];
+
+    expect(nextPending(queue)).toBeNull();
+    expect(nextPending(retryAllFailed(queue))?.id).toBe('a');
+  });
+});
+
 describe('markUploaded', () => {
   it('limpia el ultimo fallo al conseguirlo', () => {
     const failed = markFailed([studyWith('a', 'uploading', 1)], 'a', 'server-error');
-    const queue = markUploaded(failed, 'a');
+    const queue = markUploaded(failed, 'a', 'remoto-1');
 
     expect(queue[0]?.status).toBe('uploaded');
     expect(queue[0]?.lastFailure).toBeNull();
+  });
+
+  it('GUARDA EL IDENTIFICADOR QUE DIO EL SERVIDOR', () => {
+    // Es el unico momento en que existe: llega en el acuse de recibo y no
+    // vuelve. Sin el, la aplicacion pide el analisis con su propio
+    // identificador, el servidor responde 404, y el estudio aparece como no
+    // procesable sin que nada insinue que se le pregunto por otra cosa.
+    const queue = markUploaded([studyWith('a', 'uploading', 1)], 'a', 'remoto-1');
+
+    expect(queue[0]?.remoteId).toBe('remoto-1');
+  });
+
+  it('un estudio sin enviar no tiene identificador remoto', () => {
+    expect(studyWith('a').remoteId).toBeNull();
   });
 });
 
