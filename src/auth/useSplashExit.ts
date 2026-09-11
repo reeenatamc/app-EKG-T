@@ -16,16 +16,17 @@ import { motion } from '@/design/tokens';
  * pantalla. Lo que se veia era un destello, que se lee como un salto y no como
  * una entrada.
  *
- * No es un numero elegido a ojo: es lo que dura la animacion del latido mas el
- * tiempo de ver el trazo ya completo antes de que se disuelva. Rematar el gesto
- * es lo que hace que la entrada se sienta tranquila en lugar de apresurada.
+ * No es un numero elegido a ojo: el latido tarda 1800 ms en dibujarse, y a eso se
+ * le suman 800 para ver el trazo ya completo antes de que empiece a disolverse.
+ * Rematar el gesto es lo que hace que la entrada se sienta tranquila en lugar de
+ * apresurada.
  *
  * SE PAGA CON ESPERA. La aplicacion tarda ~0,8 s mas en estar disponible, y eso
  * es tiempo real del usuario cada vez que abre. Se acepta porque es la unica
  * pantalla de la aplicacion que no hace nada mas, y porque por debajo el trabajo
  * de arranque ya termino: lo que se espera es la animacion, no el sistema.
  */
-const MIN_VISIBLE_MS = 1400;
+const MIN_VISIBLE_MS = 2600;
 
 /**
  * Salida del splash hacia su destino.

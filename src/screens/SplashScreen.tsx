@@ -5,13 +5,19 @@ import { useBootDestination } from '@/auth/useBootDestination';
 import { useSplashExit } from '@/auth/useSplashExit';
 import { SPLASH_TEXT } from '@/constants/authText';
 import { Background } from '@/design/Background';
-import { SplashBeat } from '@/design/SplashBeat';
+import { beatHeightFor, SplashBeat } from '@/design/SplashBeat';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
 
-/** Cuanto tarda el latido en recorrer la pantalla una vez. */
-const BEAT_DURATION_MS = 1000;
+/**
+ * Cuanto tarda el latido en recorrer la pantalla.
+ *
+ * Sin prisa. A mil milisegundos el trazo salia disparado y lo que se percibia
+ * era un destello; a esta velocidad se ve avanzar, que es justo lo que hace que
+ * la entrada se sienta tranquila en vez de apresurada.
+ */
+const BEAT_DURATION_MS = 1800;
 
 /**
  * Fraccion del ancho que ocupa el latido.
@@ -22,10 +28,7 @@ const BEAT_DURATION_MS = 1000;
  * pantalla no tiene interfaz: no hay nada que tocar, nada que leer, nada que
  * decidir. Solo hay que esperar un segundo.
  */
-const BEAT_WIDTH_RATIO = 0.82;
-
-/** Proporcion del latido. Ancho y bajo, como la tira de papel de la que sale. */
-const BEAT_ASPECT = 3.4;
+const BEAT_WIDTH_RATIO = 0.86;
 
 /**
  * La pantalla de arranque.
@@ -59,7 +62,7 @@ export function SplashScreen() {
         <SplashBeat
           durationMs={BEAT_DURATION_MS}
           width={beatWidth}
-          height={Math.round(beatWidth / BEAT_ASPECT)}
+          height={beatHeightFor(beatWidth)}
           color={theme.bloom}
         />
         <View style={styles.brand}>
