@@ -134,6 +134,20 @@ describe('consultar como va', () => {
     expect(await httpEcgAnalysisService.get(STUDY_ID)).toBeNull();
   });
 
+  it('UN TRAZADO INCOMPLETO LLEGA CON SU CAUSA, NO COMO null', async () => {
+    // La causa entro en el contrato, en el tipo y en los textos, pero no en la
+    // lista con la que el adaptador reconoce lo que llega. Asi llegaba como null
+    // y la pantalla contaba el fallo generico: el mensaje nuevo nunca se veia, y
+    // nada fallaba ni avisaba de ello.
+    mockedFetch.mockResolvedValue(
+      responding(200, { ...QUEUED, status: 'failed', failure: 'trace-incomplete' }),
+    );
+
+    const analysis = await httpEcgAnalysisService.get(STUDY_ID);
+
+    expect(analysis?.failure).toBe('trace-incomplete');
+  });
+
   it('un estudio desconocido tambien es null', async () => {
     mockedFetch.mockResolvedValue(responding(404, null));
 

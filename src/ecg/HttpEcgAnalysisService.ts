@@ -27,15 +27,28 @@ import { httpRequest, NetworkUnreachableError, reasonFrom } from '@/net/http';
 
 const STATUSES: readonly AnalysisStatus[] = ['queued', 'processing', 'ready', 'failed'];
 
-const FAILURE_REASONS: readonly AnalysisFailureReason[] = [
-  'unreadable-image',
-  'grid-not-detected',
-  'unsupported-mount',
-  'no-full-length-lead',
-  'network-unreachable',
-  'server-error',
-  'unexpected',
-];
+/**
+ * Toda causa que el contrato conoce, para reconocerla cuando llega.
+ *
+ * UN REGISTRO Y NO UNA LISTA, para que el compilador no deje olvidar ninguna.
+ * Una causa que no esta aqui llega como null y la pantalla cuenta el fallo
+ * generico en lugar del suyo, sin que nada falle ni avise. Paso dos veces:
+ * `no-full-length-lead` hubo que anadirlo a mano, y `trace-incomplete` entro en
+ * el tipo y en los textos pero no aqui, de modo que su mensaje nunca habria
+ * llegado a verse. Con un Record sobre la union, anadir una causa al tipo y no
+ * a este objeto ya no compila.
+ */
+const KNOWN_FAILURES: Record<AnalysisFailureReason, true> = {
+  'unreadable-image': true,
+  'grid-not-detected': true,
+  'trace-incomplete': true,
+  'unsupported-mount': true,
+  'network-unreachable': true,
+  'server-error': true,
+  unexpected: true,
+};
+
+const FAILURE_REASONS = Object.keys(KNOWN_FAILURES) as readonly AnalysisFailureReason[];
 
 const LEAD_NAMES: readonly LeadName[] = [
   'I',

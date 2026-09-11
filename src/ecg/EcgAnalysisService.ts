@@ -28,8 +28,8 @@ export type AnalysisStatus = 'queued' | 'processing' | 'ready' | 'failed';
 export type AnalysisFailureReason =
   | 'unreadable-image'
   | 'grid-not-detected'
+  | 'trace-incomplete'
   | 'unsupported-mount'
-  | 'no-full-length-lead'
   | 'network-unreachable'
   | 'server-error'
   | 'unexpected';

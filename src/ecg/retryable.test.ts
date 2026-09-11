@@ -9,11 +9,14 @@ describe('isWorthRetrying', () => {
     expect(isWorthRetrying('unexpected')).toBe(true);
   });
 
-  it('UNA HOJA SIN DERIVACION COMPLETA NO CAMBIA POR PEDIRLO OTRA VEZ', () => {
+  it('UN TRAZADO INCOMPLETO NO CAMBIA POR PEDIRLO OTRA VEZ', () => {
     // Es el caso que motivo todo esto. Un 3x4 sin tira de ritmo se lee
     // perfectamente y aun asi no da lectura de ritmo, porque no la hay. Salia
     // como "algo fallo, reintentar", y reintentar no podia funcionar nunca.
-    expect(isWorthRetrying('no-full-length-lead')).toBe(false);
+    // Desde que la digitalizacion es reproducible, la misma imagen da el mismo
+    // trazado. Lo que puede cambiar el resultado es una foto nueva, que es un
+    // estudio nuevo, no reintentar este.
+    expect(isWorthRetrying('trace-incomplete')).toBe(false);
   });
 
   it('lo que es propiedad de la fotografia tampoco', () => {
