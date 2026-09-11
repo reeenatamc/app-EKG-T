@@ -271,6 +271,40 @@ Toda desviación respecto de `SKILL.md` se registra aquí con fecha, motivo y
 alternativa descartada. Si algo de la especificación resulta imposible, se
 enmienda la especificación y se anota; nunca se ignora en silencio.
 
+### D-26 · La captura se usa en horizontal, sin desbloquear la pantalla
+
+**2026-09-11 · §12 · hallazgo leyendo expo-camera, y decisión del autor**
+
+#### Por qué había que fotografiar en vertical
+
+La aplicación está bloqueada en vertical, pero en Android expo-camera tiene
+siempre activo un `OrientationEventListener` que gira la foto según la postura
+física (`ExpoCameraView.kt`), y con `exif: false` gira los píxeles de verdad
+(`ResolveTakenPicture.kt`). Con el teléfono en horizontal la foto llegaba apaisada
+mientras el marco se calculaba sobre la vista previa vertical: el recorte caía en
+otro sitio. Además el marco apaisado de un 3x4, dibujado en una pantalla vertical,
+ocupaba un tercio del alto: la hoja salía pequeña.
+
+#### Qué se hizo
+
+- `turn.ts` repite en JavaScript la decisión de Android (misma fórmula, mismo
+  umbral de «plano», mismos cortes que expo-camera). expo-sensors entrega la
+  gravedad con el signo que usa Android internamente, comprobado en
+  `DeviceMotionModule.kt`.
+- Con el teléfono de lado el marco se alarga a lo largo del teléfono, y los textos
+  (`CameraMessages`) y el icono de la galería giran. La pantalla no se desbloquea:
+  habría que recompilar y rediseñar en apaisado, y las cámaras de sistema hacen lo
+  mismo que esto.
+- `planCapture` calcula el recorte en el espacio de la vista previa y lo lleva a la
+  foto girada. El giro que tiene la foto se deduce de su forma y no se da por hecho:
+  si Android no la giró, se gira aquí.
+- La revisión tiene **Girar la imagen**, para el caso que ningún sensor resuelve: el
+  teléfono ya plano sobre la mesa al abrir la cámara, o una imagen de galería.
+
+Verificado en el dispositivo con el giro forzado en código (el teléfono estaba sobre
+la mesa): marco alto, textos girados, foto recortada y enderezada a apaisado, y el
+botón de girar. **Falta probarlo girando el teléfono de verdad.**
+
 ### D-25 · El perfil es una ficha, y la pestaña activa en oscuro deja el carmín
 
 **2026-09-11 · §10, §12.9 · decisión del autor y una medida**

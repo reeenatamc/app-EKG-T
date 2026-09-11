@@ -46,6 +46,15 @@ export const CAMERA_TEXT = {
    */
   shutterFailure: 'La foto no se llegó a tomar. Vuelve a pulsar',
   importFailure: 'No se pudo abrir esa imagen. Prueba con otra',
+  /**
+   * Invitación a girar el teléfono.
+   *
+   * Un registro estándar es apaisado y el sensor del teléfono también: de pie, la
+   * hoja ocupa un tercio del alto de la foto; en horizontal, casi toda. Se dice
+   * mientras el teléfono está de pie y el montaje es apaisado, y desaparece en
+   * cuanto se gira.
+   */
+  sidewaysHint: 'Gira el teléfono en horizontal: sale más grande',
 } as const;
 
 export interface MountCopy {
@@ -172,6 +181,15 @@ export const REVIEW_TEXT = {
   preview: 'Con la perspectiva corregida',
   previewHint: 'Asi quedara el registro una vez enderezado.',
   reset: 'Volver al encuadre',
+  /**
+   * Girar la imagen un cuarto de vuelta.
+   *
+   * La cámara la endereza sola según cómo se sostenía el teléfono, pero con el
+   * teléfono ya plano sobre la mesa desde el principio no hay de dónde saberlo,
+   * y una imagen de galería puede venir de lado. Enviar un registro de lado o
+   * boca abajo es enviar doce derivaciones mal leídas.
+   */
+  rotate: 'Girar la imagen',
   discard: 'Repetir la foto',
   continueAction: 'Continuar',
   imageLabel: 'Fotografia del electrocardiograma con las esquinas ajustables',

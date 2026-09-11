@@ -1,10 +1,11 @@
 import type { CameraView, PictureRef } from 'expo-camera';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 
-import { CAPTURE_MARGIN_RATIO, CROPPED_COMPRESSION } from '@/camera/captureConfig';
+import { CROPPED_COMPRESSION } from '@/camera/captureConfig';
+import { planCapture } from '@/camera/captureRegions';
 import { reportCapturePhases } from '@/camera/captureTimings';
-import { computeCropRegion, type CropRegion, type Rect, type Size } from '@/camera/framing';
-import { expandRect } from '@/camera/quad';
+import type { CropRegion, Rect, Size } from '@/camera/framing';
+import type { QuarterTurn } from '@/camera/turn';
 
 /** Foto recortada al area del marco mas su margen, lista para revisar. */
 /**
@@ -45,6 +46,13 @@ export interface CaptureRequest {
   readonly container: Size;
   /** Marco visible, en coordenadas del contenedor. */
   readonly frame: Rect;
+  /**
+   * Como estaba girado el telefono al disparar.
+   *
+   * Hace falta porque Android gira la foto segun la postura fisica aunque la
+   * aplicacion este bloqueada en vertical. Ver `turn.ts`.
+   */
+  readonly turn: QuarterTurn;
 }
 
 /**
@@ -71,99 +79,42 @@ export async function capturePhoto(request: CaptureRequest): Promise<CapturedPho
   });
   const sensorMs = Date.now() - shutterAt;
 
-  const photoSize: Size = { width: picture.width, height: picture.height };
-  const { region, framedRegion } = computeCaptureRegions(
-    request.container,
-    request.frame,
-    photoSize,
-  );
+  const delivered: Size = { width: picture.width, height: picture.height };
+  const plan = planCapture(request.container, request.frame, delivered, request.turn);
 
   const processingAt = Date.now();
-  const cropped = await cropToRegion(picture, region);
+  const cropped = await cropToRegion(picture, plan.region, plan.clockwise);
   reportCapturePhases(sensorMs, Date.now() - processingAt);
 
-  return { ...cropped, framedRegion };
-}
-
-interface CaptureRegions {
-  /** Region a recortar de la foto: el marco mas su margen. */
-  readonly region: CropRegion;
-  /** El marco original, ya en coordenadas de la region recortada. */
-  readonly framedRegion: Rect;
+  return { ...cropped, framedRegion: plan.framedRegion };
 }
 
 /**
- * Deriva la region a recortar y donde queda el marco dentro de ella.
- *
- * Las dos regiones se calculan con la misma funcion probada, computeCropRegion,
- * en lugar de calcular una y deducir la otra por aritmetica: asi el margen no
- * puede introducir un desfase propio.
- *
- * @param container Tamano del contenedor de la vista previa.
- * @param frame Marco visible en coordenadas del contenedor.
- * @param photo Tamano real de la foto capturada.
- * @returns La region a recortar y la posicion del marco dentro de ella.
- */
-function computeCaptureRegions(container: Size, frame: Rect, photo: Size): CaptureRegions {
-  const containerBounds: Rect = { x: 0, y: 0, ...container };
-  const outer = computeCropRegion({
-    container,
-    frame: expandRect(frame, CAPTURE_MARGIN_RATIO, containerBounds),
-    photo,
-  });
-  const inner = computeCropRegion({ container, frame, photo });
-
-  if (outer.wasClamped) {
-    warnAboutClampedRegion(outer.region, photo);
-  }
-
-  return {
-    region: outer.region,
-    framedRegion: {
-      x: inner.region.originX - outer.region.originX,
-      y: inner.region.originY - outer.region.originY,
-      width: inner.region.width,
-      height: inner.region.height,
-    },
-  };
-}
-
-/**
- * Aplica el recorte y guarda el resultado en el directorio temporal.
+ * Aplica el recorte, lo endereza si hace falta y guarda el resultado en el
+ * directorio temporal.
  *
  * Es la unica codificacion a JPEG de todo el proceso, y actua solo sobre el
- * area recortada, no sobre la foto completa.
+ * area recortada, no sobre la foto completa. El giro va despues del recorte por
+ * lo mismo: girar la foto entera moveria el doble de pixeles para tirar la
+ * mayoria.
  *
  * @param source Referencia a la imagen nativa recien capturada.
  * @param region Region a conservar, en pixeles de la foto.
+ * @param clockwise Grados en sentido horario; cero en el caso normal.
  * @returns La foto recortada.
  * @throws {Error} Si el modulo nativo no puede procesar o escribir la imagen.
  */
 async function cropToRegion(
   source: PictureRef,
   region: CropRegion,
+  clockwise: QuarterTurn,
 ): Promise<Omit<CapturedPhoto, 'framedRegion'>> {
-  const rendered = await ImageManipulator.manipulate(source).crop(region).renderAsync();
+  const context = ImageManipulator.manipulate(source).crop(region);
+  const rendered = await (clockwise === 0 ? context : context.rotate(clockwise)).renderAsync();
   const saved = await rendered.saveAsync({
     format: SaveFormat.JPEG,
     compress: CROPPED_COMPRESSION,
   });
 
   return { uri: saved.uri, source: 'camera', width: saved.width, height: saved.height };
-}
-
-/**
- * Avisa de que la region calculada no cabia en la foto.
- *
- * Que esto ocurra significa que la capa nativa no coloco la vista previa como
- * asume computeCropRegion. La captura sigue adelante con la region ajustada
- * para no bloquear al usuario, pero queda constancia porque el encuadre
- * resultante no sera el que se mostro en pantalla.
- */
-function warnAboutClampedRegion(region: CropRegion, photo: Size): void {
-  console.warn(
-    '[framing] La region de recorte excedia los limites de la foto y se ajusto. ' +
-      'El area capturada puede no coincidir con el marco en este dispositivo.',
-    { regionAplicada: region, tamanoFoto: photo },
-  );
 }

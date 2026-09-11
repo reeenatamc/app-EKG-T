@@ -14,6 +14,7 @@ import {
 import { useQuadCorners, type CornerValues } from '@/camera/useQuadCorners';
 import { ActionButton } from '@/components/ActionButton';
 import { CornerHandles } from '@/components/CornerHandles';
+import { IconButton } from '@/components/IconButton';
 import { Notice } from '@/components/Notice';
 import { PerspectivePreview } from '@/components/PerspectivePreview';
 import { REVIEW_TEXT } from '@/constants/captureText';
@@ -30,6 +31,8 @@ interface ReviewScreenProps {
   /** Cierto si el ultimo intento de recorte no salio. */
   readonly hasCropFailed: boolean;
   readonly onDiscard: () => void;
+  /** Gira la foto un cuarto de vuelta en sentido horario. */
+  readonly onRotate: () => void;
   /** Recibe las esquinas en pixeles de la foto. */
   readonly onConfirm: (quad: Quad) => void;
 }
@@ -46,6 +49,7 @@ interface ReviewScreenProps {
  * @param isCropping Cierto mientras se prepara el recorte.
  * @param hasCropFailed Cierto si el ultimo recorte no salio.
  * @param onDiscard Descarta la foto y vuelve a la captura.
+ * @param onRotate Gira la foto.
  * @param onConfirm Acepta el recorte, con las esquinas en pixeles de la foto.
  * @returns La pantalla de revision.
  */
@@ -54,6 +58,7 @@ export function ReviewScreen({
   isCropping,
   hasCropFailed,
   onDiscard,
+  onRotate,
   onConfirm,
 }: ReviewScreenProps) {
   const review = useReviewState(photo);
@@ -61,7 +66,7 @@ export function ReviewScreen({
 
   return (
     <View style={[styles.container, safe]}>
-      <ReviewHeader source={photo.source} />
+      <ReviewHeader source={photo.source} onRotate={isCropping ? null : onRotate} />
 
       <CropWorkspace uri={photo.uri} review={review} />
 
@@ -114,19 +119,46 @@ function CropWorkspace({ uri, review }: { readonly uri: string; readonly review:
 }
 
 /**
- * Titulo e instruccion de la pantalla.
+ * Titulo e instruccion de la pantalla, y el boton de girar.
  *
- * Los dos dependen de si la imagen se fotografio o se importo: ver reviewCopyFor.
+ * Los textos dependen de si la imagen se fotografio o se importo: ver
+ * reviewCopyFor.
+ *
+ * GIRAR VA JUNTO AL TITULO y no con las acciones de abajo: es lo primero que hay
+ * que mirar —si el registro esta derecho— antes de tocar ninguna esquina, y abajo
+ * ya hay tres botones con texto. Mientras se rehace la imagen se oculta, para que
+ * dos toques no giren dos veces una foto que todavia no ha cambiado en pantalla.
+ *
+ * @param source De donde salio la imagen.
+ * @param onRotate Gira la foto, o null mientras no se puede.
+ * @returns La cabecera de la revision.
  */
-function ReviewHeader({ source }: { readonly source: PhotoSource }) {
+function ReviewHeader({
+  source,
+  onRotate,
+}: {
+  readonly source: PhotoSource;
+  readonly onRotate: (() => void) | null;
+}) {
   const theme = useTheme();
   const copy = reviewCopyFor(source);
 
   return (
-    <>
-      <Text style={[type.h1, { color: theme.textHigh }]}>{copy.title}</Text>
-      <Text style={[type.caption, { color: theme.textLow }]}>{copy.hint}</Text>
-    </>
+    <View style={styles.header}>
+      <View style={styles.headerText}>
+        <Text style={[type.h1, { color: theme.textHigh }]}>{copy.title}</Text>
+        <Text style={[type.caption, { color: theme.textLow }]}>{copy.hint}</Text>
+      </View>
+      {onRotate === null ? null : (
+        <IconButton
+          icon="rotate"
+          label={REVIEW_TEXT.rotate}
+          onPress={onRotate}
+          color={theme.textHigh}
+          background={theme.surface}
+        />
+      )}
+    </View>
   );
 }
 
@@ -419,6 +451,8 @@ function useReviewGeometry(photo: CapturedPhoto, container: Size | null): Review
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: gap.lg, gap: gap.md },
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: gap.md },
+  headerText: { flex: 1, gap: gap.xs },
   stage: { flex: 1, borderRadius: radius.tile, overflow: 'hidden' },
   actions: { flexDirection: 'row', gap: gap.md },
 });

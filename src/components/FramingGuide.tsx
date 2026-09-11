@@ -1,13 +1,11 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import type { Rect } from '@/camera/framing';
-import { CAMERA_TEXT } from '@/constants/captureText';
 import { useReducedMotion } from '@/design/a11y';
 import { timing } from '@/design/motion';
-import { gap, motion, opacity, paperDark, radius, scrim, size } from '@/design/tokens';
-import { type } from '@/design/type';
+import { motion, opacity, paperDark, radius, scrim, size } from '@/design/tokens';
 
 interface FramingGuideProps {
   readonly frame: Rect;
@@ -33,6 +31,9 @@ interface FramingGuideProps {
  * gruesa cuya opacidad es lo unico que se anima, porque §11 no permite animar
  * propiedades de disposicion como borderWidth: obligarian a Yoga a recalcular
  * la disposicion en cada fotograma con la camara en vivo detras.
+ *
+ * LA INSTRUCCION YA NO VA AQUI. Iba escrita bajo el marco, en vertical, y con el
+ * telefono de lado se leia torcida; ahora la escribe `CameraMessages`, que gira.
  *
  * No intercepta toques para que el obturador siga siendo pulsable.
  *
@@ -62,10 +63,6 @@ export function FramingGuide({ frame, isAligned }: FramingGuideProps) {
 
       <View style={[styles.frame, styles.searching, toFrameStyle(frame)]} />
       <Animated.View style={[styles.frame, styles.aligned, toFrameStyle(frame), alignedStyle]} />
-
-      <Text style={[styles.instruction, { top: frame.y + frame.height + gap.xl }]}>
-        {isAligned ? CAMERA_TEXT.aligned : CAMERA_TEXT.instruction}
-      </Text>
     </View>
   );
 }
@@ -95,13 +92,4 @@ const styles = StyleSheet.create({
   },
   searching: { borderWidth: size.frameBorder, opacity: opacity.guideIdle },
   aligned: { borderWidth: size.frameBorderAligned },
-  instruction: {
-    ...type.body,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    paddingHorizontal: gap.xl,
-    color: paperDark.textHigh,
-  },
 });

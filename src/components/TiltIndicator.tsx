@@ -1,16 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
-import type { TiltMode } from '@/camera/tilt';
-import { CAMERA_TEXT } from '@/constants/captureText';
-import { gap, opacity, paperDark, radius, scrim, size } from '@/design/tokens';
-import { type } from '@/design/type';
+import { opacity, paperDark, radius, scrim, size } from '@/design/tokens';
 
 interface TiltIndicatorProps {
   readonly offsetX: SharedValue<number>;
   readonly offsetY: SharedValue<number>;
-  /** Postura que ha deducido el nivel, para poder decirla. */
-  readonly mode: TiltMode;
 }
 
 /**
@@ -28,17 +23,16 @@ interface TiltIndicatorProps {
  *
  * Es dato operativo, no ambiente: trazo solido sobre velo, nunca vidrio.
  *
- * LLEVA ESCRITA LA POSTURA porque el instrumento cambia de pregunta solo. Con el
- * telefono boca abajo mide cuanto se aparta de la mesa; de pie, cuanto se aparta
- * de la vertical. Sin decirlo, quien levanta el telefono ve el punto saltar y no
- * sabe si el error es suyo o de la aplicacion.
+ * LA POSTURA SE SIGUE DICIENDO, pero no aqui: el instrumento cambia de pregunta
+ * solo y hay que escribirlo, y ahora lo escribe `CameraMessages`, que gira con el
+ * telefono. El circulo no necesita girar: es igual en cualquier postura, y el
+ * punto se mueve en coordenadas de la pantalla, que son las del sensor.
  *
  * @param offsetX Componente horizontal de la inclinacion, entre -1 y 1.
  * @param offsetY Componente vertical de la inclinacion, entre -1 y 1.
- * @param mode Postura deducida de la gravedad.
  * @returns El indicador de inclinacion.
  */
-export function TiltIndicator({ offsetX, offsetY, mode }: TiltIndicatorProps) {
+export function TiltIndicator({ offsetX, offsetY }: TiltIndicatorProps) {
   const bubbleStyle = useAnimatedStyle(() => {
     'worklet';
     const travel = Math.hypot(offsetX.value, offsetY.value);
@@ -55,14 +49,9 @@ export function TiltIndicator({ offsetX, offsetY, mode }: TiltIndicatorProps) {
   });
 
   return (
-    <View style={styles.stack} pointerEvents="none">
-      <View style={styles.container}>
-        <View style={styles.target} />
-        <Animated.View style={[styles.bubble, bubbleStyle]} />
-      </View>
-      <Text style={[type.eyebrow, styles.mode]}>
-        {mode === 'flat' ? CAMERA_TEXT.tiltModeFlat : CAMERA_TEXT.tiltModeUpright}
-      </Text>
+    <View style={styles.container} pointerEvents="none">
+      <View style={styles.target} />
+      <Animated.View style={[styles.bubble, bubbleStyle]} />
     </View>
   );
 }
@@ -81,17 +70,6 @@ const MAX_OFFSET = Math.sin((DEGREES_AT_EDGE * Math.PI) / 180);
 const TRAVEL_RADIUS = (size.levelOuter - size.levelBubble) / 2 / MAX_OFFSET;
 
 const styles = StyleSheet.create({
-  stack: { alignItems: 'center', gap: gap.xs },
-  // La etiqueta lleva su propio velo: cae sobre la imagen en vivo, que cambia de
-  // claridad cada vez que se mueve la camara.
-  mode: {
-    color: paperDark.textHigh,
-    backgroundColor: scrim.soft,
-    paddingHorizontal: gap.xs,
-    paddingVertical: 2,
-    borderRadius: radius.chip,
-    overflow: 'hidden',
-  },
   container: {
     width: size.levelOuter,
     height: size.levelOuter,

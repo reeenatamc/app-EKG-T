@@ -3,6 +3,7 @@ import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 
 import { measureTilt, smoothTilt, type TiltMode, type TiltReading } from '@/camera/tilt';
+import { turnFromGravity, type QuarterTurn } from '@/camera/turn';
 
 /**
  * Inclinacion del telefono respecto al papel.
@@ -80,6 +81,13 @@ export interface Tilt {
    * cuadrante para que cambie.
    */
   readonly mode: TiltMode;
+  /**
+   * Como esta girado el telefono, con la misma decision que toma Android para
+   * girar la foto. Ver `turn.ts`.
+   *
+   * Estado de React: cambia solo al pasar de un cuarto de vuelta a otro.
+   */
+  readonly turn: QuarterTurn;
   /** Falso si el dispositivo no tiene sensor de movimiento. */
   readonly isAvailable: boolean;
 }
@@ -95,17 +103,19 @@ export function useTilt(): Tilt {
   const offsetY = useSharedValue(0);
   const [isAligned, setIsAligned] = useState(false);
   const [mode, setMode] = useState<TiltMode>('flat');
+  const [turn, setTurn] = useState<QuarterTurn>(0);
   const [isAvailable, setIsAvailable] = useState(false);
 
   useEffect(
     () =>
-      subscribeToTilt({ degrees, offsetX, offsetY, setAligned: setIsAligned, setMode }, () =>
-        setIsAvailable(true),
+      subscribeToTilt(
+        { degrees, offsetX, offsetY, setAligned: setIsAligned, setMode, setTurn },
+        () => setIsAvailable(true),
       ),
     [degrees, offsetX, offsetY],
   );
 
-  return { degrees, offsetX, offsetY, isAligned, mode, isAvailable };
+  return { degrees, offsetX, offsetY, isAligned, mode, turn, isAvailable };
 }
 
 /** Donde va a parar cada lectura suavizada. */
@@ -115,6 +125,7 @@ interface TiltSink {
   readonly offsetY: SharedValue<number>;
   readonly setAligned: Dispatch<SetStateAction<boolean>>;
   readonly setMode: Dispatch<SetStateAction<TiltMode>>;
+  readonly setTurn: Dispatch<SetStateAction<QuarterTurn>>;
 }
 
 /**
@@ -158,9 +169,14 @@ function subscribeToTilt(sink: TiltSink, onAvailable: () => void): () => void {
     DeviceMotion.setUpdateInterval(UPDATE_INTERVAL_MS);
 
     subscription = DeviceMotion.addListener((measurement) => {
+      const gravity = measurement.accelerationIncludingGravity;
+      // El giro va SIN SUAVIZAR: tiene que coincidir con el que decide Android en
+      // ese mismo instante para girar la foto, y Android no suaviza nada.
+      sink.setTurn((previous) => turnFromGravity(gravity, previous));
+
       // La postura anterior se pasa de vuelta: es lo que da la banda muerta, y
       // mantenerla aqui deja `measureTilt` puro.
-      const reading = measureTilt(measurement.accelerationIncludingGravity, smoothed?.mode);
+      const reading = measureTilt(gravity, smoothed?.mode);
       if (reading !== null) {
         smoothed = smoothTilt(smoothed, reading);
         applyReading(sink, smoothed);

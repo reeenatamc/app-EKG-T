@@ -16,8 +16,14 @@ export const CAPTURE_FRAME = {
   aspect: { width: 3, height: 2 },
   /** Fraccion del ancho que queda libre a cada lado del marco. */
   horizontalMarginRatio: 0.06,
-  /** Techo de altura para que el marco no invada los controles. */
-  maxHeightRatio: 0.6,
+  /**
+   * Techo de altura para que el marco no invada los controles.
+   *
+   * Subio de 0,6 a 0,66 cuando el marco empezo a alargarse con el telefono de
+   * lado: arriba solo queda la fila de montajes y abajo la del obturador, y el
+   * marco centrado cabe entre las dos con ese alto en un telefono de 800 puntos.
+   */
+  maxHeightRatio: 0.66,
 } as const;
 
 /**

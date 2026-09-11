@@ -4,6 +4,7 @@ import type { CapturedPhoto } from '@/camera/capturePhoto';
 import { discardCapture } from '@/camera/discardCapture';
 import { DEFAULT_MOUNT_ID, type MountId } from '@/camera/mounts';
 import type { Quad } from '@/camera/quad';
+import { rotatePhoto } from '@/camera/rotatePhoto';
 import { createAnonymousId } from '@/capture/createStudyId';
 import { cropToQuad, type PreparedImage } from '@/capture/prepareStudy';
 import { submitStudy, type StudyDraft } from '@/capture/submitStudy';
@@ -92,10 +93,15 @@ function PhotoStage({ stage, mount, flow }: PhotoStageProps) {
     <Background atmosphere={false}>
       {stage.kind === 'review' ? (
         <ReviewScreen
+          // Una foto girada es otra foto: otras medidas y otro marco. Con la clave
+          // en la ruta, la revision empieza de cero con ella en vez de intentar
+          // llevar las esquinas de la anterior, que apuntarian a otro sitio.
+          key={stage.photo.uri}
           photo={stage.photo}
           isCropping={flow.isCropping}
           hasCropFailed={flow.hasCropFailed}
           onDiscard={() => flow.discard(stage.photo)}
+          onRotate={() => flow.rotate(stage.photo)}
           onConfirm={(quad) => flow.adjust(stage.photo, quad)}
         />
       ) : (
@@ -134,16 +140,37 @@ async function cropAndAdvance(
   setStage({ kind: 'confirm', photo, image, anonymousId: createAnonymousId(new Date()) });
 }
 
+/**
+ * Gira la foto y vuelve a la revision con la girada.
+ *
+ * La de antes se borra solo cuando la nueva ya existe: si el giro falla, sigue
+ * siendo la unica copia.
+ *
+ * @param photo Foto a girar.
+ * @param setStage Actualizador del paso del flujo.
+ */
+async function rotateAndReview(
+  photo: CapturedPhoto,
+  setStage: Dispatch<SetStateAction<Stage>>,
+): Promise<void> {
+  const rotated = await rotatePhoto(photo);
+
+  discardCapture(photo);
+  setStage({ kind: 'review', photo: rotated });
+}
+
 interface CaptureFlowControls {
   readonly stage: Stage;
   readonly capture: (photo: CapturedPhoto) => void;
   readonly discard: (photo: CapturedPhoto) => void;
+  /** Gira la foto un cuarto de vuelta y la revisa de nuevo. */
+  readonly rotate: (photo: CapturedPhoto) => void;
   readonly adjust: (photo: CapturedPhoto, quad: Quad) => void;
   readonly back: (photo: CapturedPhoto, image: PreparedImage) => void;
   readonly submit: (photo: CapturedPhoto, image: PreparedImage, draft: StudyDraft) => void;
   /** Abandona la captura sin haber tomado nada. */
   readonly close: () => void;
-  /** Cierto mientras se prepara el recorte. */
+  /** Cierto mientras se prepara el recorte o se gira la foto. */
   readonly isCropping: boolean;
   /** Cierto si el ultimo recorte no salio. */
   readonly hasCropFailed: boolean;
@@ -178,6 +205,10 @@ function useCaptureFlow(): CaptureFlowControls {
       discardCapture(photo);
       setStage({ kind: 'camera' });
     },
+
+    // Comparte la tarea del recorte: las dos rehacen la imagen y no deben
+    // solaparse. Si no sale, la foto de antes sigue en pantalla y lo dice.
+    rotate: (photo) => crop.run(() => rotateAndReview(photo, setStage)),
 
     // Si no sale no se avanza y no se pierde nada: la revision sigue en pantalla
     // con las esquinas donde estaban, y ahora ademas lo dice.
