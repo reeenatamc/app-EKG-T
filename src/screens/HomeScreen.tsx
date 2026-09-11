@@ -87,6 +87,7 @@ function NewStudy() {
       {/* En fila: el boton se estira con flex, y en una columna creceria en alto. */}
       <View style={styles.row}>
         <ActionButton
+          icon="plus"
           label={HOME_TEXT.newStudy}
           onPress={() => router.push('/capture')}
           variant="primary"

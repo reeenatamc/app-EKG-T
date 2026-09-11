@@ -151,11 +151,14 @@ function ReadingBasis({ basis, isShown, onToggle }: ReadingBasisProps) {
       <Text style={[type.caption, { color: theme.textLow }]}>
         {STUDY_TEXT.basisLabel} {basis.join(' · ')}
       </Text>
-      <ActionButton
-        label={isShown ? STUDY_TEXT.hideBasis : STUDY_TEXT.showBasis}
-        onPress={onToggle}
-        variant="secondary"
-      />
+      {/* En fila, como el de reintentar: a ancho completo pesaria mas que la lectura. */}
+      <View style={styles.basisAction}>
+        <ActionButton
+          label={isShown ? STUDY_TEXT.hideBasis : STUDY_TEXT.showBasis}
+          onPress={onToggle}
+          variant="secondary"
+        />
+      </View>
     </View>
   );
 }
@@ -332,6 +335,7 @@ const styles = StyleSheet.create({
   signalView: { gap: gap.sm },
   photo: { width: '100%', borderRadius: radius.tile },
   basis: { gap: gap.sm, marginBottom: gap.md },
+  basisAction: { flexDirection: 'row' },
   ready: { gap: gap.xl },
   processing: { gap: gap.xl },
   failureWrap: { gap: gap.xl },

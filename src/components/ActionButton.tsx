@@ -1,6 +1,9 @@
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { useTheme } from '@/design/theme';
+import { LineIcon } from '@/components/icons/LineIcon';
+import { NAV_ICON_PATHS, NAV_ICON_VIEWBOX, type NavIconName } from '@/components/icons/navIcons';
+
+import { useTheme, type Theme } from '@/design/theme';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 import { brand, gap, opacity, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
@@ -24,6 +27,8 @@ interface ActionButtonProps {
   readonly variant: ActionButtonVariant;
   /** Impide pulsarlo dos veces mientras una peticion esta en curso. */
   readonly disabled?: boolean;
+  /** Icono delante de la etiqueta. Acompana al texto, nunca lo sustituye. */
+  readonly icon?: NavIconName;
 }
 
 /**
@@ -52,21 +57,11 @@ interface ActionButtonProps {
  * @param disabled Cierto mientras la accion esta en curso.
  * @returns El boton renderizado.
  */
-export function ActionButton({ label, onPress, variant, disabled = false }: ActionButtonProps) {
+export function ActionButton(props: ActionButtonProps) {
+  const { label, onPress, variant, disabled = false, icon } = props;
   const theme = useTheme();
   const press = usePressMotion();
-
-  const surface = {
-    primary: { backgroundColor: brand.carmine, borderColor: brand.edge },
-    secondary: { backgroundColor: 'transparent', borderColor: theme.textHigh },
-    onBrand: { backgroundColor: brand.onCarmine, borderColor: brand.onCarmine },
-  }[variant];
-
-  const labelColor = {
-    primary: brand.onCarmine,
-    secondary: theme.textHigh,
-    onBrand: brand.carmine,
-  }[variant];
+  const { surface, labelColor } = variantColors(variant, theme);
 
   return (
     <AnimatedPressable
@@ -79,9 +74,45 @@ export function ActionButton({ label, onPress, variant, disabled = false }: Acti
       disabled={disabled}
       style={[styles.base, surface, disabled ? styles.disabled : null, press.style]}
     >
-      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      <View style={styles.content}>
+        {icon === undefined ? null : (
+          <LineIcon
+            path={NAV_ICON_PATHS[icon]}
+            color={labelColor}
+            viewBox={NAV_ICON_VIEWBOX}
+            side={INLINE_GLYPH_SIZE}
+          />
+        )}
+        <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      </View>
     </AnimatedPressable>
   );
+}
+
+/** Tamano del icono dentro del boton: a la altura de la etiqueta. */
+const INLINE_GLYPH_SIZE = 18;
+
+/**
+ * Relleno, borde y color de etiqueta de cada papel.
+ *
+ * @param variant Papel del boton.
+ * @param theme Tema en curso.
+ * @returns La superficie y el color de la etiqueta.
+ */
+function variantColors(variant: ActionButtonVariant, theme: Theme) {
+  const surface = {
+    primary: { backgroundColor: brand.carmine, borderColor: brand.edge },
+    secondary: { backgroundColor: 'transparent', borderColor: theme.textHigh },
+    onBrand: { backgroundColor: brand.onCarmine, borderColor: brand.onCarmine },
+  }[variant];
+
+  const labelColor = {
+    primary: brand.onCarmine,
+    secondary: theme.textHigh,
+    onBrand: brand.carmine,
+  }[variant];
+
+  return { surface, labelColor };
 }
 
 const styles = StyleSheet.create({
@@ -98,6 +129,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderWidth: size.hairline,
   },
+  content: { flexDirection: 'row', alignItems: 'center', gap: gap.sm },
   disabled: { opacity: opacity.disabled },
   label: { ...type.body, fontFamily: 'Inter_500Medium' },
 });
