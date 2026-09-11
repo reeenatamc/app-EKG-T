@@ -327,6 +327,10 @@ interface ReviewActionsProps {
  * ahi no se impide nada, solo se evita que dos toques seguidos lancen dos
  * recortes de la misma foto.
  *
+ * CADA BOTON VA EN UNA FILA, tambien el de reiniciar que va solo. ActionButton se
+ * reparte el espacio con flex, y suelto en esta columna se repartia el ALTO con la
+ * foto: salia como un ovalo que ocupaba media pantalla.
+ *
  * EL AVISO DEL RECORTE FALLIDO VIVE AQUI, pegado al boton que no funciono.
  * Puesto arriba de la pantalla habria quedado fuera de vista justo cuando hace
  * falta, porque el dedo y la mirada estan abajo.
@@ -358,7 +362,9 @@ function ReviewActions({
           disabled={!canContinue}
         />
       </View>
-      <ActionButton label={resetLabel} onPress={onReset} variant="secondary" />
+      <View style={styles.actions}>
+        <ActionButton label={resetLabel} onPress={onReset} variant="secondary" />
+      </View>
     </>
   );
 }
