@@ -42,9 +42,9 @@ describe('texto y trazado, suelo de 4.5:1 de §7', () => {
   const pairs: readonly Pair[] = [
     ['claro: texto alto sobre lienzo', paperLight.textHigh, paperLight.canvas, 13.42],
     ['claro: texto bajo sobre lienzo', paperLight.textLow, paperLight.canvas, 5.19],
-    ['claro: texto alto sobre superficie', paperLight.textHigh, paperLight.surface, 16.61],
-    ['claro: texto bajo sobre superficie', paperLight.textLow, paperLight.surface, 6.42],
-    ['claro: trazado sobre superficie', paperLight.ink, paperLight.surface, 17.82],
+    ['claro: texto alto sobre superficie', paperLight.textHigh, paperLight.surface, 17.4],
+    ['claro: texto bajo sobre superficie', paperLight.textLow, paperLight.surface, 6.73],
+    ['claro: trazado sobre superficie', paperLight.ink, paperLight.surface, 18.66],
     ['oscuro: texto alto sobre lienzo', paperDark.textHigh, paperDark.canvas, 16.04],
     ['oscuro: texto bajo sobre lienzo', paperDark.textLow, paperDark.canvas, 8.09],
     ['oscuro: texto alto sobre superficie', paperDark.textHigh, paperDark.surface, 12.59],
@@ -52,7 +52,7 @@ describe('texto y trazado, suelo de 4.5:1 de §7', () => {
     ['oscuro: trazado sobre superficie', paperDark.ink, paperDark.surface, 12.59],
     ['etiqueta sobre carmin (boton primario)', brand.onCarmine, brand.carmine, 7.48],
     ['apoyo sobre carmin (modulo hero)', brand.onCarmineLow, brand.carmine, 5.68],
-    ['carmin sobre hueso (boton invertido)', brand.carmine, paperLight.surface, 7.48],
+    ['carmin sobre hueso (boton invertido)', brand.carmine, paperLight.surface, 7.83],
     // Los dos extremos del degradado del hero. El peor caso es el FOCO, no el
     // borde: el degradado oscurece hacia fuera a proposito, asi que hacia el
     // borde el contraste solo puede mejorar.
