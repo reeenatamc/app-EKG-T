@@ -40,6 +40,21 @@ export const STUDY_TEXT = {
    */
   observationsReviewAll: 'Todas requieren confirmación clínica.',
   confidenceLabel: 'confianza',
+  /** Lo que se abre al tocar una observacion. */
+  observationOpen: 'Ver detalle',
+  observationClose: 'Ocultar detalle',
+  observationScore: 'Puntuación del modelo',
+  /**
+   * Por que se dice esto en cada detalle.
+   *
+   * La cifra de al lado se lee como una probabilidad —«87% de tener esto»— y no
+   * lo es: es la salida cruda de una red, sin calibrar contra prevalencia. Que
+   * suba tampoco significa que el hallazgo sea mas grave.
+   */
+  observationScoreNote: 'Es una puntuación del modelo, no una probabilidad. No indica gravedad.',
+  observationAboveThreshold: 'Supera el umbral del modelo.',
+  observationBelowThreshold: 'No supera el umbral del modelo.',
+  observationNoThreshold: 'Todavía no hay un umbral definido para esta observación.',
   /**
    * De donde sale la lectura.
    *
