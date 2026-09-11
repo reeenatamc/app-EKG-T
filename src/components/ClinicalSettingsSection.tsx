@@ -4,7 +4,7 @@ import { SettingsSection } from '@/components/SettingsSection';
 import { SETTINGS_TEXT } from '@/constants/shellText';
 import { useSettings, type ElectrodeStandard } from '@/state/settings';
 
-const ELECTRODE_OPTIONS: readonly SegmentedOption<ElectrodeStandard>[] = [
+export const ELECTRODE_OPTIONS: readonly SegmentedOption<ElectrodeStandard>[] = [
   { value: 'AHA', label: 'AHA' },
   { value: 'IEC', label: 'IEC' },
 ];

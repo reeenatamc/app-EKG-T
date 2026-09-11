@@ -4,7 +4,7 @@ import { SettingsSection } from '@/components/SettingsSection';
 import { SETTINGS_TEXT } from '@/constants/shellText';
 import { useSettings, type ThemeMode } from '@/state/settings';
 
-const THEME_OPTIONS: readonly SegmentedOption<ThemeMode | null>[] = [
+export const THEME_OPTIONS: readonly SegmentedOption<ThemeMode | null>[] = [
   { value: null, label: SETTINGS_TEXT.themeSystem },
   { value: 'light', label: SETTINGS_TEXT.themeLight },
   { value: 'dark', label: SETTINGS_TEXT.themeDark },

@@ -29,6 +29,9 @@ const MARK_PATH = 'M2 12 H6 L7.5 9 L9 12 H10.5 L11.5 3 L13 21 L14.5 12 H16 L17.5
 /** Papelera, para eliminar. Tapa, cubo y dos lineas: se lee a dieciocho puntos. */
 const TRASH_PATH = 'M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7 M10 11 V16 M14 11 V16';
 
+/** Flecha de avance de una fila que lleva a otra pantalla. */
+const CHEVRON_PATH = 'M9 5 L16 12 L9 19';
+
 const CAMERA_PATH =
   'M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z M12 10 A3.5 3.5 0 1 0 12 17 A3.5 3.5 0 1 0 12 10';
 
@@ -43,6 +46,7 @@ export const FORM_ICON_PATHS = {
   graduate: Skia.Path.MakeFromSVGString(GRADUATE_PATH),
   mark: Skia.Path.MakeFromSVGString(MARK_PATH),
   trash: Skia.Path.MakeFromSVGString(TRASH_PATH),
+  chevron: Skia.Path.MakeFromSVGString(CHEVRON_PATH),
 } as const;
 
 export type FormIconName = keyof typeof FORM_ICON_PATHS;

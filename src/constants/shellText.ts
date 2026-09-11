@@ -87,8 +87,6 @@ export const PROFILE_TEXT = {
   title: 'Perfil',
   roleProfessional: 'Profesional de salud',
   roleStudent: 'Estudiante o demostración',
-  roleLabel: 'Rol',
-  emailLabel: 'Cuenta',
   /**
    * Qué se muestra si la sesión no trae correo.
    *
@@ -96,7 +94,32 @@ export const PROFILE_TEXT = {
    * como una avería. Un hueco en un dato dice algo, y hay que decirlo.
    */
   emailMissing: 'Sin correo asociado',
-  settingsAction: 'Ajustes',
+  activitySection: 'En este teléfono',
+  studiesLabel: 'Estudios guardados',
+  lastStudyLabel: 'Último estudio',
+  lastStudyNone: 'Ninguno todavía',
+  activityNote:
+    'El historial se guarda en este teléfono y se borra al cerrar sesión. Lo enviado sigue en el servidor.',
+  preferencesSection: 'Preferencias',
+  accountSection: 'Cuenta',
+  settingsAction: 'Más ajustes',
+  settingsHint: 'Accesibilidad e idioma',
+  signOut: 'Cerrar sesión',
+  version: 'versión',
+} as const;
+
+/**
+ * La pregunta antes de cerrar sesión.
+ *
+ * Cerrar sesión borra el historial del teléfono. En Perfil es una fila de una
+ * lista, y una fila se toca sin querer al desplazar; lo que se pierde con ese
+ * toque no se recupera, así que se pregunta.
+ */
+export const SIGN_OUT_TEXT = {
+  title: '¿Cerrar sesión?',
+  body: 'El historial de este teléfono se borra. Lo enviado sigue en el servidor.',
+  cancel: 'Cancelar',
+  confirm: 'Cerrar sesión',
 } as const;
 
 export const SETTINGS_TEXT = {

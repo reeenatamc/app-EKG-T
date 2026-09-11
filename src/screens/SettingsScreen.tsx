@@ -1,8 +1,3 @@
-import { useRouter } from 'expo-router';
-
-import { useSession } from '@/auth/session';
-import { unresolved } from '@/capture/queue';
-import { useUploadQueue } from '@/capture/uploadQueue';
 import { AccessibilitySettingsSection } from '@/components/AccessibilitySettingsSection';
 import { ActionButton } from '@/components/ActionButton';
 import { AppearanceSettingsSection } from '@/components/AppearanceSettingsSection';
@@ -11,8 +6,8 @@ import { ClinicalSettingsSection } from '@/components/ClinicalSettingsSection';
 import { Notice } from '@/components/Notice';
 import { SettingsSection } from '@/components/SettingsSection';
 import { SETTINGS_TEXT } from '@/constants/shellText';
-import { isAwaiting, useAnalyses } from '@/ecg/analyses';
 import { useGoBack } from '@/shell/useGoBack';
+import { useSignOut } from '@/shell/useSignOut';
 
 /**
  * Pantalla de ajustes.
@@ -26,30 +21,14 @@ import { useGoBack } from '@/shell/useGoBack';
  * (D-20). Y por lo mismo lleva salida: esta apilada encima de Perfil, y sin
  * cabecera del router el gesto del sistema era la unica forma de volver.
  *
+ * Cerrar sesion se decide en `useSignOut`, que comparte con Perfil: pregunta antes,
+ * y avisa si hay estudios a medias.
+ *
  * @returns La pantalla de ajustes.
  */
 export function SettingsScreen() {
-  const router = useRouter();
-  const closeSession = useSession((state) => state.close);
-  const studies = useUploadQueue((state) => state.studies);
-  const analyses = useAnalyses((state) => state.byStudy);
+  const { hasPending, signOut } = useSignOut();
   const goBack = useGoBack('/profile');
-
-  // Se avisa, no se impide. Quien cierra sesion en un telefono compartido puede
-  // tener una razon para hacerlo con estudios a medias, y bloquearselo le
-  // dejaria sin salida; lo que no puede pasar es que se entere despues.
-  //
-  // Cuentan las dos formas de quedarse a medias, porque las dos pierden algo:
-  // un estudio sin enviar se pierde entero, y de uno que espera resultado se
-  // pierde el resultado, que el servidor calculara para nadie.
-  const awaiting = studies.some(
-    (study) => study.remoteId !== null && isAwaiting(analyses[study.remoteId]),
-  );
-  const hasPending = unresolved(studies).length > 0 || awaiting;
-
-  const signOut = () => {
-    void closeSession().then(() => router.replace('/login'));
-  };
 
   return (
     <AuthScreenLayout title={SETTINGS_TEXT.title} atmosphere={false} onBack={goBack}>

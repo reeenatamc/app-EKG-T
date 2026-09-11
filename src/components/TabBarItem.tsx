@@ -59,7 +59,12 @@ interface TabBarItemProps {
 export function TabBarItem({ label, icon, onPress, isActive, role }: TabBarItemProps) {
   const theme = useTheme();
   const press = usePressMotion();
-  const color = isActive ? brand.carmine : theme.textLow;
+  // EN OSCURO, TINTA CLARA Y NO CARMIN. Sobre la burbuja del tema oscuro el carmin
+  // medía 1.24:1: la pestaña activa era la unica que no se leia. El unico texto
+  // que aguanta el peor fondo bajo ese vidrio es `textHigh` (4.84:1, fijado en
+  // `contrast.test.ts`); la seleccion la sigue diciendo la burbuja.
+  const activeColor = theme.mode === 'dark' ? theme.textHigh : brand.carmine;
+  const color = isActive ? activeColor : theme.textLow;
 
   return (
     <AnimatedPressable

@@ -25,7 +25,7 @@ La tesis central de la especificación gobierna todo lo demás:
 | El lienzo plano es hueso puro                                           | §2, D-20      | `theme.canvasFlat`; en claro la tarjeta se define solo por su filo, 1.82:1                                   |
 | El lienzo se pinta **dentro** del objetivo de desenfoque, como hijo     | §3, D-23      | `Background` → `CanvasFill`; como fondo del objetivo no entra en la foto y el vidrio sale gris               |
 | El inicio no usa tarjetas para lo que no se abre                        | §10, D-24     | `HomeScreen`: botón, `StudySummary` sobre el lienzo y filas del historial. `tinted` queda sin uso            |
-| La pestaña activa se marca con el color de acento                       | §12.9, D-22   | `TabBarItem`; carmín como tinte, nunca relleno. Comprobado en `palette.test.ts`                              |
+| La pestaña activa se marca con el color de acento                       | §12.9, D-25   | `TabBarItem`; carmín como tinte en claro, `textHigh` en oscuro. Comprobado en `palette.test.ts`              |
 | El inicio saluda por franja del día y con el nombre                     | §6, D-22      | `src/shell/greeting.ts`, puro y probado; el nombre se deriva del correo                                      |
 | Sombra en vez de borde en toda superficie opaca                         | §10, D-21     | `src/design/elevation.ts` → `cardShadow` y `rowShadow`                                                       |
 | Campos y pistas hundidos, no elevados                                   | §7, D-22      | `FormField` y `SegmentedControl` sobre `theme.canvas`: un campo es un hueco, no una tarjeta                  |
@@ -270,6 +270,32 @@ probablemente afecten a algo medido en este documento.
 Toda desviación respecto de `SKILL.md` se registra aquí con fecha, motivo y
 alternativa descartada. Si algo de la especificación resulta imposible, se
 enmienda la especificación y se anota; nunca se ignora en silencio.
+
+### D-25 · El perfil es una ficha, y la pestaña activa en oscuro deja el carmín
+
+**2026-09-11 · §10, §12.9 · decisión del autor y una medida**
+
+#### El perfil
+
+Eran dos pastillas —correo y rol— y un botón a Ajustes. Ahora es una ficha en
+bloques agrupados (`GroupedList`: una superficie con filas separadas por filos, la
+misma forma que la tabla de observaciones): quién es la cuenta, qué guarda el
+teléfono y qué pasa con ello al cerrar sesión, las tres preferencias que cambian
+con el turno —tema, estándar de electrodos, vibración— y la salida. Ajustes se
+queda con accesibilidad e idioma, y con todo lo demás también, para quien lo busque
+allí.
+
+Cerrar sesión borra el historial del teléfono, y en Perfil es una fila que se toca
+sin querer al desplazar; por eso ahora pregunta antes, desde las dos pantallas
+(`useSignOut`).
+
+#### La pestaña activa en oscuro
+
+Sobre la burbuja del tema oscuro el carmín medía **1.24:1**: la pestaña activa era
+la única que no se leía. Ningún rosa de marca sirve ahí sin ser casi blanco, porque
+el peor fondo bajo el vidrio oscuro solo lo aguanta `textHigh` (4.84:1, ya fijado en
+`contrast.test.ts`). En oscuro la pestaña activa va en `textHigh` y la selección la
+dice la burbuja; en claro sigue en carmín.
 
 ### D-24 · El inicio deja el bento
 
