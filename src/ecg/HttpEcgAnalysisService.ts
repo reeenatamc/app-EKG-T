@@ -6,6 +6,7 @@ import type {
   EcgAnalysisService,
   EcgMeasurements,
   EcgObservation,
+  EcgObservationCategory,
 } from '@/ecg/EcgAnalysisService';
 import type { EcgSignal, Lead, LeadName, LeadSegment } from '@/ecg/signal';
 import { httpRequest, NetworkUnreachableError, reasonFrom } from '@/net/http';
@@ -49,6 +50,29 @@ const KNOWN_FAILURES: Record<AnalysisFailureReason, true> = {
 };
 
 const FAILURE_REASONS = Object.keys(KNOWN_FAILURES) as readonly AnalysisFailureReason[];
+
+/**
+ * Categorias que el backend puede mandar en cada observacion.
+ *
+ * UN REGISTRO Y NO UNA LISTA, por la misma razon que KNOWN_FAILURES: anadir una
+ * categoria a la union sin anadirla aqui deja de compilar. `otro` es la que
+ * responde cuando el valor recibido no es ninguna de las nueve restantes -- ver
+ * `categoryFrom`.
+ */
+const KNOWN_CATEGORIES: Record<EcgObservationCategory, true> = {
+  ritmo: true,
+  conduccion: true,
+  repolarizacion: true,
+  isquemia_infarto: true,
+  hipertrofia: true,
+  eje: true,
+  marcapasos: true,
+  tecnico: true,
+  resumen: true,
+  otro: true,
+};
+
+const CATEGORIES = Object.keys(KNOWN_CATEGORIES) as readonly EcgObservationCategory[];
 
 const LEAD_NAMES: readonly LeadName[] = [
   'I',
@@ -204,6 +228,22 @@ function measurementsFrom(value: unknown): EcgMeasurements | null {
 }
 
 /**
+ * Interpreta la categoria de una observacion.
+ *
+ * TOLERANTE POR DISENO: `category` es un campo nuevo del backend, asi que un
+ * estudio ya guardado en el telefono antes de este cambio no la trae, y un
+ * valor que el backend anada manana y esta version todavia no conozca tampoco
+ * deberia romper nada. En los dos casos, y en cualquier otro que no encaje,
+ * la observacion cae en `otro` en lugar de invalidar el analisis entero.
+ *
+ * @param value Categoria cruda, o ausente.
+ * @returns La categoria reconocida, u `otro` si no la hay.
+ */
+function categoryFrom(value: unknown): EcgObservationCategory {
+  return CATEGORIES.find((candidate) => candidate === value) ?? 'otro';
+}
+
+/**
  * Interpreta una observacion.
  *
  * @param value Observacion cruda.
@@ -228,6 +268,7 @@ function observationFrom(value: unknown): EcgObservation | null {
     // Nunca se lee de la respuesta. Ver la cabecera del modulo.
     needsReview: true,
     aboveThreshold: typeof raw.aboveThreshold === 'boolean' ? raw.aboveThreshold : null,
+    category: categoryFrom(raw.category),
   };
 }
 

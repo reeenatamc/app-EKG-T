@@ -54,6 +54,7 @@ const OBSERVATIONS: readonly EcgObservation[] = [
     confidence: 0.94,
     needsReview: true,
     aboveThreshold: null,
+    category: 'ritmo',
   },
   {
     id: 'axis-normal',
@@ -62,6 +63,7 @@ const OBSERVATIONS: readonly EcgObservation[] = [
     confidence: 0.88,
     needsReview: true,
     aboveThreshold: null,
+    category: 'eje',
   },
 ];
 

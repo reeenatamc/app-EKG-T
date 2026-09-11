@@ -52,6 +52,27 @@ export interface EcgMeasurements {
 }
 
 /**
+ * Grupo clinico de una observacion, para agruparla en la lista.
+ *
+ * Diez valores fijos que decide el backend. `resumen` son los enunciados de
+ * alcance global (ver HIDDEN_LABELS en labelsEs.ts) y no se agrupan con los
+ * hallazgos. `otro` es el cajon de lo que no encaja en el resto, y tambien
+ * cubre lo que un estudio ya guardado en el telefono nunca llego a traer: ver
+ * `categoryFrom` en HttpEcgAnalysisService.
+ */
+export type EcgObservationCategory =
+  | 'ritmo'
+  | 'conduccion'
+  | 'repolarizacion'
+  | 'isquemia_infarto'
+  | 'hipertrofia'
+  | 'eje'
+  | 'marcapasos'
+  | 'tecnico'
+  | 'resumen'
+  | 'otro';
+
+/**
  * Algo observado en el trazado.
  *
  * Deliberadamente NO se llama hallazgo ni diagnostico. `needsReview` no es un
@@ -70,6 +91,8 @@ export interface EcgObservation {
   readonly needsReview: true;
   /** Sobre umbral (true), bajo umbral (false) o sin umbral (null). */
   readonly aboveThreshold: boolean | null;
+  /** Grupo clinico, para la lista agrupada. */
+  readonly category: EcgObservationCategory;
 }
 
 export interface EcgAnalysis {

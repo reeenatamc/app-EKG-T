@@ -167,6 +167,34 @@ describe('lo que llega se comprueba', () => {
     expect(analysis?.observations[0]?.needsReview).toBe(true);
   });
 
+  it('un estudio sin categoria, como los guardados antes de este campo, cae en "otro"', async () => {
+    // READY.observations[0] no trae category: es la forma exacta en que llegan
+    // los analisis que ya estaban en el telefono antes de este cambio.
+    mockedFetch.mockResolvedValue(responding(200, READY));
+
+    const analysis = await httpEcgAnalysisService.get(STUDY_ID);
+
+    expect(analysis?.observations[0]?.category).toBe('otro');
+  });
+
+  it('una categoria que el servidor no reconoce tambien cae en "otro"', async () => {
+    const observations = [{ ...READY.observations[0], category: 'inventada' }];
+    mockedFetch.mockResolvedValue(responding(200, { ...READY, observations }));
+
+    const analysis = await httpEcgAnalysisService.get(STUDY_ID);
+
+    expect(analysis?.observations[0]?.category).toBe('otro');
+  });
+
+  it('una categoria reconocida pasa tal cual', async () => {
+    const observations = [{ ...READY.observations[0], category: 'ritmo' }];
+    mockedFetch.mockResolvedValue(responding(200, { ...READY, observations }));
+
+    const analysis = await httpEcgAnalysisService.get(STUDY_ID);
+
+    expect(analysis?.observations[0]?.category).toBe('ritmo');
+  });
+
   it('una derivacion con un nombre desconocido invalida el analisis entero', async () => {
     // Descartarla en silencio dejaria un electrocardiograma con menos
     // derivaciones, indistinguible de un registro que de verdad tenia menos.
