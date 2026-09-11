@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
@@ -10,12 +11,8 @@ import { ErrorNotice } from '@/components/ErrorNotice';
 import { FormField } from '@/components/FormField';
 import { SubmitButton } from '@/components/SubmitButton';
 import { LOGIN_TEXT } from '@/constants/authText';
+import { gap } from '@/design/tokens';
 
-/**
- * Pantalla de acceso.
- *
- * @returns La pantalla de acceso.
- */
 export function LoginScreen() {
   const router = useRouter();
   const enterApp = useEnterApp();
@@ -38,8 +35,18 @@ export function LoginScreen() {
         value={password}
         onChangeText={setPassword}
       />
-      <AuthLink label={LOGIN_TEXT.forgot} onPress={() => router.push('/recover')} />
-      <AuthLink label={LOGIN_TEXT.toRegister} onPress={() => router.push('/register')} />
+      <View style={styles.linksRow}>
+        <AuthLink label={LOGIN_TEXT.forgot} onPress={() => router.push('/recover')} />
+        <AuthLink label={LOGIN_TEXT.toRegister} onPress={() => router.push('/register')} />
+      </View>
     </AuthScreenLayout>
   );
 }
+
+const styles = StyleSheet.create({
+  linksRow: {
+    gap: gap.xs,
+    paddingTop: gap.xs,
+    alignItems: 'center',
+  },
+});

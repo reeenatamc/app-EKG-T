@@ -51,8 +51,24 @@ export interface Theme {
   readonly auroraOpacity: number;
 }
 
-const DARK_AURORA_OPACITY = 0.5;
-const LIGHT_AURORA_OPACITY = 0.42;
+/**
+ * BAJADAS DE 0.5 Y 0.42.
+ *
+ * A los valores anteriores el aurora seguia siendo lo primero que se veia al
+ * abrir la aplicacion: sobre el hueso, el lobulo ciruela caia justo detras del
+ * titular de las pantallas de acceso y lo dejaba lavado, con las esquinas de la
+ * pantalla en dos tonos distintos. La pantalla se leia sucia, no atmosferica.
+ *
+ * Es la misma conclusion de D.1 —«el aurora era el elemento mas fuerte de las
+ * doce pantallas»— llevada hasta el final. Alli se resolvio quitando el aurora
+ * de las pantallas de producto y bajandolo a 0.42 en las de entrada; esto
+ * segundo se anoto entonces como que «ayudo sin arreglarlo». Esto lo arregla.
+ *
+ * El oscuro baja menos: sobre ciruela profundo el mismo valor se ve la mitad, y
+ * ahi el aurora es lo unico que separa el fondo de un negro plano.
+ */
+const DARK_AURORA_OPACITY = 0.38;
+const LIGHT_AURORA_OPACITY = 0.2;
 
 const ThemeContext = createContext<Theme | null>(null);
 

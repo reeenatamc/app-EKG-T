@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { authService } from '@/auth/service';
 import { useAuthAction } from '@/auth/useAuthAction';
@@ -12,19 +12,10 @@ import { FormField } from '@/components/FormField';
 import { SubmitButton } from '@/components/SubmitButton';
 import { VERIFY_TEXT } from '@/constants/authText';
 import { useTheme } from '@/design/theme';
+import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
 
-/**
- * Pantalla de verificacion por codigo.
- *
- * El correo llega como parametro de ruta en lugar de guardarse en estado
- * global: es un dato de un solo uso que muere con el flujo, y meterlo en un
- * store obligaria a acordarse de limpiarlo.
- *
- * @returns La pantalla de verificacion.
- */
 export function VerifyScreen() {
-  const theme = useTheme();
   const { email } = useLocalSearchParams<{ email: string }>();
   const enterApp = useEnterApp();
   const { isBusy, failureReason, run } = useAuthAction();
@@ -32,8 +23,6 @@ export function VerifyScreen() {
 
   const submit = () => run(() => authService.verifyCode({ email, code }), enterApp);
 
-  // Pide un codigo nuevo de verdad. Un enlace que dice "enviar otro codigo" y
-  // solo limpia el campo es interfaz que miente.
   const resend = () =>
     run(
       () => authService.requestPasswordReset(email),
@@ -45,14 +34,42 @@ export function VerifyScreen() {
       title={VERIFY_TEXT.title}
       footer={<SubmitButton label={VERIFY_TEXT.submit} onPress={submit} isBusy={isBusy} />}
     >
-      <Text style={[type.body, { color: theme.textLow }]}>
-        {VERIFY_TEXT.bodyPrefix}{' '}
-        {/* El correo es un identificador, no prosa: va en monoespaciada (§6). */}
-        <Text style={type.data}>{email}</Text>
-      </Text>
+      <EmailRecipient email={email ?? ''} />
       <ErrorNotice reason={failureReason} />
       <FormField kind="code" label={VERIFY_TEXT.code} value={code} onChangeText={setCode} />
-      <AuthLink label={VERIFY_TEXT.resend} onPress={resend} disabled={isBusy} />
+      <View style={styles.linksRow}>
+        <AuthLink label={VERIFY_TEXT.resend} onPress={resend} disabled={isBusy} />
+      </View>
     </AuthScreenLayout>
   );
 }
+
+/**
+ * A que correo fue el codigo.
+ *
+ * Texto suelto, sin capsula. Es un dato de una linea y media; rodearlo de un
+ * borde redondeado no lo hace mas legible, solo anade una forma mas a una
+ * pantalla cuyo trabajo entero son seis cifras.
+ */
+function EmailRecipient({ email }: { readonly email: string }) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.recipient}>
+      <Text style={[type.caption, { color: theme.textLow }]}>{VERIFY_TEXT.bodyPrefix}</Text>
+      <Text style={[type.data, styles.emailText, { color: theme.textHigh }]}>{email}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  recipient: { alignItems: 'center', gap: 2 },
+  emailText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  linksRow: {
+    alignItems: 'center',
+    paddingTop: gap.xs,
+  },
+});

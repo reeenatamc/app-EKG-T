@@ -10,60 +10,12 @@ import { gap } from '@/design/tokens';
 interface AuthScreenLayoutProps {
   readonly title: string;
   readonly children: ReactNode;
-  /** Micro-etiqueta monoespaciada sobre el titular. Solo si informa. */
   readonly eyebrow?: string;
-  /**
-   * Monta la atmosfera del fondo.
-   *
-   * Existe por Ajustes, que comparte esta composicion con las pantallas de
-   * acceso pero **no** es una de ellas: se llega desde Perfil, o sea que esta
-   * dentro del producto, y ahi el lienzo va plano (D-20).
-   */
   readonly atmosphere?: boolean;
-  /** Acciones fijadas al pie, fuera del scroll. */
   readonly footer?: ReactNode;
-  /**
-   * Salida de la pantalla, si esta apilada encima de otra.
-   *
-   * Lo usa Ajustes, que se abre desde Perfil. Las cinco pantallas de acceso no
-   * lo pasan: son el arranque de la aplicacion y debajo no hay nada.
-   */
   readonly onBack?: () => void;
 }
 
-/**
- * Composicion comun de las pantallas de acceso.
- *
- * Aporta el fondo de las capas 0 a 3 y respeta las areas seguras. Ninguna de
- * estas pantallas usa la cabecera de expo-router: el chrome lo define §3 de la
- * especificacion, no el router, y por eso headerShown esta desactivado de forma
- * global en el layout raiz.
- *
- * El titular va en `ScreenHeader`, o sea en display. Antes iba en `type.h1`
- * —Inter 24— y por eso estas cinco pantallas eran indistinguibles entre si en la
- * lamina de contacto de D.1.
- *
- * EL PIE VA DENTRO DEL AJUSTE DE TECLADO, no solo el scroll. Es donde vive el
- * boton de enviar, o sea lo que el teclado tapa primero en iOS.
- *
- * DOS BLOQUES ANCLADOS, no uno pegado arriba. El titular se ancla al borde
- * superior y el cuerpo se empuja hacia abajo, junto a la accion. Es la correccion
- * del segundo hallazgo de la lamina: en cinco pantallas el contenido ocupaba el
- * 25 % de arriba, el boton el 8 % de abajo y el 65 % de en medio era degradado
- * vacio. La silueta era hueca porque el hueco quedaba **despues** de que el
- * contenido se acabara, o sea que se leia como falta. Anclando los dos extremos,
- * el mismo hueco pasa a ser separacion entre dos bloques, el formulario cae donde
- * llega el pulgar, y con el teclado abierto sigue viendose porque el ancla es
- * relativa al alto disponible.
- *
- * @param title Titular de la pantalla.
- * @param children Contenido desplazable.
- * @param eyebrow Micro-etiqueta opcional sobre el titular.
- * @param atmosphere Falso para lienzo plano; lo usa Ajustes.
- * @param footer Acciones fijas al pie, opcionales.
- * @param onBack Salida opcional, solo si la pantalla esta apilada.
- * @returns La pantalla compuesta.
- */
 export function AuthScreenLayout({
   title,
   children,
@@ -78,25 +30,85 @@ export function AuthScreenLayout({
     <Background atmosphere={atmosphere}>
       <KeyboardLift>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.xl }]}
+          contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.md }]}
           keyboardShouldPersistTaps="handled"
         >
           <ScreenHeader title={title} eyebrow={eyebrow} onBack={onBack} />
-          <View style={styles.body}>{children}</View>
+          <AuthBody>{children}</AuthBody>
         </ScrollView>
-
-        {footer === undefined ? null : (
-          <View style={[styles.footer, { paddingBottom: insets.bottom + gap.lg }]}>{footer}</View>
-        )}
+        <AuthFooter footer={footer} bottomInset={insets.bottom} />
       </KeyboardLift>
     </Background>
   );
 }
 
+interface AuthBodyProps {
+  readonly children: ReactNode;
+}
+
+/**
+ * El cuerpo del formulario.
+ *
+ * SIN TARJETA, y esa es la decision. Se probo encerrarlo en un GlassCard y salio
+ * mal por dos motivos independientes.
+ *
+ * El tecnico: el objetivo de desenfoque de esta aplicacion contiene el contenido
+ * que se desplaza, y el vidrio se monta fuera de ese objetivo, como hermano
+ * —por eso el proveedor del contexto envuelve `chrome` y no `children`—. Una
+ * tarjeta de vidrio metida aqui dentro queda dentro de su propio objetivo: se
+ * desenfoca a si misma y deja un rectangulo fantasma, y como ademas no recibe el
+ * objetivo, expo-blur cae en silencio a un tinte plano. En pantalla eso es una
+ * caja gris, no vidrio.
+ *
+ * El de fondo, que manda sobre el anterior: un campo de entrada sobre vidrio
+ * pierde contraste justo cuando hace falta leer lo que se escribe. El vidrio de
+ * este sistema es para lo ambiental —la barra de pestanas, el chrome flotante—,
+ * no para aquello con lo que se trabaja.
+ *
+ * Asi que cada campo es su propia superficie opaca sobre la atmosfera, y el
+ * caracter cristalino lo pone el fondo, que es donde no estorba.
+ */
+function AuthBody({ children }: AuthBodyProps) {
+  return <View style={styles.body}>{children}</View>;
+}
+
+interface AuthFooterProps {
+  readonly footer?: ReactNode;
+  readonly bottomInset: number;
+}
+
+function AuthFooter({ footer, bottomInset }: AuthFooterProps) {
+  if (footer === undefined) {
+    return null;
+  }
+
+  return <View style={[styles.footer, { paddingBottom: bottomInset + gap.md }]}>{footer}</View>;
+}
+
 const styles = StyleSheet.create({
-  // flexGrow: 1 es lo que da al contenedor un alto que repartir; sin el,
-  // marginTop: 'auto' no tiene contra que empujar y el bloque no se mueve.
-  content: { flexGrow: 1, paddingHorizontal: gap.lg, paddingBottom: gap.xl, gap: gap.lg },
-  body: { marginTop: 'auto', gap: gap.lg },
-  footer: { paddingHorizontal: gap.lg, paddingTop: gap.md, gap: gap.md },
+  /**
+   * TITULAR Y FORMULARIO SON UN SOLO BLOQUE, centrado.
+   *
+   * Antes el titular se anclaba arriba y el formulario abajo, y entre los dos
+   * quedaba media pantalla de malla. La intencion era buena —que el formulario
+   * caiga donde llega el pulgar— pero con dos campos el hueco se come mas de la
+   * mitad del alto y deja de leerse como aire: se lee como que falta algo. Y con
+   * el teclado abierto empujaba la tarjeta fuera de la vista.
+   *
+   * Centrados, el hueco se reparte arriba y abajo, o sea que pasa a ser margen.
+   * El pie sigue fijo al fondo, asi que la accion no se mueve.
+   */
+  content: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: gap.lg,
+    paddingBottom: gap.lg,
+    gap: gap.lg,
+  },
+  body: { gap: gap.lg },
+  footer: {
+    paddingHorizontal: gap.lg,
+    paddingTop: gap.sm,
+    gap: gap.sm,
+  },
 });

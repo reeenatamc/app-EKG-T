@@ -324,6 +324,15 @@ export const size = {
    * D-13 en src/design/README.md.
    */
   frameBorderAligned: 5,
+  /**
+   * Lado del icono que acompana a un campo de formulario.
+   *
+   * Mas pequeno que el de navegacion: aqui el icono no es el objeto que se toca,
+   * es una marca de que se pide en ese hueco. Quien manda en la fila es el texto
+   * que se escribe.
+   */
+  fieldIcon: 18,
+
   /** Area agarrable de una esquina de recorte. Igual al minimo tactil de §7. */
   cornerHandle: 44,
   /** Punto visible de la esquina, centrado en su area agarrable. */

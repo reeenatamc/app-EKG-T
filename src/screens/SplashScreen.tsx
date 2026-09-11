@@ -1,4 +1,4 @@
-import { StyleSheet, Text, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import { useBootDestination } from '@/auth/useBootDestination';
@@ -10,58 +10,72 @@ import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
 
-/**
- * Duracion del trazo del latido.
- *
- * Medido en el Redmi Note 9 Pro, el arranque resuelve su destino entre 810 y
- * 843 ms. Pero esas son medidas **en caliente**: un arranque en frio, con la
- * bateria baja o con el sistema recuperando procesos que habia matado, sera
- * bastante mas lento.
- *
- * Por eso el trazo se fija DELIBERADAMENTE POR ENCIMA del arranque medido, y no
- * ajustado a el. Un latido que termina y se queda esperando se ve peor que uno
- * que no llega al final: para eso existe el desvanecimiento de salida, y es
- * mejor confiar en el que apurar el margen.
- *
- * Si el arranque cambia de orden de magnitud —por ejemplo cuando la sesion pase
- * por red— hay que volver a medir. La instrumentacion vive en useSplashExit.
- */
+/** Cuanto tarda el latido en recorrer la pantalla una vez. */
 const BEAT_DURATION_MS = 1000;
 
 /**
- * Pantalla de arranque.
+ * Fraccion del ancho que ocupa el latido.
  *
- * Presenta el unico momento llamativo de la aplicacion mientras se decide a
- * donde ir. No lleva el trazado difuso del fondo: ya hay un latido en pantalla,
- * y dos competirian.
+ * Casi todo, y ese es el punto. Antes iba dentro de una tarjeta de 280 puntos
+ * con borde y sombra, o sea que lo primero que veia alguien al abrir la
+ * aplicacion era un recuadro. Un recuadro es una pieza de interfaz, y esta
+ * pantalla no tiene interfaz: no hay nada que tocar, nada que leer, nada que
+ * decidir. Solo hay que esperar un segundo.
+ */
+const BEAT_WIDTH_RATIO = 0.82;
+
+/** Proporcion del latido. Ancho y bajo, como la tira de papel de la que sale. */
+const BEAT_ASPECT = 3.4;
+
+/**
+ * La pantalla de arranque.
+ *
+ * SIN TARJETA Y SIN ETIQUETAS. Lo unico que se ve es el latido cruzando la
+ * pantalla y el nombre debajo. Es la unica pantalla de la aplicacion donde no se
+ * puede hacer nada, asi que cualquier elemento que se anada aqui es decoracion
+ * sobre decoracion: un borde que no contiene nada, una insignia que no informa
+ * de nada, una etiqueta que repite lo que el nombre ya dijo.
+ *
+ * El latido va suelto sobre el lienzo, a lo ancho, y esa es toda la puesta en
+ * escena. El §8 lo llama el elemento de firma; una firma no se enmarca.
+ *
+ * El bloom de la capa 2 se apaga a proposito: aqui el latido ya es el sujeto, y
+ * un halo difuso detras del mismo trazo lo unico que hace es engordarlo.
  *
  * @returns La pantalla de arranque.
  */
 export function SplashScreen() {
   const theme = useTheme();
-  const { width, height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const destination = useBootDestination();
   const opacity = useSplashExit(destination);
   const fade = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  const beatWidth = Math.round(width * BEAT_WIDTH_RATIO);
 
   return (
     <Background showSignalBloom={false}>
       <Animated.View style={[styles.container, fade]}>
         <SplashBeat
           durationMs={BEAT_DURATION_MS}
-          width={width}
-          height={height}
+          width={beatWidth}
+          height={Math.round(beatWidth / BEAT_ASPECT)}
           color={theme.bloom}
         />
-        <Text style={[type.display, styles.name, { color: theme.textHigh }]}>
-          {SPLASH_TEXT.appName}
-        </Text>
+        <View style={styles.brand}>
+          <Text style={[type.display, { color: theme.textHigh }]}>{SPLASH_TEXT.appName}</Text>
+        </View>
       </Animated.View>
     </Background>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  name: { marginTop: gap.xl * 4, textAlign: 'center' },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: gap.xl,
+  },
+  brand: { alignItems: 'center' },
 });
