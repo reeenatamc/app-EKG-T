@@ -51,7 +51,10 @@ const BRAND_FILL_ALLOWED = [
  * significa nada; la lista vacia impide que vuelva a aparecer suelta en otra
  * pantalla sin decidirlo.
  */
-const TINTED_ALLOWED: string[] = [];
+const TINTED_ALLOWED: string[] = [
+  // Tarjeta destacada del inicio: ocupa el ancho completo y lleva la accion principal.
+  'src/components/HomeHero.tsx',
+];
 
 /** Modulos que pueden tocar la jerarquia de alarma de la IEC 60601-1-8. */
 // `Notice` sustituye a `ErrorNotice` en esta lista: el color de alarma se movio

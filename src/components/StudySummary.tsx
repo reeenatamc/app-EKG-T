@@ -44,7 +44,6 @@ const COLUMNS: readonly SummaryColumn[] = [
  * @returns La fila de recuentos.
  */
 export function StudySummary({ counts, onPress }: StudySummaryProps) {
-  const theme = useTheme();
   const press = usePressMotion();
   const spoken = COLUMNS.map((column) => `${counts[column.key]} ${column.label}`).join(', ');
 
@@ -55,7 +54,7 @@ export function StudySummary({ counts, onPress }: StudySummaryProps) {
       onPress={onPress}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
-      style={[styles.strip, { borderColor: theme.edge }, press.style]}
+      style={[styles.strip, press.style]}
     >
       {COLUMNS.map((column, index) => (
         <SummaryCell
@@ -99,12 +98,8 @@ function SummaryCell({
 }
 
 const styles = StyleSheet.create({
-  strip: {
-    flexDirection: 'row',
-    borderTopWidth: size.hairline,
-    borderBottomWidth: size.hairline,
-    paddingVertical: gap.md,
-  },
+  // Va dentro de la tarjeta de resumen del inicio, que ya le da el contorno.
+  strip: { flexDirection: 'row', paddingVertical: gap.sm },
   cell: { flex: 1, gap: gap.xs, paddingHorizontal: gap.md },
   label: { flexDirection: 'row', alignItems: 'center', gap: gap.xs },
   dot: { width: gap.sm, height: gap.sm, borderRadius: radius.pill },
