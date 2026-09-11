@@ -53,6 +53,7 @@ const OBSERVATIONS: readonly EcgObservation[] = [
     leads: ['II'],
     confidence: 0.94,
     needsReview: true,
+    aboveThreshold: null,
   },
   {
     id: 'axis-normal',
@@ -60,6 +61,7 @@ const OBSERVATIONS: readonly EcgObservation[] = [
     leads: ['I', 'aVF'],
     confidence: 0.88,
     needsReview: true,
+    aboveThreshold: null,
   },
 ];
 
