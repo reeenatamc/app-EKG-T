@@ -180,3 +180,26 @@ export const HIDDEN_LABELS: ReadonlySet<string> = new Set([
   'BORDERLINE ECG',
   'PEDIATRIC ECG ANALYSIS',
 ]);
+
+/**
+ * Etiqueta de una observacion tal como la ve el usuario: en espanol y con
+ * mayuscula inicial. El diccionario guarda los terminos en minuscula; lo que no
+ * esta en el diccionario sale como lo emitio el modelo.
+ *
+ * @param label Etiqueta del modelo.
+ * @returns La etiqueta para mostrar.
+ */
+export function observationLabel(label: string): string {
+  const text = LABELS_ES[label] ?? label;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * Si una observacion se muestra junto a los hallazgos.
+ *
+ * @param label Etiqueta del modelo.
+ * @returns Falso para los enunciados de resumen.
+ */
+export function isShownObservation(label: string): boolean {
+  return !HIDDEN_LABELS.has(label);
+}

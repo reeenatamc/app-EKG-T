@@ -11,6 +11,7 @@
  */
 
 import { MOUNT_COPY } from '@/constants/captureText';
+import { isShownObservation, observationLabel } from '@/constants/labelsEs';
 import { MEASUREMENT_LABELS, STUDY_TEXT } from '@/constants/studyText';
 import type { EcgAnalysis, EcgMeasurements } from '@/ecg/EcgAnalysisService';
 import type { QueuedStudy } from '@/capture/study';
@@ -107,9 +108,10 @@ function renderObservations(analysis: EcgAnalysis): string {
   }
 
   const items = analysis.observations
+    .filter((observation) => isShownObservation(observation.label))
     .map(
       (observation) =>
-        `<li>${escapeHtml(observation.label)}
+        `<li>${escapeHtml(observationLabel(observation.label))}
          <span class="review">${escapeHtml(STUDY_TEXT.observationNeedsReview)}</span></li>`,
     )
     .join('');
