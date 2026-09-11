@@ -9,7 +9,6 @@ import { studyCounts } from '@/capture/studyState';
 import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { AppTabBar } from '@/components/AppTabBar';
 import { HomeHero } from '@/components/HomeHero';
-import { QuickAccess } from '@/components/QuickAccess';
 import { StudyListRow } from '@/components/StudyListRow';
 import { StudySummary } from '@/components/StudySummary';
 import { HOME_TEXT } from '@/constants/shellText';
@@ -35,7 +34,7 @@ const AVATAR_SIDE = 48;
  * Inicio.
  *
  * De arriba abajo: quien abre la aplicacion, la tarjeta destacada con la accion
- * principal, el resumen de estudios, los accesos rapidos y los recientes. El aviso
+ * principal, el resumen de estudios y los recientes. El aviso
  * clinico queda como nota al pie.
  *
  * La barra se monta AQUI, por la prop `chrome` de `Background`, no desde el
@@ -96,7 +95,7 @@ function HomeHeader({ now }: { readonly now: Date }) {
 }
 
 /**
- * El resumen, los accesos y los recientes.
+ * El resumen y los recientes.
  *
  * MIENTRAS SE LEE EL DISCO NO SE ENSENA NADA: un «todavia no hay estudios» en los
  * primeros fotogramas mentiria a quien tiene cuatro.
@@ -123,7 +122,6 @@ function HomeStudies() {
           />
         </View>
       )}
-      <QuickAccess />
       <RecentStudies studies={studies} onSeeAll={() => router.navigate('/history')} />
     </>
   );

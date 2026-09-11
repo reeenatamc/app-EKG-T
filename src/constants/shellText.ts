@@ -63,8 +63,6 @@ export const CALENDAR_TEXT = {
 export const HOME_TEXT = {
   newStudy: 'Nuevo estudio',
   heroTitle: 'Lee un electrocardiograma',
-  quickTitle: 'Acceso rápido',
-  settings: 'Ajustes',
   newStudyHint: 'ECG estándar de 12 derivaciones, en papel.',
   summaryTitle: 'Resumen',
   summaryReady: 'Listos',
