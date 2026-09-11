@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   signalView: { gap: gap.sm },
   photo: { width: '100%', borderRadius: radius.tile },
   basis: { gap: gap.sm, marginBottom: gap.md },
-  basisAction: { flexDirection: 'row' },
+  basisAction: { flexDirection: 'row', alignSelf: 'flex-start' },
   ready: { gap: gap.xl },
   processing: { gap: gap.xl },
   failureWrap: { gap: gap.xl },
