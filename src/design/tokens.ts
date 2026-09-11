@@ -378,6 +378,22 @@ export const glass = {
   borderLight: 'rgba(252, 248, 244, 0.55)',
   borderDark: 'rgba(245, 235, 241, 0.20)',
   specular: 'rgba(252, 248, 244, 0.85)',
+  /**
+   * La burbuja que marca la pestana activa, dentro de la barra de vidrio.
+   *
+   * Un velo, no un relleno. Una segunda capa de desenfoque dentro de la barra
+   * costaria otra pasada de vidrio en cada fotograma de la animacion, en un
+   * telefono donde ya se midio un 30 % de fotogramas a tirones; un velo
+   * translucido con su filo claro se lee como vidrio sobre vidrio sin ese coste.
+   *
+   * En claro lleva un punto de carmin para que se distinga de la propia barra,
+   * que tambien es clara; a este porcentaje es un tinte, no el relleno de carmin
+   * que la regla 12.9 prohibe en superficies pequenas.
+   */
+  selectionLight: 'rgba(190, 74, 94, 0.13)',
+  selectionDark: 'rgba(245, 235, 241, 0.14)',
+  selectionEdgeLight: 'rgba(252, 248, 244, 0.75)',
+  selectionEdgeDark: 'rgba(245, 235, 241, 0.22)',
   shadow: '#5A1C2E',
 } as const;
 

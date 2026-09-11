@@ -14,10 +14,10 @@ interface TabBarItemProps {
   readonly onPress: () => void;
   readonly isActive: boolean;
   /**
-   * Marca la accion principal. Se pinta rellena para que destaque sobre las
-   * pestanas de navegacion, que solo cambian de sitio.
+   * `tab` para una seccion, `button` para una accion. Capturar es lo segundo: no
+   * cambia de seccion, abre la camara.
    */
-  readonly isPrimary?: boolean;
+  readonly role: 'tab' | 'button';
 }
 
 /**
@@ -30,13 +30,12 @@ interface TabBarItemProps {
  * hoja con un trazado dentro se puede leer como "documento" o como "estudio"
  * segun quien mire.
  *
- * LA ACCION PRINCIPAL SE RELLENA DE TINTA, no de carmin. La regla de tamano de
- * §12.9 reserva el **relleno** de carmin para superficies grandes, y esta pildora
- * mide unos 76 puntos: a ese tamano un rojo saturado sobre vidrio se lee como un
- * aviso. La inversion tinta/lienzo la separa igual de bien de las pestanas, que
- * solo cambian de sitio.
+ * CAPTURAR YA NO SE RELLENA. Fue una pildora de tinta para destacar sobre las
+ * pestanas; con la burbuja deslizante chocaba con ella —dos formas rellenas en
+ * la misma barra, una de ellas quieta— y hacia dudar de cual marcaba la seccion
+ * actual. Ahora es un hueco como los demas, y la burbuja nunca se posa en el.
  *
- * LA PESTANA ACTIVA SI VA EN CARMIN, y no contradice lo anterior: §12.9 prohibe
+ * LA PESTANA ACTIVA VA EN CARMIN, ademas de la burbuja: §12.9 prohibe
  * el carmin como RELLENO de un elemento pequeno, no como tinte de un icono y su
  * etiqueta. Marcar la pestana activa con el color de acento es la convencion de
  * iOS, y hacia falta: con tinta oscura contra gris, a trece puntos y sobre
@@ -54,17 +53,17 @@ interface TabBarItemProps {
  * @param icon Icono del elemento.
  * @param onPress Accion al pulsarlo.
  * @param isActive Cierto si es la pestana actual.
- * @param isPrimary Cierto para la accion principal.
+ * @param role Seccion o accion.
  * @returns El elemento renderizado.
  */
-export function TabBarItem({ label, icon, onPress, isActive, isPrimary = false }: TabBarItemProps) {
+export function TabBarItem({ label, icon, onPress, isActive, role }: TabBarItemProps) {
   const theme = useTheme();
   const press = usePressMotion();
-  const color = isPrimary ? theme.canvas : isActive ? brand.carmine : theme.textLow;
+  const color = isActive ? brand.carmine : theme.textLow;
 
   return (
     <AnimatedPressable
-      accessibilityRole={isPrimary ? 'button' : 'tab'}
+      accessibilityRole={role}
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={label}
       onPress={() => {
@@ -73,7 +72,7 @@ export function TabBarItem({ label, icon, onPress, isActive, isPrimary = false }
       }}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
-      style={[styles.item, isPrimary ? { backgroundColor: theme.textHigh } : null, press.style]}
+      style={[styles.item, press.style]}
     >
       <TabIcon name={icon} color={color} />
       <Text style={[type.caption, { color }]} numberOfLines={1}>
