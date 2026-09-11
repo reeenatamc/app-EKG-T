@@ -48,6 +48,21 @@ import type { CapturedPhoto } from '@/camera/capturePhoto';
 const INITIAL_INSET_RATIO = 0;
 
 /**
+ * Recodifica la imagen elegida, que es lo que la despega de sus metadatos.
+ *
+ * Una imagen de galeria puede traer EXIF con coordenadas: la casa del paciente,
+ * el hospital. Al reescribirla no viaja nada de eso.
+ *
+ * @param uri Imagen tal como la devolvio el selector.
+ * @returns La imagen recodificada, con sus dimensiones.
+ */
+async function recode(uri: string): Promise<{ uri: string; width: number; height: number }> {
+  const rendered = await ImageManipulator.manipulate(uri).renderAsync();
+
+  return rendered.saveAsync({ format: SaveFormat.JPEG, compress: CROPPED_COMPRESSION });
+}
+
+/**
  * Pide una imagen de la galeria y la deja lista para revisar.
  *
  * @returns La foto importada, o null si el usuario cancelo.
@@ -70,17 +85,14 @@ export async function importFromGallery(): Promise<CapturedPhoto | null> {
     return null;
   }
 
-  const rendered = await ImageManipulator.manipulate(asset.uri).renderAsync();
-  const saved = await rendered.saveAsync({
-    format: SaveFormat.JPEG,
-    compress: CROPPED_COMPRESSION,
-  });
+  const saved = await recode(asset.uri);
 
   const insetX = saved.width * INITIAL_INSET_RATIO;
   const insetY = saved.height * INITIAL_INSET_RATIO;
 
   return {
     uri: saved.uri,
+    source: 'gallery',
     width: saved.width,
     height: saved.height,
     framedRegion: {

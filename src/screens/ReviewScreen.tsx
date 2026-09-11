@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
-import type { CapturedPhoto } from '@/camera/capturePhoto';
+import type { CapturedPhoto, PhotoSource } from '@/camera/capturePhoto';
 import { computeContainRect, type Rect, type Size } from '@/camera/framing';
 import {
   mapQuad,
@@ -17,6 +17,7 @@ import { CornerHandles } from '@/components/CornerHandles';
 import { Notice } from '@/components/Notice';
 import { PerspectivePreview } from '@/components/PerspectivePreview';
 import { REVIEW_TEXT } from '@/constants/captureText';
+import { reviewCopyFor } from '@/capture/reviewCopy';
 import { useTheme } from '@/design/theme';
 import { gap, radius } from '@/design/tokens';
 import { type } from '@/design/type';
@@ -58,13 +59,14 @@ export function ReviewScreen({
 
   return (
     <View style={styles.container}>
-      <ReviewHeader />
+      <ReviewHeader source={photo.source} />
 
       <CropWorkspace uri={photo.uri} review={review} />
 
       <ReviewActions
         canContinue={review.isValid && !isCropping}
         hasCropFailed={hasCropFailed}
+        source={photo.source}
         onDiscard={onDiscard}
         onConfirm={() => onConfirm(review.readInPhotoPixels())}
         onReset={review.resetCorners}
@@ -109,14 +111,19 @@ function CropWorkspace({ uri, review }: { readonly uri: string; readonly review:
   );
 }
 
-/** Titulo e instruccion de la pantalla. */
-function ReviewHeader() {
+/**
+ * Titulo e instruccion de la pantalla.
+ *
+ * Los dos dependen de si la imagen se fotografio o se importo: ver reviewCopyFor.
+ */
+function ReviewHeader({ source }: { readonly source: PhotoSource }) {
   const theme = useTheme();
+  const copy = reviewCopyFor(source);
 
   return (
     <>
-      <Text style={[type.h1, { color: theme.textHigh }]}>{REVIEW_TEXT.title}</Text>
-      <Text style={[type.caption, { color: theme.textLow }]}>{REVIEW_TEXT.hint}</Text>
+      <Text style={[type.h1, { color: theme.textHigh }]}>{copy.title}</Text>
+      <Text style={[type.caption, { color: theme.textLow }]}>{copy.hint}</Text>
     </>
   );
 }
@@ -300,6 +307,7 @@ function RectifiedFeedback({
 interface ReviewActionsProps {
   readonly canContinue: boolean;
   readonly hasCropFailed: boolean;
+  readonly source: PhotoSource;
   readonly onDiscard: () => void;
   readonly onConfirm: () => void;
   readonly onReset: () => void;
@@ -324,10 +332,15 @@ interface ReviewActionsProps {
 function ReviewActions({
   canContinue,
   hasCropFailed,
+  source,
   onDiscard,
   onConfirm,
   onReset,
 }: ReviewActionsProps) {
+  // "Volver al encuadre" nombra algo que en la galeria no ocurrio: nadie encuadro
+  // nada, se eligio un archivo.
+  const { reset: resetLabel } = reviewCopyFor(source);
+
   return (
     <>
       {hasCropFailed ? (
@@ -343,7 +356,7 @@ function ReviewActions({
           disabled={!canContinue}
         />
       </View>
-      <ActionButton label={REVIEW_TEXT.reset} onPress={onReset} variant="secondary" />
+      <ActionButton label={resetLabel} onPress={onReset} variant="secondary" />
     </>
   );
 }

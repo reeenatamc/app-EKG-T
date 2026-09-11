@@ -7,8 +7,26 @@ import { computeCropRegion, type CropRegion, type Rect, type Size } from '@/came
 import { expandRect } from '@/camera/quad';
 
 /** Foto recortada al area del marco mas su margen, lista para revisar. */
+/**
+ * De donde salio la imagen.
+ *
+ * IMPORTA PARA EL RECORTE, no para la trazabilidad. Una foto es una hoja sobre
+ * una mesa: alrededor hay fondo, y llevar las esquinas al borde del papel es
+ * exactamente lo que hay que hacer. Una imagen de galeria suele ser ya la hoja
+ * entera, y ahi la misma instruccion recorta el electrocardiograma.
+ *
+ * Medido sobre un registro de 1800x649: entero se identifica como standard_3x4
+ * con un coste de 0.034, el mejor de todo el corpus; recortado a la rejilla pasa
+ * a precordial_3x2, y basta con quitarle la columna de texto de la derecha para
+ * que se rompa. La pantalla pedia literalmente "arrastra cada esquina hasta el
+ * borde del papel" en los dos casos.
+ */
+export type PhotoSource = 'camera' | 'gallery';
+
 export interface CapturedPhoto {
   readonly uri: string;
+  /** Cual de las dos puertas de entrada trajo esta imagen. */
+  readonly source: PhotoSource;
   readonly width: number;
   readonly height: number;
   /**
@@ -131,7 +149,7 @@ async function cropToRegion(
     compress: CROPPED_COMPRESSION,
   });
 
-  return { uri: saved.uri, width: saved.width, height: saved.height };
+  return { uri: saved.uri, source: 'camera', width: saved.width, height: saved.height };
 }
 
 /**

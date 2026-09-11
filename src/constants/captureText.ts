@@ -148,6 +148,26 @@ export const CORNER_LABELS = [
 export const REVIEW_TEXT = {
   title: 'Ajusta las esquinas',
   hint: 'Arrastra cada esquina hasta el borde del papel. La perspectiva se corrige sola.',
+  /**
+   * La misma pantalla, cuando la imagen viene de la galeria.
+   *
+   * NO ES UNA VARIANTE DE TONO: es que la instruccion de arriba solo vale para una
+   * fotografia. Una foto es una hoja sobre una mesa y llevar las esquinas al borde
+   * del papel quita el fondo, que es justo lo que hay que hacer. Una imagen de
+   * galeria ya suele ser la hoja entera, y ahi esa misma instruccion recorta el
+   * electrocardiograma.
+   *
+   * Medido sobre un registro de 1800x649: entero se lee como standard_3x4 con un
+   * coste de 0.034, el mejor del corpus; ajustado a la rejilla pasa a
+   * precordial_3x2, y basta quitarle la columna de texto de la derecha para que se
+   * rompa. Las esquinas ya parten de los bordes, asi que lo correcto casi siempre
+   * es no tocarlas -- y la pantalla pedia lo contrario.
+   */
+  gallery: {
+    title: 'Comprueba las esquinas',
+    hint: 'Si la imagen ya es solo el electrocardiograma, dejalas donde estan. Muevelas solo si sobra mesa, dedos o fondo alrededor del papel.',
+    reset: 'Usar la imagen entera',
+  },
   crossedQuad: 'Las esquinas se han cruzado. Devuelve una a su sitio para seguir.',
   preview: 'Con la perspectiva corregida',
   previewHint: 'Asi quedara el registro una vez enderezado.',
