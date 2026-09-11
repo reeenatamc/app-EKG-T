@@ -20,15 +20,19 @@ import { type } from '@/design/type';
 const BEAT_DURATION_MS = 1800;
 
 /**
- * Fraccion del ancho que ocupa el latido.
+ * Fraccion del ancho que ocupa el latido: todo.
  *
- * Casi todo, y ese es el punto. Antes iba dentro de una tarjeta de 280 puntos
- * con borde y sombra, o sea que lo primero que veia alguien al abrir la
- * aplicacion era un recuadro. Un recuadro es una pieza de interfaz, y esta
- * pantalla no tiene interfaz: no hay nada que tocar, nada que leer, nada que
- * decidir. Solo hay que esperar un segundo.
+ * DE BORDE A BORDE. Al 86 % la linea de base empezaba y acababa en medio de la
+ * pantalla, y un trazo que se interrumpe antes del borde se lee como un dibujo
+ * colocado encima, no como una senal que pasa. Entrando por un lado y saliendo
+ * por el otro, la pantalla es una ventana sobre un registro que sigue fuera de
+ * ella, que es exactamente lo que es un electrocardiograma.
+ *
+ * Antes iba dentro de una tarjeta de 280 puntos, o sea que lo primero que veia
+ * alguien al abrir la aplicacion era un recuadro. Esta pantalla no tiene
+ * interfaz: no hay nada que tocar, leer ni decidir.
  */
-const BEAT_WIDTH_RATIO = 0.86;
+const BEAT_WIDTH_RATIO = 1;
 
 /**
  * La pantalla de arranque.
