@@ -46,7 +46,12 @@ export function StudyNotes({ studyId }: StudyNotesProps) {
           placeholder={STUDY_TEXT.notesPlaceholder}
           placeholderTextColor={theme.textLow}
           accessibilityLabel={STUDY_TEXT.notesSection}
-          style={[styles.input, { backgroundColor: theme.surface, color: theme.textHigh }]}
+          style={[
+            styles.input,
+            // Con filo: sobre el lienzo plano la superficie es el mismo hueso, y sin
+            // borde el campo no se veia; solo flotaba el texto de ejemplo.
+            { backgroundColor: theme.surface, borderColor: theme.edge, color: theme.textHigh },
+          ]}
         />
         <Text style={[type.caption, { color: theme.textLow }]}>{STUDY_TEXT.notesHint}</Text>
       </View>
@@ -61,6 +66,7 @@ const styles = StyleSheet.create({
     minHeight: NOTES_HEIGHT,
     padding: gap.lg,
     borderRadius: radius.tile,
+    borderWidth: size.hairline,
     textAlignVertical: 'top',
     minWidth: size.touchTarget,
   },

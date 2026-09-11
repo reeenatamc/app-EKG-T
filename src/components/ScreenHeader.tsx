@@ -25,6 +25,11 @@ interface ScreenHeaderProps {
    * navegacion plana en un laberinto.
    */
   readonly onBack?: () => void;
+  /**
+   * `display` en las pantallas de entrada, `headline` en las de trabajo. Ver
+   * `type.headline`.
+   */
+  readonly size?: 'display' | 'headline';
 }
 
 /**
@@ -48,9 +53,10 @@ interface ScreenHeaderProps {
  * @param title Titular de la pantalla.
  * @param eyebrow Micro-etiqueta opcional, solo si informa.
  * @param onBack Salida opcional, solo en pantallas apiladas.
+ * @param size Escalon del titular.
  * @returns El titular renderizado.
  */
-export function ScreenHeader({ title, eyebrow, onBack }: ScreenHeaderProps) {
+export function ScreenHeader({ title, eyebrow, onBack, size = 'display' }: ScreenHeaderProps) {
   const theme = useTheme();
 
   return (
@@ -70,7 +76,7 @@ export function ScreenHeader({ title, eyebrow, onBack }: ScreenHeaderProps) {
       {eyebrow === undefined ? null : (
         <Text style={[type.eyebrow, { color: theme.textLow }]}>{eyebrow}</Text>
       )}
-      <Text style={[type.display, { color: theme.textHigh }]}>{title}</Text>
+      <Text style={[type[size], { color: theme.textHigh }]}>{title}</Text>
     </View>
   );
 }

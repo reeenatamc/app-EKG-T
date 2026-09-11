@@ -69,7 +69,7 @@ export function ConfirmScreen({ image, mount, suggestedId, onBack, onSubmit }: C
         contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.lg }]}
         keyboardShouldPersistTaps="handled"
       >
-        <ScreenHeader title={CONFIRM_TEXT.title} />
+        <ScreenHeader title={CONFIRM_TEXT.title} size="headline" />
 
         <Image
           source={{ uri: image.uri }}

@@ -41,6 +41,21 @@ export const type = {
     lineHeight: 42,
     letterSpacing: -1.3,
   },
+  /**
+   * Titular de las pantallas de trabajo: inicio, historial, perfil, detalle.
+   *
+   * La misma familia que `display` y un escalon menos. A 44 puntos, los titulares
+   * de estas pantallas se partian en dos lineas —el saludo con el nombre, el
+   * montaje de un estudio— y el titular ocupaba el primer cuarto de la pantalla
+   * sin decir nada que no cupiese en una. `display` se queda para las pantallas
+   * de entrada, donde el titular es casi lo unico que hay.
+   */
+  headline: {
+    fontFamily: 'BricolageGrotesque_800ExtraBold',
+    fontSize: 32,
+    lineHeight: 36,
+    letterSpacing: -0.8,
+  },
   h1: { fontFamily: 'Inter_500Medium', fontSize: 24, lineHeight: 30 },
   body: { fontFamily: 'Inter_400Regular', fontSize: 16, lineHeight: 24 },
   caption: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 18 },

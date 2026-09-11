@@ -42,7 +42,7 @@ export function ProfileScreen() {
           { paddingTop: insets.top + gap.xl, paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
         ]}
       >
-        <ScreenHeader title={PROFILE_TEXT.title} />
+        <ScreenHeader title={PROFILE_TEXT.title} size="headline" />
         <SettingsRow
           label={PROFILE_TEXT.emailLabel}
           value={session?.email ?? PROFILE_TEXT.emailMissing}

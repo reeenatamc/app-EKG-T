@@ -23,6 +23,15 @@ export const STUDY_TEXT = {
   supportOnly:
     'Lo que sigue es una lectura automatica de la imagen, no un diagnostico. Confirmalo con el trazado y con el paciente.',
   observationNeedsReview: 'Requiere confirmacion',
+  /**
+   * Lo mismo, dicho una vez para toda la lista.
+   *
+   * Se repetia en cada observacion, diez veces en una lectura corriente, y a la
+   * tercera ya no se lee: una advertencia que se repite hasta ser ruido deja de
+   * advertir. Va en la cabecera de la lista, y cada fila lo sigue diciendo a quien
+   * la escucha con lector de pantalla, que no ve la cabecera al recorrerlas.
+   */
+  observationsReviewAll: 'Todas requieren confirmación clínica.',
   confidenceLabel: 'confianza',
   /**
    * De donde sale la lectura.

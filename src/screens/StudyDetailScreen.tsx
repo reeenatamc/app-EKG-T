@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
+import { formatStudyDate } from '@/capture/studyDate';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { AnalysisSection } from '@/components/AnalysisSection';
 import { KeyboardLift } from '@/components/KeyboardLift';
@@ -113,9 +114,14 @@ function StudyHeader({
 
   return (
     <View style={styles.header}>
-      <ScreenHeader title={MOUNT_COPY[mount].label} eyebrow={anonymousId} onBack={onBack} />
+      <ScreenHeader
+        title={MOUNT_COPY[mount].label}
+        eyebrow={anonymousId}
+        onBack={onBack}
+        size="headline"
+      />
       <Text style={[type.data, { color: theme.textLow }]}>
-        {new Date(capturedAt).toLocaleString()} · {calibration.speedMmPerSecond} mm/s ·{' '}
+        {formatStudyDate(capturedAt, true)} · {calibration.speedMmPerSecond} mm/s ·{' '}
         {calibration.gainMmPerMillivolt} mm/mV
       </Text>
     </View>

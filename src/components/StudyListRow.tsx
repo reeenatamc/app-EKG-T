@@ -7,6 +7,7 @@ import ReanimatedSwipeable, {
 import { deleteStudy } from '@/capture/deleteStudy';
 import type { QueuedStudy } from '@/capture/study';
 import { studyActions } from '@/capture/studyActions';
+import { formatStudyDate } from '@/capture/studyDate';
 import { studyState, type StudyState } from '@/capture/studyState';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
@@ -223,7 +224,7 @@ function RowContent({ study, analysis, state }: Omit<StudyOpenerProps, 'canOpen'
         <StateBadge state={state} />
       </View>
       <Text style={[type.data, { color: theme.textLow }]} numberOfLines={1}>
-        {study.metadata.anonymousId} · {formatCapturedAt(study.metadata.capturedAt)}
+        {study.metadata.anonymousId} · {formatStudyDate(study.metadata.capturedAt)}
       </Text>
       {cause === null ? null : (
         <Text style={[type.caption, { color: theme.textLow }]} numberOfLines={2}>
@@ -275,24 +276,6 @@ function failureCause(
   const reason = analysis?.failure ?? null;
 
   return reason === null ? STATUS_DETAIL.failed : ANALYSIS_FAILURE_COPY[reason];
-}
-
-/**
- * Fecha y hora de captura, cortas.
- *
- * Con hora y no solo con dia: dos estudios del mismo paciente en la misma manana
- * son justo lo que hay que poder distinguir.
- *
- * @param capturedAt Instante ISO de la captura.
- * @returns La fecha legible.
- */
-function formatCapturedAt(capturedAt: string): string {
-  return new Date(capturedAt).toLocaleString('es', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 const styles = StyleSheet.create({

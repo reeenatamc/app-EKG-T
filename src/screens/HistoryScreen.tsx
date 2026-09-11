@@ -182,7 +182,7 @@ function StudyListHeader({
 
   return (
     <>
-      <ScreenHeader title={HISTORY_LIST_TEXT.title} />
+      <ScreenHeader title={HISTORY_LIST_TEXT.title} size="headline" />
       <SwipeHint />
       {notice === null ? null : (
         <View style={styles.headerNotice}>

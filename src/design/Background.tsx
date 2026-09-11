@@ -1,6 +1,7 @@
 import { BlurTargetView } from 'expo-blur';
 import { useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackgroundLayers } from '@/design/BackgroundLayers';
 import { BlurTargetContext } from '@/design/blurTarget';
@@ -100,6 +101,7 @@ export function Background({
         <CanvasFill color={ground} />
         {hasLayers ? <BackgroundLayers {...layout} showSignalBloom={showSignalBloom} /> : null}
         {children}
+        {atmosphere ? null : <StatusScrim color={ground} />}
       </BlurTargetView>
 
       {chrome === undefined ? null : (
@@ -138,9 +140,29 @@ function CanvasFill({ color }: { readonly color: string }) {
   );
 }
 
+/**
+ * Franja del color del lienzo detras de la barra de notificaciones.
+ *
+ * EL CONTENIDO NO PASA POR DEBAJO DE LA HORA. La aplicacion se dibuja de borde a
+ * borde, y al desplazar una pantalla plana el texto cruzaba la barra de
+ * notificaciones y se mezclaba con sus iconos. Solo en las pantallas planas: en
+ * las de entrada cortaria la atmosfera con un borde recto.
+ */
+function StatusScrim({ color }: { readonly color: string }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.statusScrim, { height: insets.top, backgroundColor: color }]}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   // El objetivo ocupa la pantalla y aloja el contenido, asi que no puede ser
   // absoluteFill ni ignorar los toques como cuando solo contenia el fondo.
   target: { flex: 1 },
+  statusScrim: { position: 'absolute', top: 0, left: 0, right: 0 },
 });

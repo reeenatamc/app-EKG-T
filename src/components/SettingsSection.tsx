@@ -22,7 +22,9 @@ export function SettingsSection({ title, children }: SettingsSectionProps) {
 
   return (
     <View style={styles.section}>
-      <Text style={[type.caption, { color: theme.textLow }]}>{title}</Text>
+      {/* Rotulo en micro-etiqueta: en caja alta y monoespaciada se distingue del
+          contenido de un vistazo, que en cuerpo de texto gris no pasaba. */}
+      <Text style={[type.eyebrow, { color: theme.textLow }]}>{title}</Text>
       {children}
     </View>
   );

@@ -59,7 +59,7 @@ export function HomeScreen() {
           { paddingTop: insets.top + gap.xl, paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
         ]}
       >
-        <ScreenHeader title={welcomeLine(session, now)} eyebrow={longDate(now)} />
+        <ScreenHeader title={welcomeLine(session, now)} eyebrow={longDate(now)} size="headline" />
         <HomeModules />
       </ScrollView>
     </Background>

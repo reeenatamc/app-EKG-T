@@ -16,8 +16,7 @@ interface ObservationListProps {
  * SE TRUNCA, NO SE REDONDEA. Redondear convierte 0,996 en «100%», y eso es una
  * certeza que el modelo no ha afirmado: sus salidas no son probabilidades
  * calibradas, y ni siquiera las que lo fueran llegan al uno. Una aplicacion que
- * repite en cada fila que hay que confirmar la lectura no puede a la vez
- * escribir un cien por cien.
+ * pide confirmar la lectura no puede a la vez escribir un cien por cien.
  */
 const PERCENT = 100;
 
@@ -25,20 +24,27 @@ const PERCENT = 100;
  * Lo que el modelo observo en el trazado.
  *
  * NO SON DIAGNOSTICOS y la pantalla no deja lugar a dudas: el aviso de que esto
- * es una lectura automatica va arriba, cada observacion lleva escrito que
- * requiere confirmacion, y ninguna se pinta con color de estado. Un rojo o un
- * verde aqui convertirian una sugerencia en un veredicto, ademas de invadir la
- * paleta de alarma de §12.
+ * es una lectura automatica va arriba, la lista dice que todas requieren
+ * confirmacion, y ninguna se pinta con color de estado. Un rojo o un verde aqui
+ * convertirian una sugerencia en un veredicto, ademas de invadir la paleta de
+ * alarma de §12.
  *
- * LAS DERIVACIONES NO SE PINTAN POR FILA, y no por ahorrar sitio. El pipeline
- * las calcula una vez para la lectura entera y se las pone iguales a todas las
- * observaciones -- «which leads the reading actually rests on», dice-- porque el
- * modelo no localiza hallazgos: recibe una senal y devuelve puntuaciones, sin
- * saber en cual se ve cada cosa. Repetir las mismas tres en cada fila insinuaba
- * una diferencia que no existe. Se dicen una vez, arriba, junto al foco.
+ * UNA TABLA, NO UNA TARJETA POR OBSERVACION. Eran tarjetas de tres lineas y la
+ * tercera repetia «Requiere confirmacion» en todas: una lectura corriente trae
+ * diez observaciones y ocupaba cuatro pantallas de desplazamiento, con la misma
+ * advertencia diez veces, que a la tercera ya no se lee. Ahora es una fila por
+ * observacion —el hallazgo a la izquierda, la confianza a la derecha en
+ * monoespaciada, para que las cifras se lean en columna— y la advertencia va una
+ * vez, encima. Cada fila la sigue diciendo a quien la recorre con lector de
+ * pantalla, que no ve la cabecera.
  *
- * La confianza se muestra porque una observacion al 60% y otra al 95% no piden
- * la misma atencion, y ocultarlo seria decidir por el clinico.
+ * LAS DERIVACIONES NO SE PINTAN POR FILA. El pipeline las calcula una vez para la
+ * lectura entera y se las pone iguales a todas las observaciones, porque el
+ * modelo no localiza hallazgos. Repetirlas insinuaria una diferencia que no
+ * existe; se dicen una vez, arriba, junto al foco.
+ *
+ * La confianza se muestra porque una observacion al 60% y otra al 95% no piden la
+ * misma atencion, y ocultarlo seria decidir por el clinico.
  *
  * @param observations Observaciones del analisis.
  * @returns La lista de observaciones.
@@ -51,40 +57,60 @@ export function ObservationList({ observations }: ObservationListProps) {
   }
 
   return (
-    <View style={styles.list}>
-      {observations.map((observation) => (
-        <View
-          key={observation.id}
-          style={[
-            styles.item,
-            // Acento decorativo, no color de estado. Ver la cabecera del
-            // componente. Es retícula gruesa: ni marca ni alarma.
-            { backgroundColor: theme.surface, borderLeftColor: theme.gridBold },
-          ]}
-          accessibilityLabel={`${observation.label}. ${STUDY_TEXT.observationNeedsReview}.`}
-        >
-          <Text style={[type.body, { color: theme.textHigh }]}>{observation.label}</Text>
+    <View style={styles.block}>
+      <Text style={[type.caption, { color: theme.textHigh }]}>
+        {STUDY_TEXT.observationsReviewAll}
+      </Text>
+      <View style={[styles.table, { backgroundColor: theme.surface, borderColor: theme.edge }]}>
+        {observations.map((observation, index) => (
+          <ObservationRow key={observation.id} observation={observation} isFirst={index === 0} />
+        ))}
+      </View>
+    </View>
+  );
+}
 
-          <Text style={[type.caption, { color: theme.textLow }]}>
-            {Math.floor(observation.confidence * PERCENT)}% {STUDY_TEXT.confidenceLabel}
-          </Text>
+/** Una fila: el hallazgo y su confianza, separada de la anterior por un filo. */
+function ObservationRow({
+  observation,
+  isFirst,
+}: {
+  readonly observation: EcgObservation;
+  readonly isFirst: boolean;
+}) {
+  const theme = useTheme();
+  const percent = Math.floor(observation.confidence * PERCENT);
 
-          <Text style={[type.caption, { color: theme.textHigh }]}>
-            {STUDY_TEXT.observationNeedsReview}
-          </Text>
-        </View>
-      ))}
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${observation.label}. ${percent}% ${STUDY_TEXT.confidenceLabel}. ${STUDY_TEXT.observationNeedsReview}.`}
+      style={[
+        styles.row,
+        isFirst ? null : { borderTopColor: theme.edge, borderTopWidth: size.hairline },
+      ]}
+    >
+      <Text style={[type.body, styles.label, { color: theme.textHigh }]}>{observation.label}</Text>
+      <Text style={[type.data, { color: theme.textLow }]}>{percent} %</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  list: { gap: gap.sm },
-  item: {
-    padding: gap.lg,
+  block: { gap: gap.sm },
+  table: {
     borderRadius: radius.tile,
     borderCurve: 'continuous',
-    borderLeftWidth: size.frameBorder,
-    gap: gap.xs,
+    borderWidth: size.hairline,
+    overflow: 'hidden',
   },
+  row: {
+    minHeight: size.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: gap.md,
+    paddingHorizontal: gap.lg,
+    paddingVertical: gap.md,
+  },
+  label: { flex: 1 },
 });
