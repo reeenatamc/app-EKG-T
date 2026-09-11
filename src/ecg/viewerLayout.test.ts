@@ -2,7 +2,7 @@ import { STANDARD_CALIBRATION } from '@/capture/study';
 import { computeGridGeometry } from '@/ecg/grid';
 import { rhythmStripLeads } from '@/ecg/leads';
 import type { EcgSignal, LeadName } from '@/ecg/signal';
-import { computeViewerLayout, MIN_PIXELS_PER_MM } from '@/ecg/viewerLayout';
+import { cellAt, computeViewerLayout, MIN_PIXELS_PER_MM } from '@/ecg/viewerLayout';
 
 const WIDTH = 800;
 const SAMPLING_RATE_HZ = 500;
@@ -249,5 +249,15 @@ describe('identidad de las celdas', () => {
 
     expect(repeated).toHaveLength(2);
     expect(repeated.every((cell) => cell.fromSecond === 0)).toBe(true);
+  });
+});
+
+describe('cellAt', () => {
+  it('devuelve la derivacion tocada, o null fuera de todas', () => {
+    const layout = computeViewerLayout('standard-3x4', WIDTH, STANDARD_CALIBRATION, STANDARD);
+    const aVR = layout.cells.find((cell) => cell.lead === 'aVR');
+
+    expect(cellAt(layout.cells, (aVR?.x ?? 0) + 5, (aVR?.y ?? 0) + 5)?.lead).toBe('aVR');
+    expect(cellAt(layout.cells, -1, -1)).toBeNull();
   });
 });

@@ -131,6 +131,22 @@ function legibleCanvasWidth(
     : MIN_PIXELS_PER_MM * paperMm;
 }
 
+/**
+ * La celda bajo un punto del lienzo, o null si el punto no cae en ninguna.
+ *
+ * @param cells Celdas del visor.
+ * @param x Horizontal del punto, en pixeles del lienzo.
+ * @param y Vertical del punto, en pixeles del lienzo.
+ * @returns La celda tocada.
+ */
+export function cellAt(cells: readonly ViewerCell[], x: number, y: number): ViewerCell | null {
+  return (
+    cells.find(
+      (cell) => x >= cell.x && x < cell.x + cell.width && y >= cell.y && y < cell.y + cell.height,
+    ) ?? null
+  );
+}
+
 function toCell(
   placement: { readonly name: LeadName; readonly row: number; readonly column: number },
   columnWidth: number,
