@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { useQueueDrain } from '@/capture/useQueueDrain';
+import { useUploadQueue } from '@/capture/uploadQueue';
+import { useAnalysesFor } from '@/ecg/analyses';
 
 /**
  * Grupo de pestanas de la aplicacion.
@@ -27,10 +29,20 @@ import { useQueueDrain } from '@/capture/useQueueDrain';
  * encima estan el acceso y la introduccion, y no tiene sentido intentar enviar
  * estudios de alguien que todavia no ha entrado.
  *
+ * TAMBIEN SE PIDEN Y SIGUEN LOS ANALISIS, por el mismo motivo: es el primer punto
+ * que solo existe con sesion abierta. Antes solo los pedia el detalle del
+ * estudio, y uno que nunca se abria no llegaba a procesarse. Ver useAnalysesFor.
+ *
  * @returns El navegador de pestanas.
  */
 export default function TabsLayout() {
   useQueueDrain();
+  // Cadena y no lista, para que el selector no devuelva un objeto nuevo en cada
+  // cambio de la cola y fuerce un render por nada.
+  const remoteKey = useUploadQueue((state) =>
+    state.studies.flatMap((study) => (study.remoteId === null ? [] : [study.remoteId])).join(','),
+  );
+  useAnalysesFor(remoteKey === '' ? [] : remoteKey.split(','));
 
   return (
     <Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={() => null}>

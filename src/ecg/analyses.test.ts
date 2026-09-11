@@ -1,5 +1,5 @@
 import type { AnalysisStatus, EcgAnalysis } from '@/ecg/EcgAnalysisService';
-import { isAwaiting, pollDelayMs, useAnalyses } from '@/ecg/analyses';
+import { isAwaiting, pollDelayMs, unsettledIds, useAnalyses } from '@/ecg/analyses';
 
 /**
  * Peticion, deduplicacion y reintento del analisis.
@@ -181,5 +181,36 @@ describe('espaciado del sondeo', () => {
     // El coste del espaciado es que un resultado listo tarda en verse. Que ese
     // coste tenga techo es justo lo que hace aceptable el cambio.
     expect(pollDelayMs(0)).toBeLessThanOrEqual(1000);
+  });
+});
+
+describe('unsettledIds', () => {
+  const analysis = (studyId: string, status: AnalysisStatus): EcgAnalysis => ({
+    studyId,
+    status,
+    signal: null,
+    measurements: null,
+    observations: [],
+    failure: null,
+    completedAt: null,
+  });
+
+  it('lo que esta en cola o procesando sigue pendiente', () => {
+    const byStudy = { a: analysis('a', 'queued'), b: analysis('b', 'processing') };
+
+    expect(unsettledIds(['a', 'b'], byStudy)).toEqual(['a', 'b']);
+  });
+
+  it('lo listo y lo fallido ya no se consulta', () => {
+    const byStudy = { a: analysis('a', 'ready'), b: analysis('b', 'failed') };
+
+    expect(unsettledIds(['a', 'b'], byStudy)).toEqual([]);
+  });
+
+  it('UN ESTUDIO SIN ANALISIS CONOCIDO CUENTA COMO PENDIENTE', () => {
+    // Es el caso que motivo el sondeo de la sesion: enviado, nunca abierto, y por
+    // eso sin analisis en el almacen. Tratarlo como resuelto lo dejaria asi para
+    // siempre.
+    expect(unsettledIds(['nuevo'], {})).toEqual(['nuevo']);
   });
 });

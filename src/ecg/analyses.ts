@@ -154,11 +154,10 @@ function isSettled(analysis: EcgAnalysis | undefined): boolean {
  * anterior ha contestado, asi que una respuesta lenta no acumula peticiones
  * solapadas preguntando lo mismo.
  *
- * @param studyId Identificador remoto del estudio.
- * @param refresh Consulta al servidor el estado del analisis.
+ * @param tick Una vuelta de consulta: uno o varios estudios.
  * @returns Funcion que detiene el sondeo.
  */
-function startPolling(studyId: string, refresh: (id: string) => Promise<void>): () => void {
+function startPolling(tick: () => Promise<void>): () => void {
   let attempt = 0;
   let timer: ReturnType<typeof setTimeout>;
   // La consulta en vuelo no se puede cancelar, pero su continuacion si. Sin
@@ -168,7 +167,7 @@ function startPolling(studyId: string, refresh: (id: string) => Promise<void>): 
 
   const schedule = (): void => {
     timer = setTimeout(() => {
-      void refresh(studyId).finally(() => {
+      void tick().finally(() => {
         if (stopped) {
           return;
         }
@@ -184,6 +183,72 @@ function startPolling(studyId: string, refresh: (id: string) => Promise<void>): 
     stopped = true;
     clearTimeout(timer);
   };
+}
+
+/**
+ * Los estudios cuyo analisis todavia puede cambiar.
+ *
+ * Un estudio sin analisis conocido cuenta como pendiente: o no se ha pedido aun,
+ * o la respuesta no ha llegado, y en los dos casos hay que seguir preguntando.
+ *
+ * @param ids Identificadores remotos a considerar.
+ * @param byStudy Analisis conocidos.
+ * @returns Los que no estan resueltos, en el mismo orden.
+ */
+export function unsettledIds(
+  ids: readonly string[],
+  byStudy: Readonly<Record<string, EcgAnalysis>>,
+): readonly string[] {
+  return ids.filter((id) => !isSettled(byStudy[id]));
+}
+
+/**
+ * Pide y sigue el analisis de todos los estudios enviados.
+ *
+ * ANTES EL ANALISIS SOLO SE PEDIA AL ABRIR EL ESTUDIO. La unica pantalla que lo
+ * pedia era el detalle, asi que un estudio enviado y nunca abierto no llegaba a
+ * procesarse: el servidor recibia la imagen y esperaba a una peticion que no
+ * llegaba. Y el historial no podia decir en que estado estaba nada, porque no lo
+ * sabia hasta que alguien entraba.
+ *
+ * Se monta una sola vez para toda la sesion, no por pantalla, para que el estado
+ * se vea igual en el inicio y en el historial sin que cada una abra su sondeo.
+ * Pedir es idempotente en los dos lados: el almacen no repite lo ya pedido y el
+ * servidor devuelve el analisis existente.
+ *
+ * Un solo sondeo para todos, con el mismo espaciado que el de un estudio. Se
+ * reinicia rapido cuando cambia el conjunto de pendientes: un estudio recien
+ * enviado merece la primera consulta al segundo, no a los quince del techo.
+ *
+ * @param ids Identificadores remotos de los estudios enviados.
+ */
+export function useAnalysesFor(ids: readonly string[]): void {
+  const request = useAnalyses((state) => state.request);
+  const refresh = useAnalyses((state) => state.refresh);
+  const idsKey = ids.join(',');
+  // Una cadena y no una lista: el selector se evalua en cada cambio del almacen,
+  // y una lista nueva cada vez haria renderizar por nada.
+  const pendingKey = useAnalyses((state) => unsettledIds(ids, state.byStudy).join(','));
+
+  useEffect(() => {
+    splitKey(idsKey).forEach((id) => request(id));
+  }, [idsKey, request]);
+
+  useEffect(() => {
+    const pending = splitKey(pendingKey);
+    if (pending.length === 0) {
+      return;
+    }
+
+    return startPolling(async () => {
+      await Promise.all(pending.map((id) => refresh(id)));
+    });
+  }, [pendingKey, refresh]);
+}
+
+/** Deshace la clave de un conjunto de identificadores. */
+function splitKey(key: string): readonly string[] {
+  return key === '' ? [] : key.split(',');
 }
 
 /**
@@ -219,7 +284,7 @@ export function useAnalysis(studyId: string | null): EcgAnalysis | undefined {
       return;
     }
 
-    return startPolling(studyId, refresh);
+    return startPolling(() => refresh(studyId));
   }, [refresh, settled, studyId]);
 
   return analysis;
