@@ -22,6 +22,15 @@ export interface StudyActions {
   readonly canRetry: boolean;
   /** Borrar el estudio y su imagen del dispositivo. */
   readonly canDiscard: boolean;
+  /**
+   * Quitar de la lista un estudio ya enviado.
+   *
+   * No es descartar: su foto ya no esta en el telefono, se borra al enviarse, y la
+   * copia del servidor no se toca. Existe porque un estudio enviado cuya lectura
+   * fallo no tenia salida ninguna —reintentar no cambia el resultado de la misma
+   * imagen— y se quedaba en el historial estorbando para siempre.
+   */
+  readonly canRemove: boolean;
 }
 
 /**
@@ -48,5 +57,6 @@ export function studyActions(study: QueuedStudy): StudyActions {
     canOpen: study.status === 'uploaded',
     canRetry: hasFailed,
     canDiscard: hasFailed,
+    canRemove: study.status === 'uploaded',
   };
 }

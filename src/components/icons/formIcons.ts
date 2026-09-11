@@ -26,6 +26,9 @@ const GRADUATE_PATH = 'M2 9 L12 4 L22 9 L12 14 Z M6 11 V16 Q12 19 18 16 V11';
  */
 const MARK_PATH = 'M2 12 H6 L7.5 9 L9 12 H10.5 L11.5 3 L13 21 L14.5 12 H16 L17.5 8.5 L19 12 H22';
 
+/** Papelera, para eliminar. Tapa, cubo y dos lineas: se lee a dieciocho puntos. */
+const TRASH_PATH = 'M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7 M10 11 V16 M14 11 V16';
+
 const CAMERA_PATH =
   'M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z M12 10 A3.5 3.5 0 1 0 12 17 A3.5 3.5 0 1 0 12 10';
 
@@ -39,6 +42,7 @@ export const FORM_ICON_PATHS = {
   stethoscope: Skia.Path.MakeFromSVGString(STETHOSCOPE_PATH),
   graduate: Skia.Path.MakeFromSVGString(GRADUATE_PATH),
   mark: Skia.Path.MakeFromSVGString(MARK_PATH),
+  trash: Skia.Path.MakeFromSVGString(TRASH_PATH),
 } as const;
 
 export type FormIconName = keyof typeof FORM_ICON_PATHS;

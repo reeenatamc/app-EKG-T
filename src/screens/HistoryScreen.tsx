@@ -1,3 +1,6 @@
+import { studyState } from '@/capture/studyState';
+import { DELETE_STUDY_TEXT, HISTORY_LIST_TEXT } from '@/constants/studyText';
+import { useAnalyses } from '@/ecg/analyses';
 import { FlashList } from '@shopify/flash-list';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
@@ -11,7 +14,6 @@ import { AppTabBar } from '@/components/AppTabBar';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyListRow } from '@/components/StudyListRow';
 import { QUEUE_TEXT } from '@/constants/captureText';
-import { HISTORY_LIST_TEXT } from '@/constants/studyText';
 import { HISTORY_TEXT } from '@/constants/shellText';
 import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
@@ -181,12 +183,41 @@ function StudyListHeader({
   return (
     <>
       <ScreenHeader title={HISTORY_LIST_TEXT.title} />
+      <SwipeHint />
       {notice === null ? null : (
         <View style={styles.headerNotice}>
           <Notice title={notice.title} action={notice.action} />
         </View>
       )}
     </>
+  );
+}
+
+/**
+ * Dice que las filas se deslizan, pero solo cuando hay algo que quitar.
+ *
+ * Un gesto que nadie ve no existe: nada en una tarjeta anuncia que se desliza.
+ * Pero una linea fija encima de toda lista es ruido en cuanto se ha leido una vez,
+ * asi que solo aparece cuando hay un estudio con error, que es cuando hace falta.
+ */
+function SwipeHint() {
+  const theme = useTheme();
+  const studies = useUploadQueue((state) => state.studies);
+  const byStudy = useAnalyses((state) => state.byStudy);
+  const hasFailed = studies.some(
+    (study) =>
+      studyState(study.status, study.remoteId === null ? undefined : byStudy[study.remoteId]) ===
+      'failed',
+  );
+
+  if (!hasFailed) {
+    return null;
+  }
+
+  return (
+    <Text style={[type.caption, styles.hint, { color: theme.textLow }]}>
+      {DELETE_STUDY_TEXT.swipeHint}
+    </Text>
   );
 }
 
@@ -198,4 +229,5 @@ const styles = StyleSheet.create({
   separator: { height: gap.md },
   // La cabecera no lleva separador detras, asi que el hueco lo pone el aviso.
   headerNotice: { marginBottom: gap.md },
+  hint: { marginBottom: gap.md },
 });

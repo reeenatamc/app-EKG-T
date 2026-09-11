@@ -1,3 +1,4 @@
+import type { StudyState } from '@/capture/studyState';
 import type { AnalysisFailureReason, AnalysisStatus } from '@/ecg/EcgAnalysisService';
 
 /**
@@ -97,6 +98,35 @@ export const ANALYSIS_FAILURE_COPY: Record<AnalysisFailureReason, string> = {
   'server-error': 'El servidor no responde ahora mismo. El estudio no se ha perdido.',
   unexpected: 'Algo fallo al procesar. El estudio sigue guardado y se puede reintentar.',
 };
+
+/** Estado de un estudio tal como se ensena en las listas. Ver `studyState`. */
+export const STUDY_STATE_TEXT: Record<StudyState, string> = {
+  waiting: 'En espera',
+  sending: 'Enviando',
+  analyzing: 'Analizando',
+  ready: 'Listo',
+  failed: 'Con error',
+};
+
+/**
+ * Eliminar un estudio del historial.
+ *
+ * El texto cambia segun el estudio se haya enviado o no, porque lo que se pierde
+ * es distinto: uno sin enviar se lleva la unica copia de la foto, y uno enviado
+ * solo desaparece de este telefono. Decirlo mal en cualquiera de los dos sentidos
+ * es malo: asustar de mas hace que nadie limpie, y de menos, perder una foto.
+ */
+export const DELETE_STUDY_TEXT = {
+  swipeAction: 'Eliminar',
+  swipeHint: 'Desliza un estudio hacia la derecha para eliminarlo.',
+  title: '¿Eliminar este estudio?',
+  removeBody:
+    'Desaparece del historial de este teléfono, con su nota. La copia que ya está en el servidor no se borra.',
+  discardBody:
+    'Este estudio no llegó a enviarse: su foto se borra del teléfono y no se puede recuperar.',
+  cancel: 'Cancelar',
+  confirm: 'Eliminar',
+} as const;
 
 export const HISTORY_LIST_TEXT = {
   title: 'Estudios',

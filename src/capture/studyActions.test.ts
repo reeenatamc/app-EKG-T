@@ -53,6 +53,15 @@ describe('studyActions', () => {
     expect(studyActions(studyWith('uploaded')).canDiscard).toBe(false);
   });
 
+  it('SOLO SE QUITA DE LA LISTA LO YA ENVIADO', () => {
+    // Lo que aun no se ha enviado vive solo en el telefono: quitarlo de la lista
+    // es perder la foto, y eso es descartar, con su propia regla. Y lo que se esta
+    // enviando esta leyendo su imagen en este momento.
+    const removes = EVERY_STATUS.filter((status) => studyActions(studyWith(status)).canRemove);
+
+    expect(removes).toEqual(['uploaded']);
+  });
+
   it('el estudio atascado tiene las dos salidas a la vez', () => {
     // Una sola no basta: reintentar sin poder descartar deja atrapado a quien ya
     // sabe que ese envio no va a salir, y al reves obliga a perder la foto.
@@ -60,6 +69,7 @@ describe('studyActions', () => {
       canOpen: false,
       canRetry: true,
       canDiscard: true,
+      canRemove: false,
     });
   });
 });

@@ -19,6 +19,12 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 interface NotesState {
   readonly byStudy: Readonly<Record<string, string>>;
   readonly setNote: (studyId: string, note: string) => void;
+  /**
+   * Borra la nota de un estudio. Se usa al eliminarlo del historial: una nota
+   * que sobrevive a su estudio es texto sobre un paciente que ya nadie puede ver
+   * ni borrar desde la aplicacion.
+   */
+  readonly forget: (studyId: string) => void;
   /** Borra todas las notas. Se usa al cerrar sesion. */
   readonly clearAll: () => void;
 }
@@ -29,6 +35,13 @@ export const useStudyNotes = create<NotesState>()(
       byStudy: {},
       setNote: (studyId, note) => {
         set((state) => ({ byStudy: { ...state.byStudy, [studyId]: note } }));
+      },
+      forget: (studyId) => {
+        set((state) => ({
+          byStudy: Object.fromEntries(
+            Object.entries(state.byStudy).filter(([id]) => id !== studyId),
+          ),
+        }));
       },
       clearAll: () => {
         set({ byStudy: {} });

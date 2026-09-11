@@ -215,6 +215,41 @@ export const aurora = {
 } as const;
 
 /**
+ * Tono de cada estado de un estudio en el historial y el inicio.
+ *
+ * FUERA DE `semantic` A PROPOSITO. Lo natural seria verde para listo, ambar para
+ * en curso y rojo para fallido, y son exactamente los colores de la jerarquia de
+ * alarma de la IEC 60601-1-8. Ensenar aqui que verde es "bien" es un aprendizaje
+ * que el usuario se lleva a la pantalla donde verde significa "paciente estable".
+ * Estos tonos salen de la propia paleta: tinta, ciruela, carmin y gris.
+ *
+ * NUNCA VAN SOLOS (§12.3). Analizando y fallido tienen casi la misma luminosidad
+ * —1,09:1 entre ellos en los dos temas— y solo los separa el tono, que alguien
+ * con daltonismo no distingue. Por eso cada estado lleva siempre su texto, y los
+ * fallidos ademas su causa.
+ *
+ * El carmin de `failed` es TINTE de un punto y una etiqueta, no relleno: la misma
+ * excepcion que usa la pestana activa (§12.9). Contraste medido contra `surface`
+ * de cada tema, todos por encima de 6:1; lo fija `studyTone.test.ts`.
+ */
+export const studyTone = {
+  light: {
+    waiting: '#6B5560',
+    sending: '#6B5560',
+    analyzing: '#6E3A63',
+    ready: '#1F1622',
+    failed: '#9E1B32',
+  },
+  dark: {
+    waiting: '#B9A4BC',
+    sending: '#B9A4BC',
+    analyzing: '#D9B3D6',
+    ready: '#F5EBF1',
+    failed: '#F4A0AE',
+  },
+} as const;
+
+/**
  * RESERVADO. Jerarquia de prioridad de alarma de la IEC 60601-1-8.
  *
  * Nunca como decoracion, acento de marca, estado pulsado, borde o relleno

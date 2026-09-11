@@ -37,6 +37,9 @@ const BRAND_FILL_ALLOWED = [
   'src/components/ActionButton.tsx',
   // Modulo hero del inicio: la superficie mas grande de la aplicacion.
   'src/components/BentoTile.tsx',
+  // Boton de eliminar al deslizar una fila: ocupa el alto entero de la fila, y es
+  // destructivo. Carmin de marca y no el rojo de alarma, reservado al paciente.
+  'src/components/SwipeDeleteAction.tsx',
   // Pestana activa. NO rellena: tine el icono y la etiqueta, que es la
   // convencion de iOS para el acento y lo que §12.9 deja fuera de la
   // prohibicion. El test de abajo comprueba que ahi no hay ningun relleno.
