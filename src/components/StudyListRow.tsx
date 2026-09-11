@@ -130,7 +130,7 @@ function StudyCard({ study, canOpen, canRetry, onDelete }: StudyCardProps) {
 
   return (
     <View
-      style={[styles.card, rowShadow, { backgroundColor: theme.surface }]}
+      style={[styles.card, rowShadow, { backgroundColor: theme.surface, borderColor: theme.edge }]}
       accessibilityActions={
         onDelete === undefined ? undefined : [{ name: 'delete', label: DELETE_STUDY_TEXT.confirm }]
       }
@@ -296,7 +296,11 @@ function formatCapturedAt(capturedAt: string): string {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.tile, borderCurve: 'continuous' },
+  // CON FILO PROPIO. En las pantallas de producto el lienzo y la superficie son el
+  // mismo hueso, y la tarjeta solo se separaba por una sombra que en la practica no
+  // se veia: la lista parecia texto suelto sobre el fondo. Un filo de un punto la
+  // recorta sin anadir peso.
+  card: { borderRadius: radius.tile, borderCurve: 'continuous', borderWidth: size.hairline },
   // El relleno vive en el pulsable y no en la tarjeta: asi el area tactil llega
   // hasta el filo de la fila en lugar de dejar dieciseis puntos muertos.
   opener: { minHeight: size.touchTarget, padding: gap.lg, gap: gap.xs },

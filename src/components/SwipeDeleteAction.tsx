@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 
 import { FORM_ICON_PATHS, FORM_ICON_VIEWBOX } from '@/components/icons/formIcons';
 import { LineIcon } from '@/components/icons/LineIcon';
@@ -17,6 +18,10 @@ interface SwipeDeleteActionProps {
  * entero de la fila, que es una superficie grande y no una pildora. Rojo porque
  * es destructivo, y carmin de marca y no el rojo de alarma, que esta reservado a
  * senales del paciente.
+ *
+ * EL PULSABLE ES EL DE GESTURE HANDLER, no el de React Native. Dentro de una fila
+ * deslizable, el de React Native pierde el toque frente al gesto de arrastre que
+ * lo envuelve: se veia el boton y pulsarlo no hacia nada. Comprobado en el telefono.
  *
  * NO ELIMINA: pide confirmacion. Quien lo pulsa acaba de deslizar, y deslizar se
  * hace sin querer al desplazar la lista; un borrado sin segunda pregunta costaria
