@@ -1,4 +1,4 @@
-import { presentLeads, rhythmLeadFor } from '@/ecg/leads';
+import { presentLeads, rhythmStripLeads } from '@/ecg/leads';
 import type { EcgSignal } from '@/ecg/signal';
 
 /** Una senal con las derivaciones que se le pidan y un tramo cualquiera. */
@@ -51,8 +51,8 @@ describe('presentLeads', () => {
   });
 });
 
-describe('rhythmLeadFor', () => {
-  /** Una senal donde cada derivacion cubre la fraccion que se le diga. */
+describe('rhythmStripLeads sobre una hoja real', () => {
+  /** Una senal donde cada derivacion cubre, desde el segundo 0, la fraccion que se le diga. */
   function signalCovering(coverage: Readonly<Record<string, number>>): EcgSignal {
     const samplingRateHz = 500;
     const durationSeconds = 10;
@@ -72,33 +72,19 @@ describe('rhythmLeadFor', () => {
     };
   }
 
-  it('LA TIRA SALE DE LA SENAL, NO DEL MONTAJE', () => {
-    // Medido en una hoja real: las tiras eran V1, V5 y V6, y el visor pintaba
-    // una rotulada II con dos segundos y medio, porque de II solo existia su
-    // celda de la rejilla. Una tira cortada a un cuarto parece senal perdida.
+  it('LAS TIRAS SON LAS QUE TRAE LA HOJA, NO II POR CONVENCION', () => {
+    // Medido en una hoja real: las tiras eran V1, V5 y V6, y de II solo existia
+    // su celda de la rejilla, dos segundos y medio. Pintar una tira rotulada II
+    // con un cuarto de trazo se lee como senal perdida.
     const signal = signalCovering({ I: 0.25, II: 0.25, V1: 1, V5: 1, V6: 1 });
 
-    expect(rhythmLeadFor(signal)).toBe('V1');
+    expect(rhythmStripLeads(signal, 'rhythm-3x4')).toEqual(['V1', 'V5', 'V6']);
   });
 
-  it('prefiere II cuando esta entera, que es la convencion', () => {
-    const signal = signalCovering({ II: 1, V1: 1, V5: 1 });
-
-    expect(rhythmLeadFor(signal)).toBe('II');
-  });
-
-  it('sin ninguna entera no hay tira que pintar', () => {
-    // Mejor no dibujar la fila que dibujar un muñon.
+  it('sin ninguna derivacion a lo largo del papel no hay tira', () => {
+    // Mejor no dibujar la fila que dibujar un munon.
     const signal = signalCovering({ I: 0.25, II: 0.25, V1: 0.25 });
 
-    expect(rhythmLeadFor(signal)).toBeNull();
-  });
-
-  it('una derivacion casi entera cuenta como entera', () => {
-    // La digitalizacion pierde muestras en los bordes; exigir el cien por cien
-    // dejaria sin tira a hojas que si la tienen.
-    const signal = signalCovering({ II: 0.95 });
-
-    expect(rhythmLeadFor(signal)).toBe('II');
+    expect(rhythmStripLeads(signal, 'rhythm-3x4')).toEqual([]);
   });
 });

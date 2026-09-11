@@ -8,7 +8,6 @@ import { LeadTrace } from '@/components/LeadTrace';
 import { MeasuringGrid } from '@/components/MeasuringGrid';
 import { computeGridGeometry } from '@/ecg/grid';
 import type { EcgSignal, LeadName } from '@/ecg/signal';
-import { rhythmLeadFor } from '@/ecg/leads';
 import { computeViewerLayout, type ViewerCell } from '@/ecg/viewerLayout';
 import { useTheme, type Theme } from '@/design/theme';
 import { gap, opacity, radius } from '@/design/tokens';
@@ -56,10 +55,10 @@ export function TwelveLeadViewer({
   // por milimetro y, de ahi, la retícula y la escala del trazado.
   const [width, setWidth] = useState<number | null>(null);
 
-  // De la senal, no del montaje: el montaje dice que hay una tira, la senal
-  // dice cual volvio entera. Ver rhythmLeadFor.
-  const rhythmLead = useMemo(() => rhythmLeadFor(signal), [signal]);
-  const { layout, grid } = useViewerGeometry(mount, width, calibration, rhythmLead);
+  // La duracion y las tiras salen de la senal, no del montaje: ver
+  // recordSecondsOf y rhythmStripLeads.
+  const { layout, grid } = useViewerGeometry(mount, width, calibration, signal);
+
   const handleLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
 
   return (
@@ -96,11 +95,11 @@ function useViewerGeometry(
   mount: MountId,
   width: number | null,
   calibration: Calibration,
-  rhythmLead: LeadName | null,
+  signal: EcgSignal,
 ) {
   const layout = useMemo(
-    () => (width === null ? null : computeViewerLayout(mount, width, calibration, rhythmLead)),
-    [mount, width, calibration, rhythmLead],
+    () => (width === null ? null : computeViewerLayout(mount, width, calibration, signal)),
+    [mount, width, calibration, signal],
   );
   const grid = useMemo(
     () => (layout === null ? null : computeGridGeometry(layout.scale)),
