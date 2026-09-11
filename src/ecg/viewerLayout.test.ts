@@ -2,9 +2,9 @@ import { STANDARD_CALIBRATION } from '@/capture/study';
 import { computeGridGeometry } from '@/ecg/grid';
 import { rhythmStripLeads } from '@/ecg/leads';
 import type { EcgSignal, LeadName } from '@/ecg/signal';
-import { computeViewerLayout } from '@/ecg/viewerLayout';
+import { computeViewerLayout, MIN_PIXELS_PER_MM } from '@/ecg/viewerLayout';
 
-const WIDTH = 400;
+const WIDTH = 800;
 const SAMPLING_RATE_HZ = 500;
 
 type Spans = Readonly<Record<string, readonly (readonly [number, number])[]>>;
@@ -61,6 +61,15 @@ function rescaled(spans: Spans, factor: number): Spans {
 }
 
 describe('computeViewerLayout', () => {
+  // En una pantalla de 300 px la hoja entera saldria a 1,2 px/mm: ilegible. El visor no
+  // se encoge por debajo de MIN_PIXELS_PER_MM; crece y se desplaza.
+  it('no baja de la escala legible: crece a lo ancho en una pantalla estrecha', () => {
+    const layout = computeViewerLayout('standard-3x4', 300, STANDARD_CALIBRATION, STANDARD);
+
+    expect(layout.scale.pixelsPerMm).toBeCloseTo(MIN_PIXELS_PER_MM);
+    expect(layout.width).toBeCloseTo(MIN_PIXELS_PER_MM * 250);
+  });
+
   it('reparte un 3x4 en cuatro columnas y tres filas', () => {
     const layout = computeViewerLayout('standard-3x4', WIDTH, STANDARD_CALIBRATION, STANDARD);
 
