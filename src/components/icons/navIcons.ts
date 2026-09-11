@@ -39,12 +39,16 @@ const PLUS = 'M12 5 V19 M5 12 H19';
 /** Flecha que gira en sentido horario, para enderezar una imagen un cuarto de vuelta. */
 const ROTATE_ARROW = 'M22 4 V10 H16 M19.5 15 A9 9 0 1 1 17.4 5.64 L22 10';
 
+/** Dos reguladores deslizantes: la convencion de ajustes sin dibujar un engranaje. */
+const SETTINGS_SLIDERS = 'M4 8 H20 M4 16 H20 M9 5 V11 M15 13 V19';
+
 export const NAV_ICON_PATHS = {
   close: Skia.Path.MakeFromSVGString(CLOSE_CROSS),
   back: Skia.Path.MakeFromSVGString(BACK_CHEVRON),
   gallery: Skia.Path.MakeFromSVGString(GALLERY_PICTURE),
   rotate: Skia.Path.MakeFromSVGString(ROTATE_ARROW),
   plus: Skia.Path.MakeFromSVGString(PLUS),
+  settings: Skia.Path.MakeFromSVGString(SETTINGS_SLIDERS),
 } as const;
 
 export type NavIconName = keyof typeof NAV_ICON_PATHS;
