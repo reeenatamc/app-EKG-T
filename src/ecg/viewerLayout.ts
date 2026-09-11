@@ -36,6 +36,12 @@ import type { EcgSignal, LeadName } from '@/ecg/signal';
  */
 export const ROW_MILLIVOLT_SPAN = 3;
 
+/**
+ * Pixeles por milimetro por debajo de los cuales el visor deja de encogerse y pasa a
+ * desplazarse. A 3 px/mm un cuadro grande mide 15 px y un QRS de 1 mV, 30 px: legible.
+ */
+export const MIN_PIXELS_PER_MM = 1.5;
+
 export interface ViewerCell {
   readonly lead: LeadName;
   /** Esquina superior izquierda de la celda, en pixeles del lienzo. */
@@ -79,7 +85,8 @@ export function computeViewerLayout(
 
   const recordSeconds = recordSecondsOf(signal);
   const secondsPerColumn = recordSeconds / columns;
-  const columnWidth = availableWidth / columns;
+  const canvasWidth = legibleCanvasWidth(availableWidth, columns, secondsPerColumn, calibration);
+  const columnWidth = canvasWidth / columns;
 
   // De aqui sale todo lo demas. La columna tiene que caber exactamente en su
   // ventana temporal, y eso fija cuanto mide un milimetro en esta pantalla.
@@ -98,10 +105,30 @@ export function computeViewerLayout(
 
   return {
     cells: [...cells, ...stripCells],
-    width: availableWidth,
+    width: canvasWidth,
     height: gridHeight + stripCells.length * rowHeight,
     scale,
   };
+}
+
+/**
+ * Ancho del lienzo: el disponible, salvo que deje la hoja ilegible.
+ *
+ * Una hoja entera de 250 mm en un telefono de 400 px da 1,6 px por milimetro: la
+ * reticula se vuelve una malla, el trazo un hilo y los rotulos tapan los complejos.
+ * Por debajo de MIN_PIXELS_PER_MM el visor no se encoge mas: crece a lo ancho y se
+ * desplaza, que es como se lee un registro largo en cualquier monitor.
+ */
+function legibleCanvasWidth(
+  availableWidth: number,
+  columns: number,
+  secondsPerColumn: number,
+  calibration: Calibration,
+): number {
+  const paperMm = columns * secondsPerColumn * calibration.speedMmPerSecond;
+  return availableWidth / paperMm >= MIN_PIXELS_PER_MM
+    ? availableWidth
+    : MIN_PIXELS_PER_MM * paperMm;
 }
 
 function toCell(

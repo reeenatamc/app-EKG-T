@@ -59,13 +59,25 @@ export function MeasuringGrid({
       {showFine ? (
         <Path path={paths.fine} style="stroke" strokeWidth={size.hairline} color={fineColor} />
       ) : null}
-      <Path path={paths.bold} style="stroke" strokeWidth={size.gridBold} color={boldColor} />
+      <Path
+        path={paths.bold}
+        style="stroke"
+        strokeWidth={geometry.boldStepPx < SPARSE_BELOW_PX ? size.hairline : size.gridBold}
+        color={boldColor}
+      />
     </>
   );
 }
 
 /** Por debajo de esto, dos lineas finas seguidas no se distinguen. */
 const MIN_LEGIBLE_STEP_PX = 3;
+
+/**
+ * Por debajo de este paso entre lineas gruesas (en pixeles) la reticula de 5 mm se
+ * convierte en una malla que tapa el trazo. Se dibuja entonces cada 10 mm y a un
+ * pixel, como en una impresion muy reducida. La calibracion no cambia.
+ */
+const SPARSE_BELOW_PX = 12;
 
 interface GridPaths {
   readonly fine: SkPath;
@@ -98,7 +110,7 @@ function buildGridPaths(width: number, height: number, geometry: GridGeometry): 
   // caso a ancho de telefono -- una gruesa mal clasificada no se dibuja mas
   // delgada: no se dibuja. Medido sobre un 3x4 en un movil, 61 de 101 lineas
   // desaparecian, dejando bandas enteras de papel en blanco.
-  const boldEvery = boldLineInterval(geometry);
+  const boldEvery = boldLineInterval(geometry) * (geometry.boldStepPx < SPARSE_BELOW_PX ? 2 : 1);
 
   for (let i = 0; i * geometry.smallStepPx <= width; i += 1) {
     const x = i * geometry.smallStepPx;

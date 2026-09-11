@@ -1,6 +1,6 @@
 import { Canvas, Group, rect } from '@shopify/react-native-skia';
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import type { MountId } from '@/camera/mounts';
 import type { Calibration } from '@/capture/study';
@@ -64,16 +64,20 @@ export function TwelveLeadViewer({
   return (
     <View style={[styles.surface, { backgroundColor: theme.surface }]} onLayout={handleLayout}>
       {layout === null || grid === null ? null : (
-        <>
-          <ViewerCanvas
-            signal={signal}
-            layout={layout}
-            grid={grid}
-            theme={theme}
-            focusedLeads={focusedLeads}
-          />
-          <LeadLabels cells={layout.cells} />
-        </>
+        // Desplazamiento horizontal cuando la hoja no cabe a escala legible; ver
+        // MIN_PIXELS_PER_MM en viewerLayout. Los rotulos van dentro para acompanar al lienzo.
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
+          <View style={{ width: layout.width, height: layout.height }}>
+            <ViewerCanvas
+              signal={signal}
+              layout={layout}
+              grid={grid}
+              theme={theme}
+              focusedLeads={focusedLeads}
+            />
+            <LeadLabels cells={layout.cells} />
+          </View>
+        </ScrollView>
       )}
     </View>
   );
