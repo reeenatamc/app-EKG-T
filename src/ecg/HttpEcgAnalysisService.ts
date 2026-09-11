@@ -227,6 +227,7 @@ function observationFrom(value: unknown): EcgObservation | null {
     confidence: raw.confidence,
     // Nunca se lee de la respuesta. Ver la cabecera del modulo.
     needsReview: true,
+    aboveThreshold: typeof raw.aboveThreshold === 'boolean' ? raw.aboveThreshold : null,
   };
 }
 

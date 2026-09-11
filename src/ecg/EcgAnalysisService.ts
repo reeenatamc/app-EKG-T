@@ -68,6 +68,8 @@ export interface EcgObservation {
   readonly confidence: number;
   /** Siempre cierto mientras la aplicacion no diagnostique. */
   readonly needsReview: true;
+  /** Sobre umbral (true), bajo umbral (false) o sin umbral (null). */
+  readonly aboveThreshold: boolean | null;
 }
 
 export interface EcgAnalysis {
