@@ -49,8 +49,8 @@ export const STUDY_TEXT = {
    * ritmo: tres de las doce. Ensenarlo hace visible un limite que si no lo es.
    */
   basisLabel: 'La lectura sale de',
-  showBasis: 'Ver en cuáles se apoya',
-  hideBasis: 'Ver el trazado completo',
+  showBasis: 'Resaltar en el trazado',
+  hideBasis: 'Quitar resaltado',
 
   /**
    * El trazado, antes de que termine la interpretacion.
