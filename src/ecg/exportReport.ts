@@ -4,7 +4,7 @@ import * as Sharing from 'expo-sharing';
 import type { QueuedStudy } from '@/capture/study';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { computeTraceScale } from '@/ecg/grid';
-import { RECORD_SECONDS } from '@/ecg/leads';
+import { recordSecondsOf } from '@/ecg/leads';
 import { buildSvgPath } from '@/ecg/svgTrace';
 import { buildReportHtml, REPORT_TRACE_HEIGHT } from '@/ecg/reportHtml';
 import { buildLeadPolylines } from '@/ecg/tracePath';
@@ -71,14 +71,16 @@ function renderTrace(
     sampleCount(lead.segments) > sampleCount(best.segments) ? lead : best,
   );
 
-  const pixelsPerMm =
-    REPORT_TRACE_WIDTH / (RECORD_SECONDS * study.metadata.calibration.speedMmPerSecond);
+  // La duracion de la senal, no la estandar: a 50 mm/s el servidor envia 5 s, y
+  // dibujarlos en un ancho de 10 dejaba la mitad derecha del informe en blanco.
+  const seconds = recordSecondsOf(signal);
+  const pixelsPerMm = REPORT_TRACE_WIDTH / (seconds * study.metadata.calibration.speedMmPerSecond);
   const scale = computeTraceScale(study.metadata.calibration, pixelsPerMm);
 
   const polylines = buildLeadPolylines(
     longest,
     signal.samplingRateHz,
-    { fromSecond: 0, toSecond: RECORD_SECONDS, baselineY: REPORT_TRACE_HEIGHT / 2 },
+    { fromSecond: 0, toSecond: seconds, baselineY: REPORT_TRACE_HEIGHT / 2 },
     scale,
   );
 
