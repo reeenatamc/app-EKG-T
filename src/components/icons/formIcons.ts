@@ -8,6 +8,24 @@ const KEY_PATH =
   'M14 6 A4 4 0 1 0 18 10 L22 10 L22 14 L20 14 L20 16 L18 16 L17 15 L14 12 A4 4 0 0 0 14 6 Z';
 const SHIELD_PATH = 'M12 3 L4 7 V12 Q4 17 12 21 Q20 17 20 12 V7 Z M12 8 V14 M9 11 H15';
 const PULSE_PATH = 'M2 13 H6 L8 7 L12 18 L15 10 L17 14 H22';
+/** Fonendoscopio: el instrumento, que es como se reconoce a quien ausculta. */
+const STETHOSCOPE_PATH =
+  'M5 3 V9 A7 7 0 0 0 19 9 V3 M12 16 V18 M12 18 A2.6 2.6 0 1 0 12 23.2 A2.6 2.6 0 1 0 12 18';
+
+/** Birrete. Se lee antes que cualquier palabra, en cualquier idioma. */
+const GRADUATE_PATH = 'M2 9 L12 4 L22 9 L12 14 Z M6 11 V16 Q12 19 18 16 V11';
+
+/**
+ * La marca de la aplicacion: el latido de su icono, sin la hoja que lo encierra.
+ *
+ * El icono de sistema es un rectangulo carmin con el trazo en hueso. Aqui se usa
+ * solo el trazo: dentro de la aplicacion ya se esta en la aplicacion, asi que la
+ * caja no identifica nada y lo unico que hace es poner un borde en una pantalla
+ * que no tiene ninguno. Sin caja, ademas, la marca toma el color del tema y se
+ * apoya en el lienzo en vez de flotar sobre el.
+ */
+const MARK_PATH = 'M2 12 H6 L7.5 9 L9 12 H10.5 L11.5 3 L13 21 L14.5 12 H16 L17.5 8.5 L19 12 H22';
+
 const CAMERA_PATH =
   'M4 8 H7 L9 5 H15 L17 8 H20 V19 H4 Z M12 10 A3.5 3.5 0 1 0 12 17 A3.5 3.5 0 1 0 12 10';
 
@@ -18,6 +36,9 @@ export const FORM_ICON_PATHS = {
   shield: Skia.Path.MakeFromSVGString(SHIELD_PATH),
   pulse: Skia.Path.MakeFromSVGString(PULSE_PATH),
   camera: Skia.Path.MakeFromSVGString(CAMERA_PATH),
+  stethoscope: Skia.Path.MakeFromSVGString(STETHOSCOPE_PATH),
+  graduate: Skia.Path.MakeFromSVGString(GRADUATE_PATH),
+  mark: Skia.Path.MakeFromSVGString(MARK_PATH),
 } as const;
 
 export type FormIconName = keyof typeof FORM_ICON_PATHS;

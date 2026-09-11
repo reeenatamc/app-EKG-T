@@ -8,16 +8,40 @@ import { timing } from '@/design/motion';
 import { motion } from '@/design/tokens';
 
 /**
+ * Cuanto se queda el splash como minimo, aunque el destino ya se sepa.
+ *
+ * Un latido entero mas un respiro. El destino se resuelve en unos 600 ms -- 642
+ * medidos en un telefono de gama media con sesion guardada -- y a esa velocidad
+ * la pantalla de arranque era un parpadeo: el latido no llegaba ni a cruzar la
+ * pantalla. Lo que se veia era un destello, que se lee como un salto y no como
+ * una entrada.
+ *
+ * No es un numero elegido a ojo: es lo que dura la animacion del latido mas el
+ * tiempo de ver el trazo ya completo antes de que se disuelva. Rematar el gesto
+ * es lo que hace que la entrada se sienta tranquila en lugar de apresurada.
+ *
+ * SE PAGA CON ESPERA. La aplicacion tarda ~0,8 s mas en estar disponible, y eso
+ * es tiempo real del usuario cada vez que abre. Se acepta porque es la unica
+ * pantalla de la aplicacion que no hace nada mas, y porque por debajo el trabajo
+ * de arranque ya termino: lo que se espera es la animacion, no el sistema.
+ */
+const MIN_VISIBLE_MS = 1400;
+
+/**
  * Salida del splash hacia su destino.
  *
- * La animacion **nunca bloquea**: en cuanto se conoce el destino se empieza a
- * salir. Si el latido no llego al final no se corta, se desvanece durante la
+ * Se sale cuando se sabe a donde ir Y el latido ha tenido tiempo de dibujarse.
+ * Si el destino tarda mas que la animacion no se espera nada: el minimo es un
+ * suelo, no una pausa que se suma.
+ *
+ * Si aun asi el latido no llego al final, no se corta: se desvanece durante la
  * transicion. Un electrocardiograma truncado a mitad del QRS no puede ser la
  * primera impresion de esta aplicacion, y la diferencia entre cortar y
  * disolver es lo que separa "arranca" de "parece rota".
  *
- * Con movimiento reducido se navega sin transicion, que es el estado final
- * (§11), no una version acortada de la animacion.
+ * Con movimiento reducido se navega sin transicion y sin espera: ahi no hay
+ * animacion que rematar, asi que el minimo no tendria a quien proteger y solo
+ * seria un retraso. Es el estado final de §11, no una version acortada.
  *
  * @param destination Ruta de salida, o null mientras se resuelve.
  * @returns La opacidad compartida que debe aplicar la pantalla.
@@ -45,11 +69,16 @@ export function useSplashExit(destination: BootDestination | null): SharedValue<
       return;
     }
 
-    opacity.value = withTiming(0, timing(motion.micro), (finished) => {
-      if (finished === true) {
-        runOnJS(leave)();
-      }
-    });
+    const remaining = Math.max(0, MIN_VISIBLE_MS - (Date.now() - mountedAt.current));
+    const timer = setTimeout(() => {
+      opacity.value = withTiming(0, timing(motion.screen), (finished) => {
+        if (finished === true) {
+          runOnJS(leave)();
+        }
+      });
+    }, remaining);
+
+    return () => clearTimeout(timer);
   }, [destination, isReducedMotion, opacity, router]);
 
   return opacity;

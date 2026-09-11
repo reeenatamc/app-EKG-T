@@ -14,6 +14,8 @@ interface AuthScreenLayoutProps {
   readonly atmosphere?: boolean;
   readonly footer?: ReactNode;
   readonly onBack?: () => void;
+  /** Marca centrada sobre el titular. Solo la pantalla de acceso la pasa. */
+  readonly mark?: ReactNode;
 }
 
 export function AuthScreenLayout({
@@ -23,6 +25,7 @@ export function AuthScreenLayout({
   atmosphere = true,
   footer,
   onBack,
+  mark,
 }: AuthScreenLayoutProps) {
   const insets = useSafeAreaInsets();
 
@@ -30,9 +33,11 @@ export function AuthScreenLayout({
     <Background atmosphere={atmosphere}>
       <KeyboardLift>
         <ScrollView
+          style={styles.scroll}
           contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.md }]}
           keyboardShouldPersistTaps="handled"
         >
+          {mark === undefined ? null : <View style={styles.mark}>{mark}</View>}
           <ScreenHeader title={title} eyebrow={eyebrow} onBack={onBack} />
           <AuthBody>{children}</AuthBody>
         </ScrollView>
@@ -82,10 +87,21 @@ function AuthFooter({ footer, bottomInset }: AuthFooterProps) {
     return null;
   }
 
-  return <View style={[styles.footer, { paddingBottom: bottomInset + gap.md }]}>{footer}</View>;
+  return <View style={[styles.footer, { paddingBottom: bottomInset + gap.xl }]}>{footer}</View>;
 }
 
 const styles = StyleSheet.create({
+  /**
+   * EL AREA DESPLAZABLE NO SE COME EL PIE.
+   *
+   * Sin `flex: 1` la lista crecia con su contenido y empujaba al pie fuera de la
+   * ventana: el boton de accion quedaba recortado a 30 de los 88 puntos que mide
+   * -- medido en el telefono, «Continuar» en [28,1476][692,1506] con la ventana
+   * acabando en 1506 -- o sea con el texto partido por la mitad. Con flex el area
+   * ocupa lo que sobra y el pie conserva su alto natural.
+   */
+  scroll: { flex: 1 },
+  mark: { alignItems: 'center' },
   /**
    * TITULAR Y FORMULARIO SON UN SOLO BLOQUE, centrado.
    *

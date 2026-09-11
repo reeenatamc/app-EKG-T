@@ -100,6 +100,16 @@ export const REGISTER_TEXT = {
   roleProfessionalHint: 'Acceso completo a estudios e interpretación',
   roleStudent: 'Estudiante o demostración',
   roleStudentHint: 'Mismo flujo, con avisos formativos y datos de ejemplo',
+  /**
+   * Version corta para el cuadro de la opcion.
+   *
+   * El texto largo sigue siendo el que se lee en voz alta: con dos opciones una
+   * al lado de la otra no cabe una frase entera sin que el cuadro deje de ser un
+   * cuadro, pero quien navega a ciegas necesita lo que implica elegir, no un
+   * resumen de tres palabras.
+   */
+  roleProfessionalShort: 'Estudios completos',
+  roleStudentShort: 'Con apoyo formativo',
   submit: 'Continuar',
   toLogin: 'Ya tengo cuenta',
 } as const;
