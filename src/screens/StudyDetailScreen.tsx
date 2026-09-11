@@ -10,10 +10,12 @@ import { StudyReportActions } from '@/components/StudyReportActions';
 import { MOUNT_COPY } from '@/constants/captureText';
 import { STUDY_TEXT } from '@/constants/studyText';
 import { useAnalysis } from '@/ecg/analyses';
+import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useSafePadding } from '@/shell/safePadding';
 import { useGoBack } from '@/shell/useGoBack';
 
 interface StudyDetailScreenProps {
@@ -31,10 +33,10 @@ interface StudyDetailScreenProps {
  * @returns La pantalla de detalle.
  */
 export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
-  const theme = useTheme();
   const goBack = useGoBack('/history');
   const study = useUploadQueue((state) => state.studies.find((item) => item.id === studyId));
   const analysis = useAnalysis(study?.remoteId ?? null);
+  const safe = useSafePadding(gap.lg, gap.xl);
 
   // Puede pasar de verdad: si el estudio se descarta desde el historial
   // mientras su detalle esta abierto, esta pantalla sobrevive un fotograma sin
@@ -50,23 +52,43 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   return (
     <Background atmosphere={false}>
       <KeyboardLift>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.content, safe]}
+          keyboardShouldPersistTaps="handled"
+        >
           <StudyHeader study={study} onBack={goBack} />
-
-          <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
-            {STUDY_TEXT.supportOnly}
-          </Text>
-
-          <AnalysisSection study={study} analysis={analysis} />
-
-          {analysis?.status === 'ready' ? (
-            <StudyReportActions study={study} analysis={analysis} />
-          ) : null}
-
-          <StudyNotes studyId={studyId} />
+          <StudyBody study={study} analysis={analysis} />
         </ScrollView>
       </KeyboardLift>
     </Background>
+  );
+}
+
+interface StudyBodyProps {
+  readonly study: QueuedStudy;
+  readonly analysis: EcgAnalysis | undefined;
+}
+
+/**
+ * Aviso, analisis, acciones del informe y notas.
+ *
+ * El aviso de que es una lectura automatica va delante del analisis y no al pie:
+ * un aviso al final se lee despues de haber decidido.
+ */
+function StudyBody({ study, analysis }: StudyBodyProps) {
+  const theme = useTheme();
+
+  return (
+    <>
+      <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
+        {STUDY_TEXT.supportOnly}
+      </Text>
+      <AnalysisSection study={study} analysis={analysis} />
+      {analysis?.status === 'ready' ? (
+        <StudyReportActions study={study} analysis={analysis} />
+      ) : null}
+      <StudyNotes studyId={study.id} />
+    </>
   );
 }
 
@@ -101,7 +123,7 @@ function StudyHeader({
 }
 
 const styles = StyleSheet.create({
-  content: { padding: gap.lg, gap: gap.xl },
+  content: { paddingHorizontal: gap.lg, gap: gap.xl },
   header: { gap: gap.xs },
   notice: { fontStyle: 'italic' },
 });

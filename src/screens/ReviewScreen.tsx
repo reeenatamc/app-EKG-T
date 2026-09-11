@@ -21,6 +21,7 @@ import { reviewCopyFor } from '@/capture/reviewCopy';
 import { useTheme } from '@/design/theme';
 import { gap, radius } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useSafePadding } from '@/shell/safePadding';
 
 interface ReviewScreenProps {
   readonly photo: CapturedPhoto;
@@ -56,9 +57,10 @@ export function ReviewScreen({
   onConfirm,
 }: ReviewScreenProps) {
   const review = useReviewState(photo);
+  const safe = useSafePadding();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, safe]}>
       <ReviewHeader source={photo.source} />
 
       <CropWorkspace uri={photo.uri} review={review} />
@@ -410,7 +412,7 @@ function useReviewGeometry(photo: CapturedPhoto, container: Size | null): Review
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: gap.lg, gap: gap.md },
+  container: { flex: 1, paddingHorizontal: gap.lg, gap: gap.md },
   stage: { flex: 1, borderRadius: radius.tile, overflow: 'hidden' },
   actions: { flexDirection: 'row', gap: gap.md },
 });
