@@ -1,4 +1,7 @@
-import { studyState } from '@/capture/studyState';
+import type { QueuedStudy, StudyStatus } from '@/capture/study';
+import { STANDARD_CALIBRATION } from '@/capture/study';
+import { studyCounts, studyState } from '@/capture/studyState';
+import { rectToQuad } from '@/camera/quad';
 import type { AnalysisStatus, EcgAnalysis } from '@/ecg/EcgAnalysisService';
 
 const analysis = (status: AnalysisStatus): EcgAnalysis => ({
@@ -36,5 +39,55 @@ describe('studyState', () => {
     // Para quien mira la lista, los dos dicen "aqui hay algo que atender". La
     // causa concreta se lee dentro, no en la fila.
     expect(studyState('failed', undefined)).toBe(studyState('uploaded', analysis('failed')));
+  });
+});
+
+describe('studyCounts', () => {
+  function study(id: string, status: StudyStatus, remoteId: string | null): QueuedStudy {
+    return {
+      id,
+      imageUri: `file:///studies/${id}.jpg`,
+      imageWidth: 3000,
+      imageHeight: 2000,
+      metadata: {
+        anonymousId: `ECG-${id}`,
+        capturedAt: '2026-09-11T07:42:00.000Z',
+        mount: 'standard-3x4',
+        calibration: STANDARD_CALIBRATION,
+        quad: rectToQuad({ x: 0, y: 0, width: 3000, height: 2000 }),
+      },
+      status,
+      remoteId,
+      attempts: 0,
+      lastFailure: null,
+    };
+  }
+
+  it('agrupa en listos, en marcha y con error', () => {
+    const studies = [
+      study('a', 'uploaded', 'r-a'),
+      study('b', 'uploaded', 'r-b'),
+      study('c', 'uploaded', 'r-c'),
+      study('d', 'pending', null),
+      study('e', 'failed', null),
+    ];
+    const byStudy = {
+      'r-a': analysis('ready'),
+      'r-b': analysis('failed'),
+      'r-c': analysis('processing'),
+    };
+
+    expect(studyCounts(studies, byStudy)).toEqual({ ready: 1, inProgress: 2, failed: 2 });
+  });
+
+  it('LOS TRES SUMAN EL TOTAL: NINGUN ESTUDIO SE QUEDA SIN CONTAR', () => {
+    // Una cifra que no cuadra con el historial es una interfaz que miente sobre lo
+    // que hay guardado, que es exactamente lo que ya le paso a este inicio.
+    const studies = (['pending', 'uploading', 'failed', 'uploaded'] as const).map((status, index) =>
+      study(String(index), status, status === 'uploaded' ? 'r' : null),
+    );
+    const counts = studyCounts(studies, {});
+
+    expect(counts.ready + counts.inProgress + counts.failed).toBe(studies.length);
   });
 });

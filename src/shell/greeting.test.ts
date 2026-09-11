@@ -1,5 +1,5 @@
 import type { Session } from '@/auth/AuthService';
-import { displayNameFrom, greetingFor, longDate, welcomeLine } from '@/shell/greeting';
+import { accountLine, displayNameFrom, greetingFor, longDate } from '@/shell/greeting';
 
 /** Sesion minima: solo importa el correo, que es de donde sale el nombre. */
 function sessionWith(email: string): Session {
@@ -50,6 +50,13 @@ describe('el nombre sale del correo, que es el unico dato que hay', () => {
     expect(displayNameFrom(sessionWith('renata+pruebas@ejemplo.com'))).toBe('Renata');
   });
 
+  it('deja fuera las cifras con que se suele desambiguar un correo', () => {
+    expect(displayNameFrom(sessionWith('ronal0036@ejemplo.com'))).toBe('Ronal');
+    expect(displayNameFrom(sessionWith('renata2@ejemplo.com'))).toBe('Renata');
+    // Un correo que empieza por cifras no tiene nombre que sacar.
+    expect(displayNameFrom(sessionWith('0036@ejemplo.com'))).toBeNull();
+  });
+
   it('respeta los acentos y la ene', () => {
     expect(displayNameFrom(sessionWith('ángela@ejemplo.com'))).toBe('Ángela');
     expect(displayNameFrom(sessionWith('nuño@ejemplo.com'))).toBe('Nuño');
@@ -66,14 +73,16 @@ describe('el nombre sale del correo, que es el unico dato que hay', () => {
   });
 });
 
-describe('la linea completa', () => {
-  it('junta saludo y nombre', () => {
-    expect(welcomeLine(sessionWith('renata@ejemplo.com'), at(15))).toBe('Buenas tardes, Renata');
-    expect(welcomeLine(sessionWith('renata@ejemplo.com'), at(8))).toBe('Buenos días, Renata');
+describe('la linea de cuenta', () => {
+  it('junta nombre y rol', () => {
+    expect(accountLine(sessionWith('renata@ejemplo.com'))).toBe('Renata · Profesional de salud');
+    expect(accountLine({ userId: 'u-2', email: 'ana@ejemplo.com', role: 'student' })).toBe(
+      'Ana · Estudiante o demostración',
+    );
   });
 
-  it('sin nombre, el saludo va solo y sin coma colgando', () => {
-    expect(welcomeLine(null, at(22))).toBe('Buenas noches');
+  it('sin nombre, el rol va solo y sin separador colgando', () => {
+    expect(accountLine(sessionWith(''))).toBe('Profesional de salud');
   });
 });
 

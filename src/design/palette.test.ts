@@ -29,14 +29,12 @@ const ROOTS = ['src', 'app'];
  * Modulos que pueden rellenar con el carmin de marca, en cualquiera de sus tres
  * densidades: `carmine`, `carmineLit` y `carmineDeep`.
  *
- * `TileGlow` NO esta en la lista y no debe estarlo: recibe los colores por prop,
- * o sea que no decide nada. Quien decide es quien lo llama.
+ * El modulo hero del inicio salio de la lista con el bento (D-24): el inicio ya no
+ * tiene ninguna superficie de carmin fuera del boton principal.
  */
 const BRAND_FILL_ALLOWED = [
   // Boton de accion principal: ocupa el ancho completo de la pantalla.
   'src/components/ActionButton.tsx',
-  // Modulo hero del inicio: la superficie mas grande de la aplicacion.
-  'src/components/BentoTile.tsx',
   // Boton de eliminar al deslizar una fila: ocupa el alto entero de la fila, y es
   // destructivo. Carmin de marca y no el rojo de alarma, reservado al paciente.
   'src/components/SwipeDeleteAction.tsx',
@@ -49,11 +47,11 @@ const BRAND_FILL_ALLOWED = [
 /**
  * Modulos que pueden pintar la superficie de subtarjeta.
  *
- * Misma logica que el carmin: es un relleno grande y con tinta propia, o sea que
- * fuera del bento no significa nada. `HomeScreen` entra solo por la tinta del
- * identificador, que va sobre una de esas tarjetas.
+ * NINGUNO desde D-24. Era el relleno de los modulos del bento y fuera de el no
+ * significa nada; la lista vacia impide que vuelva a aparecer suelta en otra
+ * pantalla sin decidirlo.
  */
-const TINTED_ALLOWED = ['src/components/BentoTile.tsx', 'src/screens/HomeScreen.tsx'];
+const TINTED_ALLOWED: string[] = [];
 
 /** Modulos que pueden tocar la jerarquia de alarma de la IEC 60601-1-8. */
 // `Notice` sustituye a `ErrorNotice` en esta lista: el color de alarma se movio
@@ -188,10 +186,9 @@ describe('regla de tamano de §12.9 — el carmin de marca no rellena elementos 
     expect(filesMatching(/backgroundColor:\s*brand\.edge/)).toEqual([]);
   });
 
-  it('la superficie de subtarjeta solo la consume el bento', () => {
-    // Se mira la IMPORTACION y no el uso: `BentoTile` devuelve el objeto entero
-    // sin acceder a ningun campo, asi que un patron `tinted.algo` no lo veria, y
-    // un `\btinted\b` a secas chocaria con el literal del tipo `BentoTone`.
+  it('la superficie de subtarjeta no la consume nadie fuera de la lista', () => {
+    // Se mira la IMPORTACION y no el uso: quien devuelva el objeto entero sin
+    // acceder a ningun campo no lo delataria con un patron `tinted.algo`.
     const imports = /import\s*\{[^}]*\btinted\b[^}]*\}\s*from\s*'@\/design\/tokens'/;
     expect(filesMatching(imports).sort()).toEqual([...TINTED_ALLOWED].sort());
   });

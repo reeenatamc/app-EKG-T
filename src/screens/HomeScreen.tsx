@@ -1,49 +1,53 @@
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSession } from '@/auth/session';
+import type { QueuedStudy } from '@/capture/study';
+import { studyCounts } from '@/capture/studyState';
 import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
 import { AppTabBar } from '@/components/AppTabBar';
-import { BentoTile } from '@/components/BentoTile';
 import { ScreenHeader } from '@/components/ScreenHeader';
+import { StudyListRow } from '@/components/StudyListRow';
+import { StudySummary } from '@/components/StudySummary';
 import { HOME_TEXT } from '@/constants/shellText';
 import { Background } from '@/design/Background';
-import { gap, tinted } from '@/design/tokens';
+import { useTheme } from '@/design/theme';
+import { gap, size } from '@/design/tokens';
 import { type } from '@/design/type';
-import { longDate, welcomeLine } from '@/shell/greeting';
-import { describePending, describeSaved } from '@/shell/queueSummary';
+import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
+import { useAnalyses } from '@/ecg/analyses';
+import { accountLine, greetingFor, longDate } from '@/shell/greeting';
 
 /** Hueco bajo el scroll para que la barra de pestanas flotante no tape contenido. */
 const TAB_BAR_CLEARANCE = 96;
 
+/** Cuantos estudios recientes caben en el inicio. El resto, en el historial. */
+const RECENT_LIMIT = 3;
+
 /**
- * Inicio, en rejilla bento (§10).
+ * Inicio.
  *
- * ABRE SALUDANDO, con la fecha larga encima. El titular era «Del papel a la
- * señal», la tesis del producto, y se retira de aqui sin perderse: el modulo hero
- * dice literalmente «Fotografia un electrocardiograma», o sea que la tesis sigue
- * en pantalla y ahora esta pegada a la accion que la ejecuta, que es mejor sitio.
- * A cambio, la primera linea que se lee al abrir habla de quien abre.
+ * SIN BENTO. Eran cuatro tarjetas con la misma forma para cosas que no se parecen:
+ * la accion de capturar, dos recuentos que cambian solos y un aviso que no cambia
+ * nunca. Ahora cada cosa tiene la forma de lo que es: la accion es un boton, los
+ * recuentos son una lectura sobre el lienzo, los estudios son las mismas filas del
+ * historial —que se abren— y el aviso es una nota al pie.
  *
- * La fecha va en la micro-etiqueta porque es un dato real y monoespaciado, que es
- * exactamente para lo que existe ese rol (§6).
+ * EL TITULAR ES SOLO EL SALUDO. Con el nombre dentro se partia en dos lineas; el
+ * nombre baja a la linea de apoyo, con el rol.
  *
- * Un unico modulo hero —la captura, que es la accion que da sentido a la
- * aplicacion— y tres tamanos de tile como maximo. Los modulos van ordenados por
- * urgencia, no por estetica: primero capturar, luego lo que esta en proceso,
- * despues lo reciente, y al final el aviso clinico.
- *
- * Ningun tile es de vidrio: la barra de pestanas ya gasta una de las dos
- * superficies que permite §3. Y la barra se monta AQUI, por la prop `chrome` de
- * `Background`, no desde el router: es lo que le da un objetivo de desenfoque que
- * contiene el contenido que se desplaza. Ver `AppTabBar` y D-18.
+ * La barra se monta AQUI, por la prop `chrome` de `Background`, no desde el
+ * router: es lo que le da un objetivo de desenfoque que contiene el contenido que
+ * se desplaza. Ver `AppTabBar` y D-18.
  *
  * @returns La pantalla de inicio.
  */
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
   const session = useSession((state) => state.session);
 
   // La hora se lee al renderizar y no se guarda en estado: nadie deja el inicio
@@ -59,92 +63,175 @@ export function HomeScreen() {
           { paddingTop: insets.top + gap.xl, paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
         ]}
       >
-        <ScreenHeader title={welcomeLine(session, now)} eyebrow={longDate(now)} size="headline" />
-        <HomeModules />
+        <ScreenHeader
+          eyebrow={longDate(now)}
+          title={greetingFor(now)}
+          subtitle={accountLine(session)}
+          size="headline"
+        />
+        <NewStudy />
+        <HomeStudies />
+        <Text style={[type.caption, { color: theme.textLow }]}>{HOME_TEXT.notice}</Text>
       </ScrollView>
     </Background>
   );
 }
 
-/**
- * Los modulos del bento, ordenados por urgencia y no por estetica: primero
- * capturar, luego lo que esta en proceso, despues lo reciente y al final el
- * aviso clinico.
- *
- * EL HERO ES LA SUPERFICIE DE CARMIN de esta pantalla, y la unica. Es la mas
- * grande, asi que cumple la regla de tamano de §12.9; su boton se invierte a
- * hueso porque carmin sobre carmin no seria un boton.
- */
-function HomeModules() {
+/** La accion de la aplicacion, y en una linea que tipo de registro espera. */
+function NewStudy() {
   const router = useRouter();
+  const theme = useTheme();
+
+  return (
+    <View style={styles.newStudy}>
+      {/* En fila: el boton se estira con flex, y en una columna creceria en alto. */}
+      <View style={styles.row}>
+        <ActionButton
+          label={HOME_TEXT.newStudy}
+          onPress={() => router.push('/capture')}
+          variant="primary"
+        />
+      </View>
+      <Text style={[type.caption, styles.centered, { color: theme.textLow }]}>
+        {HOME_TEXT.newStudyHint}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * El resumen y los recientes.
+ *
+ * MIENTRAS SE LEE EL DISCO NO SE ENSENA NADA, por lo mismo que en el historial:
+ * un «todavia no hay estudios» en los primeros fotogramas mentiria a quien tiene
+ * cuatro. Sin estudios tampoco hay resumen: tres ceros no dicen nada que no diga
+ * ya la frase de los recientes.
+ */
+function HomeStudies() {
+  const router = useRouter();
+  const hasHydrated = useQueueHydrated();
+  const studies = useUploadQueue((state) => state.studies);
+  const byStudy = useAnalyses((state) => state.byStudy);
+
+  if (!hasHydrated) {
+    return null;
+  }
 
   return (
     <>
-      <BentoTile size="hero" tone="brand" title={HOME_TEXT.heroTitle} body={HOME_TEXT.heroBody}>
-        <ActionButton
-          label={HOME_TEXT.heroAction}
-          onPress={() => router.push('/capture')}
-          variant="onBrand"
-        />
-      </BentoTile>
-
-      <StatusModules />
-
-      <BentoTile
-        size="wide"
-        tone="tinted"
-        title={HOME_TEXT.noticeTitle}
-        body={HOME_TEXT.noticeBody}
-      />
+      {studies.length === 0 ? null : (
+        <HomeSection title={HOME_TEXT.summaryTitle}>
+          <StudySummary
+            counts={studyCounts(studies, byStudy)}
+            onPress={() => router.navigate('/history')}
+          />
+        </HomeSection>
+      )}
+      <RecentStudies studies={studies} onSeeAll={() => router.navigate('/history')} />
     </>
   );
 }
 
 /**
- * Los dos modulos de estado, uno al lado del otro.
+ * Los ultimos estudios, del mas reciente al mas antiguo.
  *
- * LOS TRES COMPARTEN TONO. Se probo con uno distinto por modulo y la pantalla se
- * convertia en un muestrario: cuatro colores compitiendo y ninguno mandando. Con
- * un unico vino suavizado detras, el hero es lo unico saturado y la jerarquia
- * se lee sola.
+ * Son las filas del historial y no una version reducida: el mismo estado, la misma
+ * causa si fallo, el mismo gesto de eliminar. Un estudio no puede verse de dos
+ * maneras segun la pestana desde la que se mire.
  */
-function StatusModules() {
-  const hasHydrated = useQueueHydrated();
-  const studies = useUploadQueue((state) => state.studies);
-  const pendingCount = studies.filter((study) => study.status !== 'uploaded').length;
-  const latest = studies[studies.length - 1];
+function RecentStudies({
+  studies,
+  onSeeAll,
+}: {
+  readonly studies: readonly QueuedStudy[];
+  readonly onSeeAll: () => void;
+}) {
+  const theme = useTheme();
+  const recent = studies.slice(-RECENT_LIMIT).reverse();
+  const hasMore = studies.length > RECENT_LIMIT;
 
   return (
-    <View style={styles.row}>
-      <BentoTile
-        size="half"
-        tone="tinted"
-        title={HOME_TEXT.pendingTitle}
-        body={describePending(hasHydrated, pendingCount)}
-      />
-      <BentoTile
-        size="half"
-        tone="tinted"
-        title={HOME_TEXT.recentTitle}
-        body={describeSaved(hasHydrated, studies.length)}
-      >
-        {/*
-          EL ULTIMO ESTUDIO, DE VERDAD. Este modulo decia "Todavia ninguno" fijo
-          mientras el historial mostraba cuatro: una interfaz que miente sobre lo
-          que hay guardado. El identificador va en monoespaciada porque es un
-          identificador (§6).
-        */}
-        {!hasHydrated || latest === undefined ? null : (
-          <Text style={[type.data, { color: tinted.body }]} numberOfLines={1}>
-            {latest.metadata.anonymousId}
-          </Text>
-        )}
-      </BentoTile>
+    <HomeSection
+      title={HOME_TEXT.recentTitle}
+      action={hasMore ? <SeeAllLink onPress={onSeeAll} /> : null}
+    >
+      {recent.length === 0 ? (
+        <Text style={[type.body, { color: theme.textLow }]}>{HOME_TEXT.recentEmpty}</Text>
+      ) : (
+        <View style={styles.rows}>
+          {recent.map((study) => (
+            <StudyListRow key={study.id} study={study} />
+          ))}
+        </View>
+      )}
+    </HomeSection>
+  );
+}
+
+/** Rotulo de bloque en micro-etiqueta y, a la derecha, su enlace si lo tiene. */
+function HomeSection({
+  title,
+  action = null,
+  children,
+}: {
+  readonly title: string;
+  readonly action?: ReactNode;
+  readonly children: ReactNode;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHead}>
+        <Text style={[type.eyebrow, { color: theme.textLow }]}>{title}</Text>
+        {action}
+      </View>
+      {children}
     </View>
   );
 }
 
+/** "Ver todo": lleva al historial y acusa el dedo como el resto de controles. */
+function SeeAllLink({ onPress }: { readonly onPress: () => void }) {
+  const theme = useTheme();
+  const press = usePressMotion();
+
+  return (
+    <AnimatedPressable
+      accessibilityRole="link"
+      accessibilityLabel={HOME_TEXT.recentAll}
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={[styles.link, press.style]}
+    >
+      <Text style={[type.caption, styles.linkLabel, { color: theme.textHigh }]}>
+        {HOME_TEXT.recentAll}
+      </Text>
+    </AnimatedPressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: gap.lg, gap: gap.md },
-  row: { flexDirection: 'row', gap: gap.md },
+  content: { paddingHorizontal: gap.lg, gap: gap.xl },
+  newStudy: { gap: gap.sm },
+  row: { flexDirection: 'row' },
+  centered: { textAlign: 'center' },
+  section: { gap: gap.sm },
+  // El mismo hueco entre filas que en el historial.
+  rows: { gap: gap.md },
+  sectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  // Area tactil de 44 puntos que no empuja el rotulo: el margen negativo le
+  // devuelve al bloque lo que el enlace crece por encima y por debajo del texto.
+  link: {
+    minHeight: size.touchTarget,
+    justifyContent: 'center',
+    paddingLeft: gap.lg,
+    marginVertical: -gap.md,
+  },
+  linkLabel: { fontFamily: 'Inter_500Medium' },
 });

@@ -27,8 +27,8 @@ const GLYPH_SIZE = 20;
 /**
  * Boton redondo de un solo icono, para salir de una pantalla.
  *
- * LOS COLORES LLEGAN POR PROP y no salen del tema. Es el mismo criterio que
- * `TileGlow`: este boton no decide nada, decide quien lo monta. Y hace falta que
+ * LOS COLORES LLEGAN POR PROP y no salen del tema: este boton no decide nada,
+ * decide quien lo monta. Y hace falta que
  * sea asi porque sus dos usos viven en paletas distintas —la cabecera va con el
  * tema activo, la capa de camara va con los colores oscuros fijos de §12— y un
  * `useTheme()` aqui dentro pintaria el aspa de la camara con el tema claro sobre

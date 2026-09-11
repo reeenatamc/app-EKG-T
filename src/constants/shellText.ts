@@ -61,19 +61,18 @@ export const CALENDAR_TEXT = {
 } as const;
 
 export const HOME_TEXT = {
-  heroTitle: 'Fotografía un electrocardiograma',
-  heroBody: 'Encuadra el trazado en papel y la aplicación lo endereza, lo recorta y lo prepara.',
-  heroAction: 'Capturar ahora',
-  recentTitle: 'Últimos estudios',
-  recentEmpty: 'Todavía ninguno',
-  recentOne: '1 guardado',
-  recentMany: 'guardados',
-  pendingTitle: 'En proceso',
-  pendingEmpty: 'Nada en cola',
-  pendingOne: '1 estudio esperando',
-  pendingMany: 'estudios esperando',
-  noticeTitle: 'Apoyo, no diagnóstico',
-  noticeBody: 'Los resultados son orientativos y los confirma un profesional.',
+  newStudy: 'Nuevo estudio',
+  newStudyHint: 'ECG estándar de 12 derivaciones, en papel.',
+  summaryTitle: 'Resumen',
+  summaryReady: 'Listos',
+  summaryInProgress: 'En curso',
+  summaryFailed: 'Con error',
+  /** Lo que anuncia un lector de pantalla antes de las tres cifras. */
+  summaryOpen: 'Abrir el historial',
+  recentTitle: 'Recientes',
+  recentAll: 'Ver todo',
+  recentEmpty: 'Todavía no hay estudios. Los que fotografíes aparecerán aquí.',
+  notice: 'Apoyo, no diagnóstico. Los resultados son orientativos y los confirma un profesional.',
 } as const;
 
 export const HISTORY_TEXT = {

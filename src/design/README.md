@@ -13,54 +13,54 @@ La tesis central de la especificación gobierna todo lo demás:
 
 ## 1. Regla de la especificación → dónde vive en el código
 
-| Regla                                                                   | Sección       | Implementación                                                                                       |
-| ----------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
-| Un literal de color, tamaño, radio o duración fuera de tokens es un bug | §2            | `tokens.ts` — fuente única. **Comprobado por `palette.test.ts`**, no a ojo                           |
-| `semantic.*` reservado para alarmas, nunca decoración                   | §2            | `tokens.ts` con la advertencia junto a la definición; lista blanca en `palette.test.ts`              |
-| La identidad es carmín, hueso y ciruela                                 | §2            | `tokens.ts` → `identity`, del que derivan `brand`, `paperLight` y `paperDark`                        |
-| El acento de marca es `brand.*`; `aurora.*` no sale del lienzo          | §2            | `ActionButton.tsx` y `BentoTile.tsx` usan `brand.carmine`; `aurora` solo en `Aurora.tsx`, comprobado |
-| Regla de tamaño: carmín en grande, alarma en pequeño                    | §12.9         | Dos listas blancas y la exigencia de medida acotada, en `palette.test.ts`                            |
-| Toda superficie opaca lleva filo propio                                 | §2            | `theme.edge`; antes el par superficie/lienzo era 1.04:1                                              |
-| La atmósfera es de la entrada, no del producto                          | §1, §4, D-20  | `Background` → prop `atmosphere`; siete pantallas con malla, seis con lienzo plano                   |
-| El lienzo plano es hueso puro                                           | §2, D-20      | `theme.canvasFlat`; en claro la tarjeta se define solo por su filo, 1.82:1                           |
-| El lienzo se pinta **dentro** del objetivo de desenfoque, como hijo     | §3, D-23      | `Background` → `CanvasFill`; como fondo del objetivo no entra en la foto y el vidrio sale gris       |
-| Un solo tinte en el bento, y no depende del tema                        | §10, D-23     | `tokens.ts` → `tinted`, constante compartida. Tres tonos distintos hacían un muestrario              |
-| La pestaña activa se marca con el color de acento                       | §12.9, D-22   | `TabBarItem`; carmín como tinte, nunca relleno. Comprobado en `palette.test.ts`                      |
-| El inicio saluda por franja del día y con el nombre                     | §6, D-22      | `src/shell/greeting.ts`, puro y probado; el nombre se deriva del correo                              |
-| Sombra en vez de borde en toda superficie opaca                         | §10, D-21     | `src/design/elevation.ts` → `cardShadow` y `rowShadow`                                               |
-| Campos y pistas hundidos, no elevados                                   | §7, D-22      | `FormField` y `SegmentedControl` sobre `theme.canvas`: un campo es un hueco, no una tarjeta          |
-| Paper es la identidad; dos temas, claro y oscuro                        | §2            | `theme.tsx` → `buildTheme()`; conmutación sin remontar el árbol                                      |
-| `monitor` y `trace` reservados, fuera de la interfaz                    | §2, §12       | `tokens.ts`; verificado: ningún componente los importa                                               |
-| Verde de fósforo nunca sobre señal digitalizada de papel                | §12.8         | El trazado usa `paperLight.ink` / `paperDark.ink`, que se invierten con el tema                      |
-| La pantalla de captura es oscura siempre                                | —             | `CameraScreen.tsx`; motivo óptico, documentado en el propio archivo                                  |
-| Vidrio con caída a opaco                                                | §3            | `Glass.tsx` → `GlassSurface`, rama `isFlat`                                                          |
-| `overflow: 'hidden'` en todo BlurView                                   | §3            | `Glass.tsx`, estilo `base`                                                                           |
-| Capa de tinte propia, nunca por debajo de 0.30                          | §3            | `Glass.tsx`; valores en `tokens.glass`                                                               |
-| Línea especular, una sola dirección de luz                              | §3            | `Glass.tsx`, estilo `specular`                                                                       |
-| Sombras declaradas para iOS y para Android                              | §3            | `Glass.tsx`, `Platform.select` en `base`                                                             |
-| Presupuesto de dos superficies de vidrio                                | §3            | Sin cambios: una sola en el producto, la barra. Medido en §3 de este documento                       |
-| Malla radial, nunca degradado lineal                                    | §4            | `Aurora.tsx` — tres blobs, ninguno centrado, uno anclado bajo el vidrio                              |
-| Blur en el `layer` del `Group`, que funde las costuras                  | §4            | `Aurora.tsx`, prop `layer`                                                                           |
-| Aurora atenuada en los dos temas                                        | §4            | `theme.tsx` → `auroraOpacity`: 0.42 claro, 0.50 oscuro                                               |
-| El latido difuso se separa de su fondo                                  | §8            | `theme.bloom`: sombra sobre hueso, resplandor sobre ciruela                                          |
-| Cifras e identificadores en monoespaciada                               | §6            | `FormField` (código), `StudyListRow` (id y fecha), `StudyDetailScreen`                               |
-| Cada rol de `type` tiene consumidores                                   | §6            | Comprobado por `palette.test.ts`; antes `vital` no aparecía en ninguna pantalla                      |
-| Toda pantalla principal abre con titular en display                     | §6            | `ScreenHeader.tsx`, en las once pantallas con contenido                                              |
-| `lineHeight` y `letterSpacing` en píxeles absolutos                     | §6            | `type.ts`, valores ya convertidos                                                                    |
-| Splash retenido hasta que carguen las fuentes                           | §6            | `type.ts` → `useAppFonts()`; `app/_layout.tsx` no renderiza antes                                    |
-| Transparencia reducida ramifica de verdad                               | §7            | `a11y.ts` → `useReducedTransparency()`, consumido por `Glass.tsx`                                    |
-| Interruptor manual, porque Android no expone la preferencia             | §7, §0        | `state/settings.ts`; expuesto en `PlaygroundControls.tsx`                                            |
-| Movimiento reducido                                                     | §7, §11       | `a11y.ts` → `useReducedMotion()`                                                                     |
-| Área táctil ≥ 44×44                                                     | §7            | `tokens.size.touchTarget`, aplicado en todo control                                                  |
-| Fondo Skia fuera del árbol de accesibilidad                             | §7            | `BackgroundLayers.tsx`                                                                               |
-| Chrome flotante respeta las áreas seguras                               | §7            | `useSafeAreaInsets()` en `PlaygroundScreen` y `CameraScreen`                                         |
-| El latido dibuja P, QRS y T reales                                      | §8            | `SignalBloom.tsx` → `BEAT_SVG`                                                                       |
-| `SkPath` construido a nivel de módulo                                   | §8, §13       | `SignalBloom.tsx` → `BEAT_PATH`                                                                      |
-| Un único `<Canvas>` por pantalla                                        | §1, §13       | `BackgroundLayers.tsx`; `Aurora` y `SignalBloom` devuelven nodos                                     |
-| Retícula ambiental es textura, no información                           | §1, §9, §12.5 | `AmbientGrid.tsx`; **un solo nivel**, paso 11, sin línea gruesa que contar                           |
-| El objetivo de desenfoque contiene el contenido, no solo el fondo       | §3            | `Background.tsx`; el vidrio va encima del objetivo, como hermano                                     |
-| El vidrio flotante se monta desde la pantalla, no desde el router       | §3            | `AppTabBar` por la prop `chrome` de `Background`; `(tabs)/_layout` da `null`                         |
-| Solo se animan `transform` y `opacity`                                  | §11           | `motion.ts` documenta la restricción                                                                 |
+| Regla                                                                   | Sección       | Implementación                                                                                               |
+| ----------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| Un literal de color, tamaño, radio o duración fuera de tokens es un bug | §2            | `tokens.ts` — fuente única. **Comprobado por `palette.test.ts`**, no a ojo                                   |
+| `semantic.*` reservado para alarmas, nunca decoración                   | §2            | `tokens.ts` con la advertencia junto a la definición; lista blanca en `palette.test.ts`                      |
+| La identidad es carmín, hueso y ciruela                                 | §2            | `tokens.ts` → `identity`, del que derivan `brand`, `paperLight` y `paperDark`                                |
+| El acento de marca es `brand.*`; `aurora.*` no sale del lienzo          | §2            | `ActionButton.tsx` y `SwipeDeleteAction.tsx` usan `brand.carmine`; `aurora` solo en `Aurora.tsx`, comprobado |
+| Regla de tamaño: carmín en grande, alarma en pequeño                    | §12.9         | Dos listas blancas y la exigencia de medida acotada, en `palette.test.ts`                                    |
+| Toda superficie opaca lleva filo propio                                 | §2            | `theme.edge`; antes el par superficie/lienzo era 1.04:1                                                      |
+| La atmósfera es de la entrada, no del producto                          | §1, §4, D-20  | `Background` → prop `atmosphere`; siete pantallas con malla, seis con lienzo plano                           |
+| El lienzo plano es hueso puro                                           | §2, D-20      | `theme.canvasFlat`; en claro la tarjeta se define solo por su filo, 1.82:1                                   |
+| El lienzo se pinta **dentro** del objetivo de desenfoque, como hijo     | §3, D-23      | `Background` → `CanvasFill`; como fondo del objetivo no entra en la foto y el vidrio sale gris               |
+| El inicio no usa tarjetas para lo que no se abre                        | §10, D-24     | `HomeScreen`: botón, `StudySummary` sobre el lienzo y filas del historial. `tinted` queda sin uso            |
+| La pestaña activa se marca con el color de acento                       | §12.9, D-22   | `TabBarItem`; carmín como tinte, nunca relleno. Comprobado en `palette.test.ts`                              |
+| El inicio saluda por franja del día y con el nombre                     | §6, D-22      | `src/shell/greeting.ts`, puro y probado; el nombre se deriva del correo                                      |
+| Sombra en vez de borde en toda superficie opaca                         | §10, D-21     | `src/design/elevation.ts` → `cardShadow` y `rowShadow`                                                       |
+| Campos y pistas hundidos, no elevados                                   | §7, D-22      | `FormField` y `SegmentedControl` sobre `theme.canvas`: un campo es un hueco, no una tarjeta                  |
+| Paper es la identidad; dos temas, claro y oscuro                        | §2            | `theme.tsx` → `buildTheme()`; conmutación sin remontar el árbol                                              |
+| `monitor` y `trace` reservados, fuera de la interfaz                    | §2, §12       | `tokens.ts`; verificado: ningún componente los importa                                                       |
+| Verde de fósforo nunca sobre señal digitalizada de papel                | §12.8         | El trazado usa `paperLight.ink` / `paperDark.ink`, que se invierten con el tema                              |
+| La pantalla de captura es oscura siempre                                | —             | `CameraScreen.tsx`; motivo óptico, documentado en el propio archivo                                          |
+| Vidrio con caída a opaco                                                | §3            | `Glass.tsx` → `GlassSurface`, rama `isFlat`                                                                  |
+| `overflow: 'hidden'` en todo BlurView                                   | §3            | `Glass.tsx`, estilo `base`                                                                                   |
+| Capa de tinte propia, nunca por debajo de 0.30                          | §3            | `Glass.tsx`; valores en `tokens.glass`                                                                       |
+| Línea especular, una sola dirección de luz                              | §3            | `Glass.tsx`, estilo `specular`                                                                               |
+| Sombras declaradas para iOS y para Android                              | §3            | `Glass.tsx`, `Platform.select` en `base`                                                                     |
+| Presupuesto de dos superficies de vidrio                                | §3            | Sin cambios: una sola en el producto, la barra. Medido en §3 de este documento                               |
+| Malla radial, nunca degradado lineal                                    | §4            | `Aurora.tsx` — tres blobs, ninguno centrado, uno anclado bajo el vidrio                                      |
+| Blur en el `layer` del `Group`, que funde las costuras                  | §4            | `Aurora.tsx`, prop `layer`                                                                                   |
+| Aurora atenuada en los dos temas                                        | §4            | `theme.tsx` → `auroraOpacity`: 0.42 claro, 0.50 oscuro                                                       |
+| El latido difuso se separa de su fondo                                  | §8            | `theme.bloom`: sombra sobre hueso, resplandor sobre ciruela                                                  |
+| Cifras e identificadores en monoespaciada                               | §6            | `FormField` (código), `StudyListRow` (id y fecha), `StudyDetailScreen`                                       |
+| Cada rol de `type` tiene consumidores                                   | §6            | Comprobado por `palette.test.ts`; antes `vital` no aparecía en ninguna pantalla                              |
+| Toda pantalla principal abre con titular en display                     | §6            | `ScreenHeader.tsx`, en las once pantallas con contenido                                                      |
+| `lineHeight` y `letterSpacing` en píxeles absolutos                     | §6            | `type.ts`, valores ya convertidos                                                                            |
+| Splash retenido hasta que carguen las fuentes                           | §6            | `type.ts` → `useAppFonts()`; `app/_layout.tsx` no renderiza antes                                            |
+| Transparencia reducida ramifica de verdad                               | §7            | `a11y.ts` → `useReducedTransparency()`, consumido por `Glass.tsx`                                            |
+| Interruptor manual, porque Android no expone la preferencia             | §7, §0        | `state/settings.ts`; expuesto en `PlaygroundControls.tsx`                                                    |
+| Movimiento reducido                                                     | §7, §11       | `a11y.ts` → `useReducedMotion()`                                                                             |
+| Área táctil ≥ 44×44                                                     | §7            | `tokens.size.touchTarget`, aplicado en todo control                                                          |
+| Fondo Skia fuera del árbol de accesibilidad                             | §7            | `BackgroundLayers.tsx`                                                                                       |
+| Chrome flotante respeta las áreas seguras                               | §7            | `useSafeAreaInsets()` en `PlaygroundScreen` y `CameraScreen`                                                 |
+| El latido dibuja P, QRS y T reales                                      | §8            | `SignalBloom.tsx` → `BEAT_SVG`                                                                               |
+| `SkPath` construido a nivel de módulo                                   | §8, §13       | `SignalBloom.tsx` → `BEAT_PATH`                                                                              |
+| Un único `<Canvas>` por pantalla                                        | §1, §13       | `BackgroundLayers.tsx`; `Aurora` y `SignalBloom` devuelven nodos                                             |
+| Retícula ambiental es textura, no información                           | §1, §9, §12.5 | `AmbientGrid.tsx`; **un solo nivel**, paso 11, sin línea gruesa que contar                                   |
+| El objetivo de desenfoque contiene el contenido, no solo el fondo       | §3            | `Background.tsx`; el vidrio va encima del objetivo, como hermano                                             |
+| El vidrio flotante se monta desde la pantalla, no desde el router       | §3            | `AppTabBar` por la prop `chrome` de `Background`; `(tabs)/_layout` da `null`                                 |
+| Solo se animan `transform` y `opacity`                                  | §11           | `motion.ts` documenta la restricción                                                                         |
 
 ---
 
@@ -270,6 +270,37 @@ probablemente afecten a algo medido en este documento.
 Toda desviación respecto de `SKILL.md` se registra aquí con fecha, motivo y
 alternativa descartada. Si algo de la especificación resulta imposible, se
 enmienda la especificación y se anota; nunca se ignora en silencio.
+
+### D-24 · El inicio deja el bento
+
+**2026-09-11 · §10 · decisión del autor, sobre el inicio de la vista profesional**
+
+El inicio eran cuatro tarjetas con la misma forma: el hero de carmín para capturar,
+dos módulos tintados con recuentos que cambian solos («En proceso», «Últimos
+estudios») y un tercero tintado con un aviso que no cambia nunca. Al ser iguales,
+nada decía qué era cada cosa, y los recuentos contaban poco: «1 guardado» no dice
+si ese estudio se puede leer.
+
+Ahora cada cosa tiene la forma de lo que es:
+
+- **La acción es un botón**, el `ActionButton` principal de siempre, con una línea
+  debajo que dice qué registro espera.
+- **Los recuentos son una lectura, no una tarjeta.** `StudySummary` pone tres cifras
+  —listos, en curso, con error— sobre el lienzo, entre dos filos, con los mismos
+  puntos de tono que las filas del historial. Salen de `studyCounts`, que agrupa el
+  mismo `studyState` de la lista y está probado para que los tres sumen el total.
+- **Los estudios son las filas del historial**, las tres últimas y con el mismo
+  gesto de eliminar. Son lo único del inicio que se abre, y lo único con tarjeta.
+- **El aviso clínico es una nota al pie.**
+
+El titular se queda en el saludo; el nombre baja a una línea de apoyo junto al rol
+(`accountLine`), porque con el nombre dentro se partía en dos líneas.
+
+Se retiran `BentoTile` y `TileGlow`. `tokens.tinted` se conserva con sus medidas
+de contraste, pero ninguna pantalla lo importa: `palette.test.ts` lo exige con una
+lista blanca vacía, para que no vuelva suelto sin decidirlo. La sección 3 («inicio
+en bento con la barra de pestañas») y D-21 a D-23 quedan como historia de lo que
+se midió entonces.
 
 ### D-23 · El vidrio nunca desenfocó, y la subtarjeta deja de depender del tema
 

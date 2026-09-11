@@ -1,5 +1,5 @@
 import type { Session } from '@/auth/AuthService';
-import { CALENDAR_TEXT, GREETING_TEXT } from '@/constants/shellText';
+import { CALENDAR_TEXT, GREETING_TEXT, PROFILE_TEXT } from '@/constants/shellText';
 
 /**
  * Saludo de inicio: la hora del dia y a quien se saluda.
@@ -55,8 +55,9 @@ export function greetingFor(at: Date): string {
  */
 export function displayNameFrom(session: Session | null): string | null {
   const local = session?.email.split('@')[0] ?? '';
-  // Los separadores habituales de un correo compuesto: renata.mc, renata_mc...
-  const first = local.split(/[._+-]/)[0] ?? '';
+  // Los separadores habituales de un correo compuesto —renata.mc, renata_mc— y
+  // las cifras, que casi nunca son parte del nombre: ronal0036 saluda a Ronal.
+  const first = local.split(/[._+\-0-9]/)[0] ?? '';
 
   if (first.length === 0) {
     return null;
@@ -66,17 +67,23 @@ export function displayNameFrom(session: Session | null): string | null {
 }
 
 /**
- * El saludo completo, ya listo para pintar.
+ * Quien abre la aplicacion, en una linea: nombre y rol.
+ *
+ * VA DEBAJO DEL SALUDO Y NO DENTRO. El saludo con el nombre —«Buenas tardes,
+ * Renata»— se partia en dos lineas a tamano de titular y ocupaba el primer cuarto
+ * de la pantalla. Separados, el titular cabe en una y el nombre gana algo que
+ * antes no se veia en el inicio: el rol, que decide lo que ensena el resto de la
+ * aplicacion.
  *
  * @param session Sesion activa, o null si no hay.
- * @param at Momento del saludo.
- * @returns "Buenas tardes, Renata" o, sin nombre, "Buenas tardes".
+ * @returns "Renata · Profesional de salud" o, sin nombre, solo el rol.
  */
-export function welcomeLine(session: Session | null, at: Date): string {
-  const greeting = greetingFor(at);
+export function accountLine(session: Session | null): string {
   const name = displayNameFrom(session);
+  const role =
+    session?.role === 'student' ? PROFILE_TEXT.roleStudent : PROFILE_TEXT.roleProfessional;
 
-  return name === null ? greeting : `${greeting}, ${name}`;
+  return name === null ? role : `${name} · ${role}`;
 }
 
 /**

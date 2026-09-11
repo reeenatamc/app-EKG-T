@@ -81,6 +81,19 @@ export const type = {
     letterSpacing: -1,
   },
   data: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 15, lineHeight: 20 },
+  /**
+   * Una cifra que se lee sola, como los recuentos del resumen del inicio.
+   *
+   * Entre `data`, que acompana a un texto, y `vital`, que es la lectura de un
+   * monitor y no se usa fuera de el. Monoespaciada por lo mismo que las otras dos:
+   * tres recuentos en fila se comparan mejor si sus digitos miden lo mismo.
+   */
+  figure: {
+    fontFamily: 'JetBrainsMono_500Medium',
+    fontSize: 28,
+    lineHeight: 32,
+    letterSpacing: -0.5,
+  },
 } as const;
 
 /**

@@ -95,8 +95,7 @@ export const paperLight = {
    * CONSECUENCIA, y define como se dibuja una tarjeta: lienzo y superficie
    * quedan del mismo valor, o sea que una tarjeta blanca no puede separarse por
    * color. Se separa por **sombra**, igual que un objeto apoyado sobre una mesa
-   * del mismo color que el. Por eso `BentoTile` no lleva borde y si lleva
-   * elevacion.
+   * del mismo color que el.
    */
   canvasFlat: identity.bone,
   surface: identity.bone,

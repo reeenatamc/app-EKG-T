@@ -153,6 +153,7 @@ function StudyList({ padding }: { readonly padding: ViewStyle }) {
       ListHeaderComponent={
         <StudyListHeader hasFailed={task.hasFailed} foundNothing={foundNothing} />
       }
+      ListHeaderComponentStyle={styles.listHeader}
     />
   );
 }
@@ -227,6 +228,8 @@ const styles = StyleSheet.create({
   empty: { flex: 1, justifyContent: 'center', paddingHorizontal: gap.lg, gap: gap.md },
   action: { flexDirection: 'row', marginTop: gap.lg },
   separator: { height: gap.md },
+  // El titular ya deja un escalon pequeno debajo; la lista pide uno mas.
+  listHeader: { marginBottom: gap.sm },
   // La cabecera no lleva separador detras, asi que el hueco lo pone el aviso.
   headerNotice: { marginBottom: gap.md },
   hint: { marginBottom: gap.md },

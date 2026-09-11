@@ -30,6 +30,8 @@ interface ScreenHeaderProps {
    * `type.headline`.
    */
   readonly size?: 'display' | 'headline';
+  /** Una linea de apoyo bajo el titular, en cuerpo de texto atenuado. */
+  readonly subtitle?: string;
 }
 
 /**
@@ -54,29 +56,45 @@ interface ScreenHeaderProps {
  * @param eyebrow Micro-etiqueta opcional, solo si informa.
  * @param onBack Salida opcional, solo en pantallas apiladas.
  * @param size Escalon del titular.
+ * @param subtitle Linea de apoyo opcional.
  * @returns El titular renderizado.
  */
-export function ScreenHeader({ title, eyebrow, onBack, size = 'display' }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  eyebrow,
+  onBack,
+  size = 'display',
+  subtitle,
+}: ScreenHeaderProps) {
   const theme = useTheme();
 
   return (
     <View style={styles.header}>
-      {onBack === undefined ? null : (
-        <View style={styles.backSlot}>
-          <IconButton
-            icon="back"
-            label={NAV_TEXT.back}
-            onPress={onBack}
-            color={theme.textHigh}
-            background={theme.surface}
-          />
-        </View>
-      )}
-
+      {onBack === undefined ? null : <BackButton onPress={onBack} />}
       {eyebrow === undefined ? null : (
         <Text style={[type.eyebrow, { color: theme.textLow }]}>{eyebrow}</Text>
       )}
       <Text style={[type[size], { color: theme.textHigh }]}>{title}</Text>
+      {subtitle === undefined ? null : (
+        <Text style={[type.body, { color: theme.textLow }]}>{subtitle}</Text>
+      )}
+    </View>
+  );
+}
+
+/** La salida de una pantalla apilada, pegada al borde izquierdo del titular. */
+function BackButton({ onPress }: { readonly onPress: () => void }) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.backSlot}>
+      <IconButton
+        icon="back"
+        label={NAV_TEXT.back}
+        onPress={onPress}
+        color={theme.textHigh}
+        background={theme.surface}
+      />
     </View>
   );
 }

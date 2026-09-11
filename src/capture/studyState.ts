@@ -1,4 +1,4 @@
-import type { StudyStatus } from '@/capture/study';
+import type { QueuedStudy, StudyStatus } from '@/capture/study';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 
 /**
@@ -45,4 +45,39 @@ export function studyState(upload: StudyStatus, analysis: EcgAnalysis | undefine
   }
 
   return analysis.status === 'ready' ? 'ready' : 'failed';
+}
+
+/** Cuantos estudios hay en cada punto, agrupados como se leen en el inicio. */
+export interface StudyCounts {
+  readonly ready: number;
+  /** En espera, enviandose o analizandose: todo lo que todavia va a cambiar solo. */
+  readonly inProgress: number;
+  readonly failed: number;
+}
+
+/**
+ * Cuenta los estudios por estado.
+ *
+ * TRES GRUPOS Y NO CINCO. En el inicio lo que importa es cuanto hay para leer,
+ * cuanto esta en marcha y cuanto pide atencion. Distinguir "en espera" de
+ * "enviando" de "analizando" es lo que hace el historial, fila por fila; aqui
+ * serian tres cifras pequenas que se suman de cabeza.
+ *
+ * @param studies Estudios de la cola.
+ * @param byStudy Analisis conocidos, por identificador remoto.
+ * @returns Los tres recuentos.
+ */
+export function studyCounts(
+  studies: readonly QueuedStudy[],
+  byStudy: Readonly<Record<string, EcgAnalysis>>,
+): StudyCounts {
+  const states = studies.map((study) =>
+    studyState(study.status, study.remoteId === null ? undefined : byStudy[study.remoteId]),
+  );
+
+  return {
+    ready: states.filter((state) => state === 'ready').length,
+    failed: states.filter((state) => state === 'failed').length,
+    inProgress: states.filter((state) => state !== 'ready' && state !== 'failed').length,
+  };
 }
