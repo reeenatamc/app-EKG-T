@@ -16,7 +16,7 @@ describe('reviewCopyFor', () => {
     const hint = reviewCopyFor('gallery').hint;
 
     expect(hint).not.toContain('borde del papel');
-    expect(hint).toContain('dejalas donde estan');
+    expect(hint).toContain('déjalas donde están');
   });
 
   it('los dos origenes dicen algo, y algo distinto', () => {

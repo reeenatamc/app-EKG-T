@@ -26,7 +26,7 @@ export const CAMERA_TEXT = {
   tiltModeFlat: 'Papel en mesa',
   tiltModeUpright: 'Papel en vertical',
   dimWarning: 'Hay poca luz para fotografiar papel',
-  fromGallery: 'Elegir de la galeria',
+  fromGallery: 'Elegir de la galería',
   shutterLabel: 'Capturar',
   /**
    * Salida de la captura.
@@ -72,16 +72,16 @@ export interface MountCopy {
  */
 export const MOUNT_COPY: Record<MountId, MountCopy> = {
   'standard-3x4': {
-    label: '3x4 estandar',
+    label: '3x4 estándar',
     hint: 'Doce derivaciones en cuatro columnas de 2,5 s',
   },
   'rhythm-3x4': {
     label: '3x4 + tiras de ritmo',
-    hint: 'El reparto estandar con una tira continua al pie',
+    hint: 'El reparto estándar con una tira continua al pie',
   },
   'right-3x3': {
     label: '3x3 derechas (V4R-V6R)',
-    hint: 'Precordiales derechas, ante sospecha de infarto de ventriculo derecho',
+    hint: 'Precordiales derechas, ante sospecha de infarto de ventrículo derecho',
   },
   'six-2': {
     label: '6x2',
@@ -120,23 +120,23 @@ export interface QualityCopy {
 export const QUALITY_COPY: Record<QualityIssue, QualityCopy> = {
   'low-resolution': {
     title: 'La foto tiene poco detalle',
-    why: 'El trazo mide menos de un milimetro de ancho. A esta resolucion se pierde parte de la senal, y eso no se recupera despues.',
-    action: 'Acercate hasta que el papel llene el marco.',
+    why: 'El trazo mide menos de un milímetro de ancho. A esta resolución se pierde parte de la señal, y eso no se recupera después.',
+    action: 'Acércate hasta que el papel llene el marco.',
   },
   blurry: {
-    title: 'La foto salio movida',
-    why: 'Los bordes del trazo estan difusos, y el borde es justo lo que se mide para reconstruir la senal.',
-    action: 'Apoya los codos y espera a que la camara enfoque antes de disparar.',
+    title: 'La foto salió movida',
+    why: 'Los bordes del trazo están difusos, y el borde es justo lo que se mide para reconstruir la señal.',
+    action: 'Apoya los codos y espera a que la cámara enfoque antes de disparar.',
   },
   glare: {
     title: 'Hay un reflejo sobre el papel',
-    why: 'Debajo del brillo no queda reticula ni trazo que leer: esa parte del registro llega en blanco.',
-    action: 'Cambia el angulo o aparta la lampara que se refleja.',
+    why: 'Debajo del brillo no queda retícula ni trazo que leer: esa parte del registro llega en blanco.',
+    action: 'Cambia el ángulo o aparta la lámpara que se refleja.',
   },
   underexposed: {
-    title: 'La foto salio oscura',
+    title: 'La foto salió oscura',
     why: 'Con poca luz el ruido del sensor tiene el mismo grosor que el trazo, y se confunden.',
-    action: 'Busca mas luz antes de repetirla.',
+    action: 'Busca más luz antes de repetirla.',
   },
 };
 
@@ -174,12 +174,12 @@ export const REVIEW_TEXT = {
    */
   gallery: {
     title: 'Comprueba las esquinas',
-    hint: 'Si la imagen ya es solo el electrocardiograma, dejalas donde estan. Muevelas solo si sobra mesa, dedos o fondo alrededor del papel.',
+    hint: 'Si la imagen ya es solo el electrocardiograma, déjalas donde están. Muévelas solo si sobra mesa, dedos o fondo alrededor del papel.',
     reset: 'Usar la imagen entera',
   },
   crossedQuad: 'Las esquinas se han cruzado. Devuelve una a su sitio para seguir.',
   preview: 'Con la perspectiva corregida',
-  previewHint: 'Asi quedara el registro una vez enderezado.',
+  previewHint: 'Así quedará el registro una vez enderezado.',
   reset: 'Volver al encuadre',
   /**
    * Girar la imagen un cuarto de vuelta.
@@ -192,7 +192,7 @@ export const REVIEW_TEXT = {
   rotate: 'Girar la imagen',
   discard: 'Repetir la foto',
   continueAction: 'Continuar',
-  imageLabel: 'Fotografia del electrocardiograma con las esquinas ajustables',
+  imageLabel: 'Fotografía del electrocardiograma con las esquinas ajustables',
   /**
    * El recorte no salió.
    *
@@ -209,17 +209,17 @@ export const REVIEW_TEXT = {
 export const CONFIRM_TEXT = {
   title: 'Antes de enviar',
   qualitySection: 'Calidad de la imagen',
-  qualityClean: 'La foto cumple lo que necesita la digitalizacion.',
+  qualityClean: 'La foto cumple lo que necesita la digitalización.',
   qualityWarningNote: 'Puedes enviarla igualmente. Esto es un aviso, no un bloqueo.',
   mountSection: 'Montaje',
   mountHint:
-    'Es el dato que mas condiciona la lectura: indica como estan repartidas las derivaciones en la hoja.',
-  calibrationSection: 'Calibracion',
+    'Es el dato que más condiciona la lectura: indica cómo están repartidas las derivaciones en la hoja.',
+  calibrationSection: 'Calibración',
   calibrationHint:
-    'Los valores estandar son 25 mm/s y 10 mm/mV. Cambialos si la hoja dice otra cosa.',
+    'Los valores estándar son 25 mm/s y 10 mm/mV. Cámbialos si la hoja dice otra cosa.',
   speedLabel: 'Velocidad del papel',
   gainLabel: 'Amplitud',
-  identitySection: 'Identificacion',
+  identitySection: 'Identificación',
   identityLabel: 'Identificador del estudio',
   /**
    * La ayuda dice explicitamente que no se escriban nombres.
@@ -229,7 +229,7 @@ export const CONFIRM_TEXT = {
    * quiere ese dato y no tiene donde guardarlo.
    */
   identityHint:
-    'Se genera solo. Puedes sustituirlo por el codigo de tu propio registro. No escribas nombres de pacientes: esta aplicacion no los pide ni los guarda.',
+    'Se genera solo. Puedes sustituirlo por el código de tu propio registro. No escribas nombres de pacientes: esta aplicación no los pide ni los guarda.',
   submit: 'Enviar estudio',
   back: 'Volver a las esquinas',
 } as const;
@@ -277,10 +277,10 @@ export const QUEUE_TEXT = {
  */
 export const UPLOAD_FAILURE_COPY: Record<UploadFailureReason, string> = {
   'network-unreachable':
-    'No hay conexion. El estudio se queda guardado y se enviara cuando vuelva.',
-  unauthorized: 'La sesion caduco. Vuelve a entrar y el envio se reanuda.',
+    'No hay conexión. El estudio se queda guardado y se enviará cuando vuelva.',
+  unauthorized: 'La sesión caducó. Vuelve a entrar y el envío se reanuda.',
   'payload-rejected':
-    'El servidor no acepto la imagen. Revisa el montaje elegido y vuelve a intentarlo.',
-  'server-error': 'El servidor no responde ahora mismo. El estudio sigue guardado aqui.',
-  unexpected: 'Algo fallo al enviar. El estudio no se ha perdido: sigue en la cola.',
+    'El servidor no aceptó la imagen. Revisa el montaje elegido y vuelve a intentarlo.',
+  'server-error': 'El servidor no responde ahora mismo. El estudio sigue guardado aquí.',
+  unexpected: 'Algo falló al enviar. El estudio no se ha perdido: sigue en la cola.',
 };

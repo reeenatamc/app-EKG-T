@@ -58,7 +58,6 @@ const THUMBNAIL_HEIGHT = 160;
  * @returns La pantalla de confirmacion.
  */
 export function ConfirmScreen({ image, mount, suggestedId, onBack, onSubmit }: ConfirmScreenProps) {
-  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { findings, isAnalyzing } = useQualityReport(image.uri, image.width);
   const [draft, setDraft] = useState<StudyDraft>(() => initialDraft(mount, suggestedId));
@@ -66,16 +65,15 @@ export function ConfirmScreen({ image, mount, suggestedId, onBack, onSubmit }: C
   return (
     <KeyboardLift>
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingTop: insets.top + gap.lg }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + gap.lg, paddingBottom: insets.bottom + gap.lg },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <ScreenHeader title={CONFIRM_TEXT.title} size="headline" />
 
-        <Image
-          source={{ uri: image.uri }}
-          style={[styles.thumbnail, { backgroundColor: theme.surface }]}
-          resizeMode="contain"
-        />
+        <Thumbnail uri={image.uri} />
 
         <SettingsSection title={CONFIRM_TEXT.qualitySection}>
           <QualityReport findings={findings} isAnalyzing={isAnalyzing} />
@@ -90,6 +88,19 @@ export function ConfirmScreen({ image, mount, suggestedId, onBack, onSubmit }: C
         />
       </ScrollView>
     </KeyboardLift>
+  );
+}
+
+/** La imagen tal como se enviara, en pequeno, para comprobar que es la buena. */
+function Thumbnail({ uri }: { readonly uri: string }) {
+  const theme = useTheme();
+
+  return (
+    <Image
+      source={{ uri }}
+      style={[styles.thumbnail, { backgroundColor: theme.surface }]}
+      resizeMode="contain"
+    />
   );
 }
 
@@ -108,6 +119,10 @@ interface ConfirmActionsProps {
  * Los hallazgos de calidad, en cambio, advierten y no bloquean: quien captura
  * puede estar en una guardia, delante de una hoja que no va a volver a tener.
  *
+ * UNA FILA CADA UNO, enviar arriba. Compartian fila a medio ancho y «Volver a las
+ * esquinas» no cabia: se partia en dos lineas dentro de una pildora, que se lee
+ * como un boton roto. Enviar va primero porque es lo que se viene a hacer aqui.
+ *
  * @param canSubmit Cierto si el estudio se puede enviar ya.
  * @param onBack Vuelve al ajuste de esquinas.
  * @param onSubmit Acepta el estudio.
@@ -116,13 +131,17 @@ interface ConfirmActionsProps {
 function ConfirmActions({ canSubmit, onBack, onSubmit }: ConfirmActionsProps) {
   return (
     <View style={styles.actions}>
-      <ActionButton label={CONFIRM_TEXT.back} onPress={onBack} variant="secondary" />
-      <ActionButton
-        label={CONFIRM_TEXT.submit}
-        variant="primary"
-        disabled={!canSubmit}
-        onPress={onSubmit}
-      />
+      <View style={styles.row}>
+        <ActionButton
+          label={CONFIRM_TEXT.submit}
+          variant="primary"
+          disabled={!canSubmit}
+          onPress={onSubmit}
+        />
+      </View>
+      <View style={styles.row}>
+        <ActionButton label={CONFIRM_TEXT.back} onPress={onBack} variant="secondary" />
+      </View>
     </View>
   );
 }
@@ -176,7 +195,10 @@ function StudyMetadataFields({ draft, onChange }: StudyMetadataFieldsProps) {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: gap.lg, gap: gap.xl },
+  // Solo los lados: arriba y abajo los pone el area segura, que cambia por telefono.
+  content: { paddingHorizontal: gap.lg, gap: gap.xl },
   thumbnail: { height: THUMBNAIL_HEIGHT, borderRadius: radius.tile },
-  actions: { flexDirection: 'row', gap: gap.md },
+  actions: { gap: gap.md },
+  // En fila aunque vaya solo: ActionButton crece con flex, y en columna creceria en alto.
+  row: { flexDirection: 'row' },
 });

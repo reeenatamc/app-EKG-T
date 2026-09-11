@@ -21,8 +21,8 @@ export const STUDY_TEXT = {
    * donde alguien podria tomar una decision, asi que aqui vuelve a decirse.
    */
   supportOnly:
-    'Lo que sigue es una lectura automatica de la imagen, no un diagnostico. Confirmalo con el trazado y con el paciente.',
-  observationNeedsReview: 'Requiere confirmacion',
+    'Lo que sigue es una lectura automática de la imagen, no un diagnóstico. Confírmalo con el trazado y con el paciente.',
+  observationNeedsReview: 'Requiere confirmación',
   /**
    * Lo mismo, dicho una vez para toda la lista.
    *
@@ -48,7 +48,7 @@ export const STUDY_TEXT = {
   noObservations: 'No se ha observado nada destacable. Revisa el trazado igualmente.',
   notesPlaceholder: 'Lo que quieras recordar de este estudio',
   notesHint: 'Se guardan solo en este dispositivo. No escribas datos que identifiquen al paciente.',
-  saveNote: 'Guardar anotacion',
+  saveNote: 'Guardar anotación',
   exportAction: 'Exportar informe',
   /**
    * El informe no se generó.
@@ -61,14 +61,14 @@ export const STUDY_TEXT = {
     action: 'El estudio no se ha tocado. Vuelve a intentarlo.',
   },
   compareAction: 'Comparar con otro',
-  retryAnalysis: 'Reintentar el analisis',
+  retryAnalysis: 'Reintentar el análisis',
 } as const;
 
 /** Nombre y explicacion de cada medida. */
 export const MEASUREMENT_LABELS = {
   heartRateBpm: { label: 'Frecuencia', unit: 'lpm' },
   prIntervalMs: { label: 'Intervalo PR', unit: 'ms' },
-  qrsDurationMs: { label: 'Duracion QRS', unit: 'ms' },
+  qrsDurationMs: { label: 'Duración QRS', unit: 'ms' },
   qtIntervalMs: { label: 'Intervalo QT', unit: 'ms' },
   qtcMs: { label: 'QT corregido', unit: 'ms' },
   axisDegrees: { label: 'Eje', unit: 'grados' },
@@ -84,8 +84,8 @@ export const STATUS_TEXT: Record<AnalysisStatus, string> = {
 /** Que se le dice al usuario en cada estado, y que puede esperar. */
 export const STATUS_DETAIL: Record<AnalysisStatus, string> = {
   queued: 'El estudio ha llegado y espera turno.',
-  processing: 'Se esta recuperando la senal del papel.',
-  ready: 'La senal se ha recuperado.',
+  processing: 'Se está recuperando la señal del papel.',
+  ready: 'La señal se ha recuperado.',
   failed: 'El estudio sigue guardado y se puede reintentar.',
 };
 
@@ -96,16 +96,16 @@ export const STATUS_DETAIL: Record<AnalysisStatus, string> = {
  */
 export const ANALYSIS_FAILURE_COPY: Record<AnalysisFailureReason, string> = {
   'unreadable-image':
-    'No se ha podido leer el trazado en la imagen. Suele bastar con repetir la foto con mas luz.',
+    'No se ha podido leer el trazado en la imagen. Suele bastar con repetir la foto con más luz.',
   'grid-not-detected':
-    'No se ha encontrado la reticula milimetrada. Comprueba que la hoja salga completa y sin reflejos.',
+    'No se ha encontrado la retícula milimetrada. Comprueba que la hoja salga completa y sin reflejos.',
   'trace-incomplete':
-    'Se ha leido la imagen, pero el trazado salio incompleto o muy fragmentado para interpretarlo. Repite la foto mas cerca, con la hoja plana y sin sombras.',
+    'Se ha leído la imagen, pero el trazado salió incompleto o muy fragmentado para interpretarlo. Repite la foto más cerca, con la hoja plana y sin sombras.',
   'unsupported-mount':
-    'El montaje indicado no coincide con lo que hay en la imagen. Revisalo y vuelve a enviarlo.',
-  'network-unreachable': 'No hay conexion. El estudio sigue guardado y se reintenta al volver.',
+    'El montaje indicado no coincide con lo que hay en la imagen. Revísalo y vuelve a enviarlo.',
+  'network-unreachable': 'No hay conexión. El estudio sigue guardado y se reintenta al volver.',
   'server-error': 'El servidor no responde ahora mismo. El estudio no se ha perdido.',
-  unexpected: 'Algo fallo al procesar. El estudio sigue guardado y se puede reintentar.',
+  unexpected: 'Algo falló al procesar. El estudio sigue guardado y se puede reintentar.',
 };
 
 /** Estado de un estudio tal como se ensena en las listas. Ver `studyState`. */
@@ -147,7 +147,7 @@ export const COMPARE_TEXT = {
   title: 'Comparar',
   hint: 'Elige un segundo estudio. Se muestran uno sobre otro, con la misma escala.',
   pick: 'Elegir estudio',
-  clear: 'Quitar comparacion',
+  clear: 'Quitar comparación',
   /**
    * La escala compartida no es un detalle de presentacion.
    *
