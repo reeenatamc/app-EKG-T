@@ -14,6 +14,8 @@ interface LeadTraceProps {
   readonly scale: TraceScale;
   /** Siempre `theme.ink`. Ver la nota sobre el color. */
   readonly color: string;
+  /** Puntos por tramo al decimar. Por defecto, el limite del visor. */
+  readonly maxPointsPerSegment?: number;
 }
 
 /**
@@ -36,10 +38,20 @@ interface LeadTraceProps {
  * @param color Color del trazado.
  * @returns El trazado.
  */
-export function LeadTrace({ lead, samplingRateHz, viewport, scale, color }: LeadTraceProps) {
+export function LeadTrace({
+  lead,
+  samplingRateHz,
+  viewport,
+  scale,
+  color,
+  maxPointsPerSegment,
+}: LeadTraceProps) {
   const path = useMemo(
-    () => buildTracePath(buildLeadPolylines(lead, samplingRateHz, viewport, scale)),
-    [lead, samplingRateHz, viewport, scale],
+    () =>
+      buildTracePath(
+        buildLeadPolylines(lead, samplingRateHz, viewport, scale, maxPointsPerSegment),
+      ),
+    [lead, samplingRateHz, viewport, scale, maxPointsPerSegment],
   );
 
   return (

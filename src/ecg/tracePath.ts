@@ -57,6 +57,7 @@ export function buildLeadPolylines(
   samplingRateHz: number,
   viewport: TraceViewport,
   scale: TraceScale,
+  maxPointsPerSegment = MAX_POINTS_PER_SEGMENT,
 ): readonly Polyline[] {
   const visible = segmentsInWindow(lead, viewport.fromSecond, viewport.toSecond, samplingRateHz);
 
@@ -67,7 +68,7 @@ export function buildLeadPolylines(
           segment.values,
           segment.startSecond,
           samplingRateHz,
-          MAX_POINTS_PER_SEGMENT,
+          maxPointsPerSegment,
         ).map((point) => toScreen(point, viewport, scale)),
       }))
       // Una polilinea de un solo punto no dibuja nada y complica el recorrido.

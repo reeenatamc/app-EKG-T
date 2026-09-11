@@ -1,14 +1,24 @@
 import { Canvas, Group, rect } from '@shopify/react-native-skia';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
+} from 'react-native';
 
 import type { MountId } from '@/camera/mounts';
 import type { Calibration } from '@/capture/study';
 import { LeadTrace } from '@/components/LeadTrace';
+import { LeadZoomModal } from '@/components/LeadZoomModal';
 import { MeasuringGrid } from '@/components/MeasuringGrid';
+import { STUDY_TEXT } from '@/constants/studyText';
 import { computeGridGeometry } from '@/ecg/grid';
 import type { EcgSignal, LeadName } from '@/ecg/signal';
-import { computeViewerLayout, type ViewerCell } from '@/ecg/viewerLayout';
+import { cellAt, computeViewerLayout, type ViewerCell } from '@/ecg/viewerLayout';
 import { useTheme, type Theme } from '@/design/theme';
 import { gap, opacity, radius } from '@/design/tokens';
 import { type } from '@/design/type';
@@ -66,20 +76,72 @@ export function TwelveLeadViewer({
       {layout === null || grid === null ? null : (
         // Desplazamiento horizontal cuando la hoja no cabe a escala legible; ver
         // MIN_PIXELS_PER_MM en viewerLayout. Los rotulos van dentro para acompanar al lienzo.
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
-          <View style={{ width: layout.width, height: layout.height }}>
-            <ViewerCanvas
-              signal={signal}
-              layout={layout}
-              grid={grid}
-              theme={theme}
-              focusedLeads={focusedLeads}
-            />
-            <LeadLabels cells={layout.cells} />
-          </View>
-        </ScrollView>
+        <ZoomableSheet {...{ signal, calibration, layout, grid, theme, focusedLeads }} />
       )}
     </View>
+  );
+}
+
+interface ZoomableSheetProps {
+  readonly signal: EcgSignal;
+  readonly calibration: Calibration;
+  readonly layout: ReturnType<typeof computeViewerLayout>;
+  readonly grid: ReturnType<typeof computeGridGeometry>;
+  readonly theme: Theme;
+  readonly focusedLeads: readonly LeadName[] | null;
+}
+
+/**
+ * La hoja, tocable: una derivacion tocada se abre a pantalla completa.
+ *
+ * El toque se resuelve contra las celdas del reparto y no contra vistas por
+ * derivacion, porque todo el trazado es un solo lienzo. Los rotulos no reciben
+ * toques: si los recibieran, la posicion llegaria relativa al rotulo y no a la hoja.
+ */
+function ZoomableSheet({
+  signal,
+  calibration,
+  layout,
+  grid,
+  theme,
+  focusedLeads,
+}: ZoomableSheetProps) {
+  const [zoomed, setZoomed] = useState<ViewerCell | null>(null);
+
+  return (
+    <>
+      <SheetCanvas {...{ signal, layout, grid, theme, focusedLeads }} onPressCell={setZoomed} />
+      <Text style={[type.caption, styles.hint, { color: theme.textLow }]}>
+        {STUDY_TEXT.zoomHint}
+      </Text>
+      <LeadZoomModal
+        cell={zoomed}
+        signal={signal}
+        calibration={calibration}
+        onClose={() => setZoomed(null)}
+      />
+    </>
+  );
+}
+
+interface SheetCanvasProps extends Omit<ZoomableSheetProps, 'calibration'> {
+  readonly onPressCell: (cell: ViewerCell | null) => void;
+}
+
+/** El lienzo con sus rotulos, desplazable y tocable. */
+function SheetCanvas({ signal, layout, grid, theme, focusedLeads, onPressCell }: SheetCanvasProps) {
+  const handlePress = (event: GestureResponderEvent) =>
+    onPressCell(cellAt(layout.cells, event.nativeEvent.locationX, event.nativeEvent.locationY));
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
+      <Pressable onPress={handlePress} style={{ width: layout.width, height: layout.height }}>
+        <ViewerCanvas {...{ signal, layout, grid, theme, focusedLeads }} />
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <LeadLabels cells={layout.cells} />
+        </View>
+      </Pressable>
+    </ScrollView>
   );
 }
 
@@ -235,4 +297,5 @@ function LeadCell({ cell, signal, layout, theme, isFocused }: LeadCellProps) {
 const styles = StyleSheet.create({
   surface: { borderRadius: radius.tile, overflow: 'hidden' },
   label: { position: 'absolute' },
+  hint: { padding: gap.sm },
 });
