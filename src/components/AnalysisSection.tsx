@@ -203,10 +203,15 @@ function SignalView({ study, signal, focusedLeads }: SignalViewProps) {
 
 /** La foto tal como se envio, a su proporcion, para cotejarla con el trazado. */
 function StudyPhoto({ study }: { study: QueuedStudy }) {
+  const theme = useTheme();
+
   return (
     <Image
       source={{ uri: study.imageUri }}
-      style={[styles.photo, { aspectRatio: study.imageWidth / study.imageHeight }]}
+      style={[
+        styles.photo,
+        { aspectRatio: study.imageWidth / study.imageHeight, backgroundColor: theme.surface },
+      ]}
       resizeMode="contain"
       accessibilityLabel={STUDY_TEXT.viewPhoto}
     />
@@ -325,7 +330,7 @@ function FailureCard({ studyId, analysis }: { studyId: string | null; analysis: 
 
 const styles = StyleSheet.create({
   signalView: { gap: gap.sm },
-  photo: { width: '100%', borderRadius: radius.tile, backgroundColor: '#fff' },
+  photo: { width: '100%', borderRadius: radius.tile },
   basis: { gap: gap.sm, marginBottom: gap.md },
   ready: { gap: gap.xl },
   processing: { gap: gap.xl },

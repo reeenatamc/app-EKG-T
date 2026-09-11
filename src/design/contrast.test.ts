@@ -77,7 +77,7 @@ describe('texto y trazado, suelo de 4.5:1 de §7', () => {
 
 describe('vidrio, medido sobre el compuesto y no sobre el token', () => {
   it('el texto claro aguanta el peor fondo posible bajo el vidrio', () => {
-    expect(round(contrastRatio(paperLight.textHigh, GLASS_LIGHT))).toBe(5.53);
+    expect(round(contrastRatio(paperLight.textHigh, GLASS_LIGHT))).toBe(5.74);
   });
 
   it('el texto oscuro aguanta el peor fondo posible bajo el vidrio', () => {
@@ -88,7 +88,7 @@ describe('vidrio, medido sobre el compuesto y no sobre el token', () => {
     // La cifra que justifica la enmienda de §3. No es historia: si alguien baja
     // el tinte «porque se ve mas el desenfoque», esto dice cuanto cuesta.
     const before = composite(paperLight.surface, 0.42, paperLight.ink);
-    expect(round(contrastRatio(paperLight.textHigh, before))).toBe(3.67);
+    expect(round(contrastRatio(paperLight.textHigh, before))).toBe(3.79);
     expect(contrastRatio(paperLight.textHigh, before)).toBeLessThan(WCAG_TEXT_FLOOR);
   });
 });
@@ -108,19 +108,19 @@ describe('una tarjeta tiene filo propio', () => {
   it('el filo se separa de la superficie en los dos temas', () => {
     // El par superficie/lienzo era 1.04:1 antes del rediseno, o sea invisible:
     // la forma de la tarjeta la dibujaba el aurora que tenia detras.
-    expect(round(contrastRatio(paperLight.edge, paperLight.surface))).toBe(1.82);
+    expect(round(contrastRatio(paperLight.edge, paperLight.surface))).toBe(1.9);
     expect(round(contrastRatio(paperDark.edge, paperDark.surface))).toBe(1.84);
   });
 
   it('el lienzo y la superficie ya no son el mismo color', () => {
-    expect(round(contrastRatio(paperLight.canvas, paperLight.surface))).toBe(1.24);
+    expect(round(contrastRatio(paperLight.canvas, paperLight.surface))).toBe(1.3);
     expect(round(contrastRatio(paperDark.canvas, paperDark.surface))).toBe(1.27);
   });
 
   it('la subtarjeta se ve como objeto en los dos lienzos', () => {
     // El motivo de D-23. El tinte rosa anterior media 1.91:1 contra el hueso, o
     // sea que la tarjeta apenas existia y toda la separacion la hacia la sombra.
-    expect(round(contrastRatio(tinted.edge, paperLight.canvasFlat))).toBe(10.66);
+    expect(round(contrastRatio(tinted.edge, paperLight.canvasFlat))).toBe(11.16);
     expect(round(contrastRatio(tinted.edge, paperDark.canvasFlat))).toBe(1.66);
   });
 

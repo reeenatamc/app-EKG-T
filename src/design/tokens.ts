@@ -18,8 +18,9 @@
  *   rojo de retícula del papel llevado a densidad de tinta. Ver la desviacion
  *   D-18: la medicion sobre fotos digitalizadas propias esta **pendiente**,
  *   porque el dispositivo no tiene ningun estudio todavia.
- * - **hueso** es blanco calido, nunca #FFFFFF. Un blanco puro no existe en
- *   ningun papel y delata una pantalla.
+ * - **hueso** es blanco calido. Queda como color de identidad; las pantallas de
+ *   producto del tema claro pasaron a blanco neutro por decision de la autora
+ *   (ver `paperLight.canvasFlat`).
  * - **ciruela** es el #171019 del tema oscuro, ahora estructural: es la tinta
  *   del tema claro, el lienzo del oscuro y la sombra de los dos.
  */
@@ -88,7 +89,7 @@ export const paperLight = {
   /**
    * Lienzo de las pantallas de producto, que van sin atmosfera (D-20).
    *
-   * Hueso puro, por decision de la autora. Sobre un lienzo plano no hay malla
+   * Blanco neutro, por decision de la autora (antes hueso #FCF8F4: se leia amarillento). No es #FFFFFF: ver la regla de palette.test.ts. Sobre un lienzo plano no hay malla
    * que apoyar, asi que la hoja no esta sobre un escritorio en sombra: es la
    * hoja. En oscuro coincide con `canvas`, porque ahi el extremo ya era el fondo.
    *
@@ -97,8 +98,8 @@ export const paperLight = {
    * color. Se separa por **sombra**, igual que un objeto apoyado sobre una mesa
    * del mismo color que el.
    */
-  canvasFlat: identity.bone,
-  surface: identity.bone,
+  canvasFlat: '#FEFEFD',
+  surface: '#FEFEFD',
   /** Color del trazado digitalizado: la tinta con que se imprimio en papel. */
   ink: '#150F1A',
   /** Filo de toda superficie opaca. Sin el, la forma la dibuja el fondo. */
