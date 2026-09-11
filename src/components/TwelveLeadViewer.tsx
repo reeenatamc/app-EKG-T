@@ -46,8 +46,8 @@ export function TwelveLeadViewer({ signal, mount, calibration }: TwelveLeadViewe
   const [width, setWidth] = useState<number | null>(null);
 
   const layout = useMemo(
-    () => (width === null ? null : computeViewerLayout(mount, width, calibration)),
-    [mount, width, calibration],
+    () => (width === null ? null : computeViewerLayout(mount, width, calibration, signal)),
+    [mount, width, calibration, signal],
   );
   const grid = useMemo(
     () => (layout === null ? null : computeGridGeometry(layout.scale)),
@@ -94,7 +94,7 @@ function ViewerCanvas({ signal, layout, grid, theme }: ViewerCanvasProps) {
 
       {layout.cells.map((cell) => (
         <LeadCell
-          key={`${cell.lead}-${cell.fromSecond}`}
+          key={`${cell.lead}-${cell.fromSecond}-${cell.y}`}
           cell={cell}
           {...{ signal, layout, theme }}
         />
@@ -117,7 +117,7 @@ function LeadLabels({ cells }: { readonly cells: readonly ViewerCell[] }) {
     <>
       {cells.map((cell) => (
         <Text
-          key={`label-${cell.lead}-${cell.fromSecond}`}
+          key={`label-${cell.lead}-${cell.fromSecond}-${cell.y}`}
           style={[
             type.data,
             styles.label,
