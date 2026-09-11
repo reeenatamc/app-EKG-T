@@ -5,7 +5,7 @@ import type { EcgObservation } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
-import { HIDDEN_LABELS, LABELS_ES } from '@/constants/labelsEs';
+import { isShownObservation, observationLabel } from '@/constants/labelsEs';
 
 interface ObservationListProps {
   readonly observations: readonly EcgObservation[];
@@ -50,11 +50,6 @@ const PERCENT = 100;
  * @param observations Observaciones del analisis.
  * @returns La lista de observaciones.
  */
-/** Primera letra en mayuscula: el diccionario guarda los terminos en minuscula. */
-function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
 export function ObservationList({ observations }: ObservationListProps) {
   const theme = useTheme();
 
@@ -69,7 +64,7 @@ export function ObservationList({ observations }: ObservationListProps) {
       </Text>
       <View style={[styles.table, { backgroundColor: theme.surface, borderColor: theme.edge }]}>
         {[...observations]
-          .filter((observation) => !HIDDEN_LABELS.has(observation.label))
+          .filter((observation) => isShownObservation(observation.label))
           .map((observation, index) => (
             <ObservationRow key={observation.id} observation={observation} isFirst={index === 0} />
           ))}
@@ -99,7 +94,7 @@ function ObservationRow({
       ]}
     >
       <Text style={[type.body, styles.label, { color: theme.textHigh }]}>
-        {capitalize(LABELS_ES[observation.label] ?? observation.label)}
+        {observationLabel(observation.label)}
       </Text>
       <Text style={[type.data, { color: theme.textLow }]}>{percent} %</Text>
     </View>
