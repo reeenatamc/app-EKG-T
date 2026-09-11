@@ -45,17 +45,49 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
   }
 
   if (analysis.status === 'processing') {
-    return <ProcessingIndicator isQueued={false} />;
+    return <ProcessingSignal study={study} analysis={analysis} />;
   }
 
   if (analysis.status === 'failed') {
     // El identificador del servidor, no el del dispositivo: es el unico por el que
     // se le puede pedir nada. Pedir con el local devuelve 404, y desde fuera eso se
     // ve como un boton que no hace nada.
-    return <AnalysisFailure studyId={study.remoteId} analysis={analysis} />;
+    return <AnalysisFailure study={study} studyId={study.remoteId} analysis={analysis} />;
   }
 
   return <ReadyAnalysis study={study} analysis={analysis} />;
+}
+
+/**
+ * Mientras se procesa, con el trazado ya leido si lo hay.
+ *
+ * LA DIGITALIZACION ES LA MITAD RAPIDA, unos quince segundos, y la
+ * interpretacion la lenta, de treinta a cincuenta y cinco. El servidor guarda
+ * el trazado en cuanto lo digitaliza, mucho antes de que la interpretacion
+ * termine, asi que aqui se ensena en cuanto llega en vez de esperar al final:
+ * quien acaba de fotografiar el registro ve algo mientras el resto sigue en
+ * marcha, no un indicador vacio todo ese tiempo.
+ *
+ * EL INDICADOR SE QUEDA, con o sin trazado. El trazado es un adelanto de lo
+ * que se leyo, no el resultado: la interpretacion sigue en curso y todavia
+ * puede fallar.
+ */
+function ProcessingSignal({ study, analysis }: { study: QueuedStudy; analysis: EcgAnalysis }) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.processing}>
+      {analysis.signal === null ? null : (
+        <SettingsSection title={STUDY_TEXT.signalSection}>
+          <Text style={[type.caption, { color: theme.textLow }]}>
+            {STUDY_TEXT.signalReadCaption}
+          </Text>
+          <SignalView study={study} signal={analysis.signal} focusedLeads={null} />
+        </SettingsSection>
+      )}
+      <ProcessingIndicator isQueued={false} />
+    </View>
+  );
 }
 
 /**
@@ -187,6 +219,7 @@ function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgA
 }
 
 interface AnalysisFailureProps {
+  readonly study: QueuedStudy;
   /** Identificador remoto. Nulo si el estudio nunca llego al servidor. */
   readonly studyId: string | null;
   readonly analysis: EcgAnalysis;
@@ -208,8 +241,33 @@ interface AnalysisFailureProps {
  * terminar de otra manera -- ver isWorthRetrying. En esas, lo que hay que hacer
  * lo dice el texto de la causa, y un boton al lado solo invita a pulsarlo en
  * lugar de leerlo.
+ *
+ * Y CON EL TRAZADO SI LLEGO A DIGITALIZARSE. Un fallo tras la digitalizacion
+ * -- un error del servidor en la interpretacion, un montaje no soportado que
+ * salta la comprobacion cruzada-- no borra lo que ya se leyo del papel. Quien
+ * hizo la foto ve el trazado igual, encima del aviso.
  */
-function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
+function AnalysisFailure({ study, studyId, analysis }: AnalysisFailureProps) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.failureWrap}>
+      {analysis.signal === null ? null : (
+        <SettingsSection title={STUDY_TEXT.signalSection}>
+          <Text style={[type.caption, { color: theme.textLow }]}>
+            {STUDY_TEXT.signalReadFailureCaption}
+          </Text>
+          <SignalView study={study} signal={analysis.signal} focusedLeads={null} />
+        </SettingsSection>
+      )}
+
+      <FailureCard studyId={studyId} analysis={analysis} />
+    </View>
+  );
+}
+
+/** El aviso de fallo en si: la causa, y la salida cuando la hay. */
+function FailureCard({ studyId, analysis }: { studyId: string | null; analysis: EcgAnalysis }) {
   const theme = useTheme();
   const retry = useAnalyses((state) => state.retry);
 
@@ -236,6 +294,8 @@ function AnalysisFailure({ studyId, analysis }: AnalysisFailureProps) {
 const styles = StyleSheet.create({
   basis: { gap: gap.sm, marginBottom: gap.md },
   ready: { gap: gap.xl },
+  processing: { gap: gap.xl },
+  failureWrap: { gap: gap.xl },
   failure: { padding: gap.lg, borderRadius: radius.tile, gap: gap.xs },
   // En fila para que el boton no se estire al ancho de la tarjeta: dentro de un
   // aviso, un boton a sangre pesa mas que el propio aviso.

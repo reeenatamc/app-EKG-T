@@ -45,6 +45,23 @@ export const STUDY_TEXT = {
   showBasis: 'Ver en cuáles se apoya',
   hideBasis: 'Ver el trazado completo',
 
+  /**
+   * El trazado, antes de que termine la interpretacion.
+   *
+   * La digitalizacion es la mitad rapida del analisis, unos quince segundos;
+   * la interpretacion la lenta, de treinta a cincuenta y cinco. Sin esto, ver
+   * el trazado antes de tiempo parece un adelanto del resultado en vez de lo
+   * que es: lo que ya se leyo, mientras lo demas sigue en marcha.
+   */
+  signalReadCaption: 'Trazado leído. La interpretación sigue en curso.',
+  /**
+   * El trazado, cuando la interpretacion no llego a terminar.
+   *
+   * Un fallo tras la digitalizacion no borra lo que ya se leyo del papel, y
+   * quien hizo la foto sigue queriendo verlo aunque el analisis no saliera.
+   */
+  signalReadFailureCaption: 'Esto es lo que se pudo leer.',
+
   noObservations: 'No se ha observado nada destacable. Revisa el trazado igualmente.',
   notesPlaceholder: 'Lo que quieras recordar de este estudio',
   notesHint: 'Se guardan solo en este dispositivo. No escribas datos que identifiquen al paciente.',

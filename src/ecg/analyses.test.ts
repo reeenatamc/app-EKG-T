@@ -150,31 +150,32 @@ describe('espaciado del sondeo', () => {
     return attempt;
   }
 
-  it('las dos primeras consultas van seguidas', () => {
-    // Un analisis puede resolverse en un segundo. Si la segunda consulta ya
-    // fuese a los dos, el resultado tardaria mas en verse que en calcularse.
-    expect(pollDelayMs(0)).toBe(1000);
-    expect(pollDelayMs(1)).toBe(1000);
+  it('las cinco primeras consultas van cada segundo', () => {
+    // Un analisis puede resolverse enseguida -- la digitalizacion sola tarda
+    // unos quince segundos-- y hay que verlo al momento.
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect(pollDelayMs(attempt)).toBe(1000);
+    }
   });
 
-  it('a partir de ahi se dobla', () => {
-    expect(pollDelayMs(2)).toBe(2000);
-    expect(pollDelayMs(3)).toBe(4000);
-    expect(pollDelayMs(4)).toBe(8000);
+  it('pasadas las cinco primeras, cada dos segundos', () => {
+    expect(pollDelayMs(5)).toBe(2000);
+    expect(pollDelayMs(9)).toBe(2000);
   });
 
-  it('NO CRECE SIN LIMITE', () => {
-    // Doblando sin techo, la consulta veinte caeria a los seis dias. Un analisis
-    // que termina en el minuto seis se veria al dia siguiente.
-    expect(pollDelayMs(10)).toBe(15_000);
-    expect(pollDelayMs(100)).toBe(15_000);
+  it('pasados veinte segundos de sondeo, cada cinco', () => {
+    // A los cinco segundos de las cinco primeras consultas se suman ocho mas de
+    // dos segundos (dieciseis) antes de cruzar los veinte: la consulta trece es
+    // la primera que cae del otro lado del umbral.
+    expect(pollDelayMs(13)).toBe(5000);
+    expect(pollDelayMs(100)).toBe(5000);
   });
 
-  it('cinco minutos de espera no son trescientas peticiones', () => {
-    // Es el numero medido en el telefono: la foto de Ron tardo 296,8 segundos
-    // con los dos modelos en una CPU. A un segundo fijo eso era una peticion por
-    // segundo, con la radio encendiendose cada vez.
-    expect(pollsWithin(300)).toBeLessThan(30);
+  it('el sondeo no se queda preguntando cada segundo para siempre', () => {
+    // Contra un estudio que tarda minutos, preguntar cada segundo son
+    // cientos de peticiones y otras tantas radios encendidas en la bateria
+    // de quien esta mirando. Espaciado, cinco minutos son unas setenta.
+    expect(pollsWithin(300)).toBeLessThan(80);
   });
 
   it('un resultado inmediato no espera un tiempo raro', () => {

@@ -22,36 +22,52 @@ import { httpEcgAnalysisService } from '@/ecg/HttpEcgAnalysisService';
  */
 const service: EcgAnalysisService = httpEcgAnalysisService;
 
-/** Primera espera. Un analisis puede resolverse en un segundo y hay que verlo. */
-const FIRST_POLL_MS = 1000;
+/** Consultas seguidas a la espera minima, antes de espaciar el sondeo. */
+const FAST_POLLS = 5;
 
-/** Techo de la espera. Mas alla, el usuario nota que la pantalla va por detras. */
-const MAX_POLL_MS = 15_000;
+/** Espera durante las primeras `FAST_POLLS` consultas. Un analisis puede
+ * resolverse enseguida -- la digitalizacion sola tarda unos quince segundos--
+ * y hay que verlo al momento. */
+const FAST_POLL_MS = 1000;
+
+/** Espera intermedia, una vez pasadas las consultas rapidas. */
+const MEDIUM_POLL_MS = 2000;
+
+/** Espera final, cuando el sondeo ya lleva un rato sin resolverse. */
+const SLOW_POLL_MS = 5000;
+
+/** Tiempo acumulado de sondeo a partir del cual se pasa a la espera final. */
+const SLOW_POLL_AFTER_MS = 20_000;
 
 /**
  * Cuanto esperar antes de la consulta numero `attempt`.
  *
- * SE VA ESPACIANDO, y no por elegancia. Preguntar cada segundo estaba bien contra
- * la simulacion, que resolvia en cinco; contra el servidor real un estudio tarda
- * minutos -- medido: cinco, con los dos modelos en una CPU-- y eso son trescientas
- * peticiones y trescientas radios encendidas para una sola respuesta, en la
- * bateria de quien esta mirando.
+ * TRES TRAMOS, no una progresion continua. Un segundo en las primeras cinco
+ * consultas, porque un analisis puede resolverse enseguida y esa es la unica
+ * forma de que se vea al momento. Dos segundos despues, mientras el sondeo
+ * sigue siendo reciente. Y cinco segundos pasados los primeros veinte segundos
+ * de sondeo, cuando preguntar tan seguido ya solo gasta bateria y datos sin
+ * adelantar nada -- interpretar un estudio puede llevar bastante mas que eso.
  *
- * Las dos primeras van seguidas porque un analisis puede terminar enseguida y esa
- * es la unica forma de que se vea al momento. A partir de ahi se dobla hasta el
- * techo: sobre cinco minutos, unas veinticuatro consultas en vez de trescientas.
- *
- * Lo que se paga es que un resultado puede tardar hasta quince segundos en
- * aparecer despues de estar listo. Sobre una espera de cinco minutos, eso no se
- * nota; trescientas peticiones si.
+ * Se reinicia solo, vuelve a `attempt = 0`, cada vez que se abre un sondeo
+ * nuevo: ver `startPolling`. Eso incluye reintentar un analisis fallido, que
+ * merece otra vez la espera minima y no la que traia el intento anterior.
  *
  * @param attempt Consulta que se va a hacer, empezando en cero.
  * @returns La espera, en milisegundos.
  */
 export function pollDelayMs(attempt: number): number {
-  const doublings = Math.max(0, attempt - 1);
+  if (attempt < FAST_POLLS) {
+    return FAST_POLL_MS;
+  }
 
-  return Math.min(MAX_POLL_MS, FIRST_POLL_MS * 2 ** doublings);
+  // Cuanto habra pasado sondeando justo antes de esta consulta, si todas las
+  // consultas intermedias hasta ahora fueron a MEDIUM_POLL_MS. Una vez se cruza
+  // el umbral la funcion ya no vuelve a bajar de SLOW_POLL_MS, porque `attempt`
+  // solo crece: es un reloj tan valido como cualquier marca de tiempo real.
+  const elapsedBeforeThisPoll = FAST_POLLS * FAST_POLL_MS + (attempt - FAST_POLLS) * MEDIUM_POLL_MS;
+
+  return elapsedBeforeThisPoll < SLOW_POLL_AFTER_MS ? MEDIUM_POLL_MS : SLOW_POLL_MS;
 }
 
 interface AnalysesState {
