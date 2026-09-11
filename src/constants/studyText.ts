@@ -77,6 +77,8 @@ export const ANALYSIS_FAILURE_COPY: Record<AnalysisFailureReason, string> = {
     'No se ha podido leer el trazado en la imagen. Suele bastar con repetir la foto con mas luz.',
   'grid-not-detected':
     'No se ha encontrado la reticula milimetrada. Comprueba que la hoja salga completa y sin reflejos.',
+  'trace-incomplete':
+    'Se ha leido la imagen, pero el trazado salio incompleto o muy fragmentado para interpretarlo. Repite la foto mas cerca, con la hoja plana y sin sombras.',
   'unsupported-mount':
     'El montaje indicado no coincide con lo que hay en la imagen. Revisalo y vuelve a enviarlo.',
   'network-unreachable': 'No hay conexion. El estudio sigue guardado y se reintenta al volver.',
