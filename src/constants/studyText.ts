@@ -11,6 +11,9 @@ import type { AnalysisFailureReason, AnalysisStatus } from '@/ecg/EcgAnalysisSer
 export const STUDY_TEXT = {
   detailTitle: 'Estudio',
   signalSection: 'Trazado',
+  viewTrace: 'Trazado',
+  viewPhoto: 'Foto original',
+  viewSwitchLabel: 'Ver el trazado digitalizado o la foto original',
   measurementsSection: 'Medidas',
   observationsSection: 'Observaciones',
   notesSection: 'Anotaciones',

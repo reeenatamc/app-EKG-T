@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
 import { ActionButton } from '@/components/ActionButton';
 import { MeasurementList } from '@/components/MeasurementList';
 import { ObservationList } from '@/components/ObservationList';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { presentLeads } from '@/ecg/leads';
 import type { EcgSignal, LeadName } from '@/ecg/signal';
 import { ProcessingIndicator } from '@/components/ProcessingIndicator';
@@ -167,16 +168,47 @@ interface SignalViewProps {
 
 /** El trazado, con el montaje y la calibracion con que se imprimio. */
 function SignalView({ study, signal, focusedLeads }: SignalViewProps) {
+  // Trazado o foto: la misma hoja vista dos veces. Poder saltar de una a otra es
+  // lo que deja comprobar a ojo que lo digitalizado es lo que estaba en el papel.
+  const [view, setView] = useState<'trace' | 'photo'>('trace');
+
   if (signal === null) {
     return null;
   }
 
   return (
-    <TwelveLeadViewer
-      signal={signal}
-      mount={study.metadata.mount}
-      calibration={study.metadata.calibration}
-      focusedLeads={focusedLeads}
+    <View style={styles.signalView}>
+      <SegmentedControl
+        options={[
+          { value: 'trace', label: STUDY_TEXT.viewTrace },
+          { value: 'photo', label: STUDY_TEXT.viewPhoto },
+        ]}
+        value={view}
+        onChange={setView}
+        accessibilityLabel={STUDY_TEXT.viewSwitchLabel}
+      />
+      {view === 'photo' ? (
+        <StudyPhoto study={study} />
+      ) : (
+        <TwelveLeadViewer
+          signal={signal}
+          mount={study.metadata.mount}
+          calibration={study.metadata.calibration}
+          focusedLeads={focusedLeads}
+        />
+      )}
+    </View>
+  );
+}
+
+/** La foto tal como se envio, a su proporcion, para cotejarla con el trazado. */
+function StudyPhoto({ study }: { study: QueuedStudy }) {
+  return (
+    <Image
+      source={{ uri: study.imageUri }}
+      style={[styles.photo, { aspectRatio: study.imageWidth / study.imageHeight }]}
+      resizeMode="contain"
+      accessibilityLabel={STUDY_TEXT.viewPhoto}
     />
   );
 }
@@ -292,6 +324,8 @@ function FailureCard({ studyId, analysis }: { studyId: string | null; analysis: 
 }
 
 const styles = StyleSheet.create({
+  signalView: { gap: gap.sm },
+  photo: { width: '100%', borderRadius: radius.tile, backgroundColor: '#fff' },
   basis: { gap: gap.sm, marginBottom: gap.md },
   ready: { gap: gap.xl },
   processing: { gap: gap.xl },
