@@ -25,14 +25,15 @@ import { glass } from '@/design/tokens';
 
 const CARD_ELEVATION = 3;
 const ROW_ELEVATION = 1;
+const CHROME_ELEVATION = 6;
 
 /** Modulo del bento: pieza grande que flota sobre el lienzo. */
 export const cardShadow: ViewStyle = Platform.select<ViewStyle>({
   ios: {
     shadowColor: glass.shadow,
-    shadowOpacity: 0.14,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
   },
   android: { elevation: CARD_ELEVATION },
   default: {},
@@ -48,10 +49,22 @@ export const cardShadow: ViewStyle = Platform.select<ViewStyle>({
 export const rowShadow: ViewStyle = Platform.select<ViewStyle>({
   ios: {
     shadowColor: glass.shadow,
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.03,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
   },
   android: { elevation: ROW_ELEVATION },
+  default: {},
+});
+
+/** Sombra exterior de la barra, separada del recorte del BlurView. */
+export const chromeShadow: ViewStyle = Platform.select<ViewStyle>({
+  ios: {
+    shadowColor: glass.shadow,
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  android: { elevation: CHROME_ELEVATION },
   default: {},
 });

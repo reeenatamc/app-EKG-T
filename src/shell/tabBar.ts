@@ -1,3 +1,6 @@
+import { TAB_TEXT } from '@/constants/shellText';
+import { gap, size } from '@/design/tokens';
+
 /**
  * Geometria de la barra de pestanas y de su burbuja.
  *
@@ -12,10 +15,14 @@
  * no cambia de seccion. Por eso no tiene ruta aqui y la burbuja nunca se posa en
  * ella.
  */
-export const TAB_SLOTS = ['/home', '/history', null, '/profile'] as const;
+export const TAB_ITEMS = [
+  { route: '/home', label: TAB_TEXT.home, icon: 'home' },
+  { route: '/history', label: TAB_TEXT.history, icon: 'history' },
+  { route: null, label: TAB_TEXT.capture, icon: 'capture' },
+  { route: '/profile', label: TAB_TEXT.profile, icon: 'profile' },
+] as const;
 
-/** Hueco que ocupa la accion de captura. */
-export const CAPTURE_SLOT = TAB_SLOTS.indexOf(null);
+const TAB_SLOTS = TAB_ITEMS.map((item) => item.route);
 
 /**
  * Hueco en el que debe estar la burbuja para una ruta.
@@ -38,12 +45,21 @@ export function slotForPath(pathname: string): number | null {
  * @param rowWidth Ancho de la fila, relleno incluido.
  * @param padding Relleno a cada lado.
  * @param spacing Espacio entre huecos.
+ * @param expanded Cierto si la seccion activa ocupa dos unidades para llevar su etiqueta.
  * @returns El ancho de un hueco, nunca negativo.
  */
-export function slotWidth(rowWidth: number, padding: number, spacing: number): number {
+export function slotWidth(
+  rowWidth: number,
+  padding: number,
+  spacing: number,
+  expanded = false,
+): number {
   const count = TAB_SLOTS.length;
 
-  return Math.max(0, (rowWidth - 2 * padding - (count - 1) * spacing) / count);
+  return Math.max(
+    0,
+    (rowWidth - 2 * padding - (count - 1) * spacing) / (count + (expanded ? 1 : 0)),
+  );
 }
 
 /**
@@ -62,4 +78,22 @@ export function slotWidth(rowWidth: number, padding: number, spacing: number): n
 export function slotOffset(slot: number, width: number, padding: number, spacing: number): number {
   'worklet';
   return padding + slot * (width + spacing);
+}
+
+/**
+ * Ancho de un hueco concreto: dos unidades si lleva la etiqueta al lado, una si no.
+ *
+ * @param unit Ancho de una unidad, el que devuelve `slotWidth`.
+ * @param wide Cierto para la seccion activa con la barra expandida.
+ * @returns El ancho del hueco.
+ */
+export function tabSpan(unit: number, wide: boolean): number {
+  return unit * (wide ? 2 : 1);
+}
+
+/** Reserva para icono y dos líneas de etiqueta con el tamaño de texto del sistema. */
+export function tabBarClearance(fontScale: number): number {
+  const labelHeight = size.tabLabelLineHeight * Math.max(fontScale, 1) * 2;
+  const contentHeight = Math.max(size.tabHeight, size.tabIcon + labelHeight + gap.sm * 2 + gap.xs);
+  return contentHeight + gap.xs * 2 + size.hairline * 2 + gap.sm + gap.lg;
 }

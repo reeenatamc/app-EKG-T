@@ -61,27 +61,28 @@ export const CALENDAR_TEXT = {
 } as const;
 
 export const HOME_TEXT = {
-  newStudy: 'Nuevo estudio',
-  heroTitle: 'Lee un electrocardiograma',
-  newStudyHint: 'ECG estándar de 12 derivaciones, en papel.',
+  newStudy: 'Capturar ECG',
+  title: 'Tus estudios',
+  heroTitle: 'Nuevo electrocardiograma',
+  newStudyHint: 'Fotografía el registro y revisa su lectura.',
   summaryTitle: 'Resumen',
   summaryReady: 'Listos',
   summaryInProgress: 'En curso',
   summaryFailed: 'Con error',
   /** Lo que anuncia un lector de pantalla antes de las tres cifras. */
   summaryOpen: 'Abrir el historial',
-  recentTitle: 'Recientes',
+  recentTitle: 'Estudios recientes',
   recentAll: 'Ver todo',
-  recentEmpty: 'Todavía no hay estudios. Los que fotografíes aparecerán aquí.',
-  notice: 'Apoyo, no diagnóstico. Los resultados son orientativos y los confirma un profesional.',
+  recentEmpty: 'No hay estudios guardados. Captura un ECG para comenzar.',
+  /** Cuando el correo no deja sacar un nombre para la cabecera. */
+  accountFallback: 'Mi cuenta',
 } as const;
 
 export const HISTORY_TEXT = {
   title: 'Historial',
-  emptyTitle: 'Aquí aparecerán tus estudios',
-  emptyBody:
-    'Cada electrocardiograma que fotografíes queda guardado con su fecha y su lectura, listo para volver a consultarlo.',
-  emptyAction: 'Capturar el primero',
+  emptyTitle: 'Sin estudios guardados',
+  emptyBody: 'Consulta los electrocardiogramas capturados, sus fechas y resultados.',
+  emptyAction: 'Capturar ECG',
 } as const;
 
 export const PROFILE_TEXT = {
@@ -98,9 +99,9 @@ export const PROFILE_TEXT = {
   activitySection: 'En este teléfono',
   studiesLabel: 'Estudios guardados',
   lastStudyLabel: 'Último estudio',
-  lastStudyNone: 'Ninguno todavía',
+  lastStudyNone: 'Sin registros',
   activityNote:
-    'El historial se guarda en este teléfono y se borra al cerrar sesión. Lo enviado sigue en el servidor.',
+    'El historial local se elimina al cerrar sesión. Los estudios enviados permanecen en el servidor.',
   preferencesSection: 'Preferencias',
   accountSection: 'Cuenta',
   settingsAction: 'Más ajustes',
@@ -118,7 +119,7 @@ export const PROFILE_TEXT = {
  */
 export const SIGN_OUT_TEXT = {
   title: '¿Cerrar sesión?',
-  body: 'El historial de este teléfono se borra. Lo enviado sigue en el servidor.',
+  body: 'Se eliminará el historial de este teléfono. Los estudios enviados permanecerán en el servidor.',
   cancel: 'Cancelar',
   confirm: 'Cerrar sesión',
 } as const;
@@ -132,17 +133,17 @@ export const SETTINGS_TEXT = {
   themeDark: 'Oscuro',
   accessibilitySection: 'Accesibilidad',
   reduceTransparency: 'Reducir transparencia',
-  reduceTransparencyHint: 'Sustituye el vidrio por superficies opacas.',
+  reduceTransparencyHint: 'Usa fondos opacos en lugar de translúcidos.',
   reduceMotion: 'Reducir movimiento',
-  reduceMotionHint: 'Las animaciones aparecen en su estado final.',
+  reduceMotionHint: 'Reduce las animaciones de la interfaz.',
   haptics: 'Vibración al tocar',
-  hapticsHint: 'Confirma con un toque el obturador, los envíos y los errores.',
+  hapticsHint: 'Activa la respuesta háptica al capturar, enviar o detectar un error.',
   clinicalSection: 'Clínico',
   electrodeLabel: 'Estándar de electrodos',
   electrodeHint: 'Los dos códigos de color son incompatibles; elige el que usas.',
   languageLabel: 'Idioma',
   languageValue: 'Español',
-  languageNote: 'La aplicación está en un solo idioma.',
+  languageNote: 'Disponible en español.',
   accountSection: 'Cuenta',
   signOut: 'Cerrar sesión',
 
@@ -155,8 +156,8 @@ export const SETTINGS_TEXT = {
    * pendiente se pierde, y eso hay que decirlo antes y no después.
    */
   pendingOnSignOut: {
-    title: 'Tienes estudios sin terminar',
+    title: 'Hay estudios pendientes',
     action:
-      'Al cerrar sesión se borran del teléfono. Lo que no se ha enviado se pierde, y el resultado que aún falta ya no se podrá recoger.',
+      'Al cerrar sesión se eliminarán los estudios de este teléfono. Se perderán los que no hayas enviado y no podrás consultar los resultados pendientes.',
   },
 } as const;

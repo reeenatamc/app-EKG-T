@@ -6,7 +6,7 @@ import { NAV_ICON_PATHS, NAV_ICON_VIEWBOX, type NavIconName } from '@/components
 import { useTheme, type Theme } from '@/design/theme';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 import { brand, gap, opacity, radius, size } from '@/design/tokens';
-import { type } from '@/design/type';
+import { font, type } from '@/design/type';
 
 /**
  * Papel del boton.
@@ -131,5 +131,5 @@ const styles = StyleSheet.create({
   },
   content: { flexDirection: 'row', alignItems: 'center', gap: gap.sm },
   disabled: { opacity: opacity.disabled },
-  label: { ...type.body, fontFamily: 'Inter_500Medium' },
+  label: { ...type.body, fontFamily: font.medium },
 });

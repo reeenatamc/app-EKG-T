@@ -1,4 +1,4 @@
-import { CAPTURE_SLOT, slotForPath, slotOffset, slotWidth } from '@/shell/tabBar';
+import { TAB_ITEMS, slotForPath, slotOffset, slotWidth } from '@/shell/tabBar';
 
 describe('slotForPath', () => {
   it('cada pestana tiene su hueco', () => {
@@ -10,7 +10,7 @@ describe('slotForPath', () => {
   it('LA BURBUJA NUNCA SE POSA EN CAPTURAR', () => {
     // Capturar abre la camara a pantalla completa, no es una seccion. Si la
     // burbuja fuese alli, al volver de la camara marcaria un sitio donde no se esta.
-    expect(CAPTURE_SLOT).toBe(2);
+    expect(TAB_ITEMS[2].route).toBeNull();
     expect(slotForPath('/capture')).toBeNull();
   });
 
@@ -42,5 +42,20 @@ describe('geometria de los huecos', () => {
 
   it('una fila todavia sin medir no da anchos negativos', () => {
     expect(slotWidth(0, 4, 4)).toBe(0);
+  });
+});
+
+describe('barra con etiqueta expandida', () => {
+  it.each([0, 1, 3])('la cápsula de la sección %i encaja sin invadir el margen', (active) => {
+    const base = slotWidth(352, 4, 4, true);
+    const activeLeft = slotOffset(active, base, 4, 4);
+    expect(activeLeft).toBeGreaterThanOrEqual(4);
+    expect(activeLeft + base * 2).toBeLessThanOrEqual(348);
+    expect(base * 5 + 4 * 3 + 4 * 2).toBeCloseTo(352);
+  });
+
+  it('en el último destino la cápsula acaba justo en el margen', () => {
+    const base = slotWidth(352, 4, 4, true);
+    expect(slotOffset(3, base, 4, 4) + base * 2).toBeCloseTo(348);
   });
 });

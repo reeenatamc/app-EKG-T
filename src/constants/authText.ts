@@ -15,36 +15,36 @@ export interface AuthErrorCopy {
 
 export const AUTH_ERROR_COPY: Record<AuthFailureReason, AuthErrorCopy> = {
   'credentials-mismatch': {
-    title: 'Ese correo y esa contraseña no coinciden',
-    action: 'Revísalos, o entra con un código si prefieres no recordarla.',
+    title: 'Correo o contraseña incorrectos',
+    action: 'Revisa tus datos o recupera el acceso mediante un código.',
   },
   'account-not-found': {
-    title: 'No encontramos ninguna cuenta con ese correo',
-    action: 'Comprueba que esté bien escrito, o crea una cuenta nueva.',
+    title: 'No hay una cuenta con ese correo',
+    action: 'Comprueba el correo o crea una cuenta.',
   },
   'email-already-registered': {
-    title: 'Ese correo ya tiene una cuenta',
-    action: 'Inicia sesión, o recupera el acceso si no recuerdas la contraseña.',
+    title: 'El correo ya está registrado',
+    action: 'Inicia sesión o recupera el acceso si olvidaste la contraseña.',
   },
   'weak-password': {
-    title: 'La contraseña necesita ocho caracteres o más',
-    action: 'Añade unos cuantos y vuelve a intentarlo.',
+    title: 'La contraseña debe tener al menos ocho caracteres',
+    action: 'Introduce una contraseña de ocho caracteres o más.',
   },
   'code-mismatch': {
-    title: 'Ese código no es el que enviamos',
-    action: 'Revisa los seis dígitos del correo, o pide uno nuevo.',
+    title: 'Código incorrecto',
+    action: 'Revisa los seis dígitos del correo o solicita un código nuevo.',
   },
   'code-expired': {
     title: 'El código caducó',
-    action: 'Pide uno nuevo: llega en unos segundos.',
+    action: 'Solicita un código nuevo e introdúcelo para continuar.',
   },
   'network-unreachable': {
     title: 'No hay conexión con el servidor',
-    action: 'Comprueba tu red y vuelve a intentarlo. No se perdió nada.',
+    action: 'Comprueba tu conexión a internet y vuelve a intentarlo.',
   },
   unexpected: {
-    title: 'Algo falló por nuestra parte',
-    action: 'Vuelve a intentarlo. Si sigue pasando, no es culpa tuya.',
+    title: 'No se pudo completar la solicitud',
+    action: 'Vuelve a intentarlo. Si el error persiste, inténtalo más tarde.',
   },
 };
 
@@ -81,25 +81,25 @@ export const ONBOARDING_TEXT = {
 } as const;
 
 export const LOGIN_TEXT = {
-  title: 'Entra en tu cuenta',
+  title: 'Iniciar sesión',
   email: 'Correo',
   password: 'Contraseña',
-  submit: 'Entrar',
+  submit: 'Iniciar sesión',
   forgot: '¿Olvidaste la contraseña?',
   toRegister: 'Crear una cuenta',
   biometric: 'Entrar con huella',
 } as const;
 
 export const REGISTER_TEXT = {
-  title: 'Crea tu cuenta',
+  title: 'Crear cuenta',
   email: 'Correo',
   password: 'Contraseña',
   passwordHint: 'Ocho caracteres o más',
-  roleLabel: '¿Cómo vas a usar la aplicación?',
+  roleLabel: 'Tipo de uso',
   roleProfessional: 'Profesional de salud',
   roleProfessionalHint: 'Acceso completo a estudios e interpretación',
   roleStudent: 'Estudiante o demostración',
-  roleStudentHint: 'Mismo flujo, con avisos formativos y datos de ejemplo',
+  roleStudentHint: 'Estudios con avisos formativos y datos de ejemplo',
   /**
    * Version corta para el cuadro de la opcion.
    *
@@ -115,27 +115,27 @@ export const REGISTER_TEXT = {
 } as const;
 
 export const RECOVERY_TEXT = {
-  title: 'Recupera el acceso',
-  body: 'Escribe tu correo y te enviamos un código de seis dígitos.',
+  title: 'Recuperar acceso',
+  body: 'Introduce tu correo para recibir un código de seis dígitos.',
   email: 'Correo',
-  submit: 'Enviar el código',
-  toLogin: 'Volver a entrar',
+  submit: 'Enviar código',
+  toLogin: 'Volver al inicio de sesión',
 } as const;
 
 export const VERIFY_TEXT = {
-  title: 'Escribe el código',
-  bodyPrefix: 'Enviamos seis dígitos a',
+  title: 'Verificar código',
+  bodyPrefix: 'Código enviado a',
   code: 'Código',
   submit: 'Verificar',
   resend: 'Enviar otro código',
 } as const;
 
 export const UNLOCK_TEXT = {
-  title: 'Desbloquea la aplicación',
+  title: 'Desbloquear aplicación',
   body: 'Usa tu huella o tu rostro para continuar.',
   unlock: 'Desbloquear',
   usePassword: 'Entrar con la contraseña',
-  prompt: 'Desbloquea EKG Reader',
+  prompt: 'Desbloquear EKG Reader',
   failed: 'No se pudo verificar',
-  failedAction: 'Prueba otra vez, o entra con la contraseña de tu cuenta.',
+  failedAction: 'Vuelve a intentarlo o inicia sesión con tu contraseña.',
 } as const;

@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { useQueueDrain } from '@/capture/useQueueDrain';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { useAnalysesFor } from '@/ecg/analyses';
+import { TabMotionProvider } from '@/shell/TabMotionProvider';
 
 /**
  * Grupo de pestanas de la aplicacion.
@@ -45,10 +46,12 @@ export default function TabsLayout() {
   useAnalysesFor(remoteKey === '' ? [] : remoteKey.split(','));
 
   return (
-    <Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={() => null}>
-      <Tabs.Screen name="home" />
-      <Tabs.Screen name="history" />
-      <Tabs.Screen name="profile" />
-    </Tabs>
+    <TabMotionProvider>
+      <Tabs screenOptions={{ headerShown: false, animation: 'fade' }} tabBar={() => null}>
+        <Tabs.Screen name="home" />
+        <Tabs.Screen name="history" />
+        <Tabs.Screen name="profile" />
+      </Tabs>
+    </TabMotionProvider>
   );
 }

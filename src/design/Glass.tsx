@@ -1,4 +1,4 @@
-import { BlurView } from 'expo-blur';
+import { BlurView, type BlurTint } from 'expo-blur';
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -37,7 +37,7 @@ function GlassSurface({ children, intensity, cornerRadius, style }: GlassSurface
   return (
     <BlurView
       intensity={intensity}
-      tint={isDark ? 'dark' : 'light'}
+      tint={blurTint(isDark)}
       // En Android el desenfoque no ocurre sin metodo y sin objetivo: expo-blur
       // cae a "none" en silencio y el vidrio se queda en un tinte plano.
       blurMethod={Platform.OS === 'android' ? 'dimezisBlurView' : undefined}
@@ -55,6 +55,22 @@ function GlassSurface({ children, intensity, cornerRadius, style }: GlassSurface
       {children}
     </BlurView>
   );
+}
+
+/**
+ * Material del desenfoque.
+ *
+ * En iOS el material nativo ultrafino, que es el que usa el sistema en sus barras.
+ * Android no tiene materiales: solo claro u oscuro.
+ *
+ * @param isDark Cierto en el tema oscuro.
+ * @returns El tinte para `BlurView`.
+ */
+function blurTint(isDark: boolean): BlurTint {
+  if (Platform.OS === 'ios') {
+    return isDark ? 'systemUltraThinMaterialDark' : 'systemUltraThinMaterialLight';
+  }
+  return isDark ? 'dark' : 'light';
 }
 
 interface GlassProps {

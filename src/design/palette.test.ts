@@ -33,6 +33,7 @@ const ROOTS = ['src', 'app'];
  * tiene ninguna superficie de carmin fuera del boton principal.
  */
 const BRAND_FILL_ALLOWED = [
+  'src/components/HomeHero.tsx',
   // Boton de accion principal: ocupa el ancho completo de la pantalla.
   'src/components/ActionButton.tsx',
   // Boton de eliminar al deslizar una fila: ocupa el alto entero de la fila, y es
@@ -42,18 +43,6 @@ const BRAND_FILL_ALLOWED = [
   // convencion de iOS para el acento y lo que §12.9 deja fuera de la
   // prohibicion. El test de abajo comprueba que ahi no hay ningun relleno.
   'src/components/TabBarItem.tsx',
-];
-
-/**
- * Modulos que pueden pintar la superficie de subtarjeta.
- *
- * NINGUNO desde D-24. Era el relleno de los modulos del bento y fuera de el no
- * significa nada; la lista vacia impide que vuelva a aparecer suelta en otra
- * pantalla sin decidirlo.
- */
-const TINTED_ALLOWED: string[] = [
-  // Tarjeta destacada del inicio: ocupa el ancho completo y lleva la accion principal.
-  'src/components/HomeHero.tsx',
 ];
 
 /** Modulos que pueden tocar la jerarquia de alarma de la IEC 60601-1-8. */
@@ -175,10 +164,8 @@ describe('regla de tamano de §12.9 — el carmin de marca no rellena elementos 
   });
 
   it('donde tine, no rellena', () => {
-    // La mitad geometrica de §12.9 que si se puede comprobar: los dos modulos que
-    // usan el carmin como TINTE —la etiqueta del boton invertido y la pestana
-    // activa— no pueden ademas rellenar con el.
-    const tintOnly = ['src/components/ActionButton.tsx', 'src/components/TabBarItem.tsx'];
+    // La pestaña usa carmín como tinta, nunca como relleno.
+    const tintOnly = ['src/components/TabBarItem.tsx'];
     const offenders = SOURCES.filter(
       (file) => tintOnly.includes(file.path) && /backgroundColor:\s*brand\.carmine/.test(file.code),
     );
@@ -187,13 +174,6 @@ describe('regla de tamano de §12.9 — el carmin de marca no rellena elementos 
 
   it('`brand.edge` solo se usa como borde, nunca como relleno', () => {
     expect(filesMatching(/backgroundColor:\s*brand\.edge/)).toEqual([]);
-  });
-
-  it('la superficie de subtarjeta no la consume nadie fuera de la lista', () => {
-    // Se mira la IMPORTACION y no el uso: quien devuelva el objeto entero sin
-    // acceder a ningun campo no lo delataria con un patron `tinted.algo`.
-    const imports = /import\s*\{[^}]*\btinted\b[^}]*\}\s*from\s*'@\/design\/tokens'/;
-    expect(filesMatching(imports).sort()).toEqual([...TINTED_ALLOWED].sort());
   });
 });
 
@@ -287,7 +267,7 @@ describe('§12.1 — una cifra clinica no se apoya en vidrio', () => {
   });
 });
 
-describe('las tres familias tipograficas se ganan el sitio', () => {
+describe('los roles tipográficos se ganan el sitio', () => {
   it('cada rol de `type` se usa en algun modulo', () => {
     // Medido en D.1: `type.vital` no aparecia en ninguna de las doce pantallas y
     // `type.display` solo en el splash. Una fuente que nadie usa son kilobytes

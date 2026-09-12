@@ -8,34 +8,31 @@ import type { QueuedStudy } from '@/capture/study';
 import { studyCounts } from '@/capture/studyState';
 import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { AppTabBar } from '@/components/AppTabBar';
+import { ClinicalDisclaimer } from '@/components/ClinicalDisclaimer';
 import { HomeHero } from '@/components/HomeHero';
 import { StudyListRow } from '@/components/StudyListRow';
 import { StudySummary } from '@/components/StudySummary';
 import { HOME_TEXT } from '@/constants/shellText';
 import { Background } from '@/design/Background';
-import { cardShadow } from '@/design/elevation';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size } from '@/design/tokens';
-import { type } from '@/design/type';
+import { font, type } from '@/design/type';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 import { useAnalyses } from '@/ecg/analyses';
-import { accountLine, displayNameFrom, greetingFor, longDate } from '@/shell/greeting';
-
-/** Hueco bajo el scroll para que la barra de pestanas flotante no tape contenido. */
-const TAB_BAR_CLEARANCE = 96;
+import { displayNameFrom, greetingFor, longDate } from '@/shell/greeting';
+import { useTabBarClearance } from '@/shell/useTabBarClearance';
 
 /** Cuantos estudios recientes caben en el inicio. El resto, en el historial. */
 const RECENT_LIMIT = 3;
 
 /** Lado del circulo con la inicial del usuario. */
-const AVATAR_SIDE = 48;
+const AVATAR_SIDE = size.touchTarget;
 
 /**
  * Inicio.
  *
  * De arriba abajo: quien abre la aplicacion, la tarjeta destacada con la accion
- * principal, el resumen de estudios y los recientes. El aviso
- * clinico queda como nota al pie.
+ * principal, el aviso clínico, el resumen y los estudios recientes.
  *
  * La barra se monta AQUI, por la prop `chrome` de `Background`, no desde el
  * router: es lo que le da un objetivo de desenfoque que contiene el contenido que
@@ -45,6 +42,7 @@ const AVATAR_SIDE = 48;
  */
 export function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const tabClearance = useTabBarClearance();
   const theme = useTheme();
 
   // La hora se lee al renderizar y no se guarda en estado: nadie deja el inicio
@@ -56,20 +54,23 @@ export function HomeScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + gap.lg, paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
+          { paddingTop: insets.top + gap.lg, paddingBottom: insets.bottom + tabClearance },
         ]}
       >
         <HomeHeader now={now} />
+        <Text accessibilityRole="header" style={[type.headline, { color: theme.textHigh }]}>
+          {HOME_TEXT.title}
+        </Text>
         <HomeHero dateLabel={longDate(now)} />
+        <ClinicalDisclaimer />
         <HomeStudies />
-        <Text style={[type.caption, { color: theme.textLow }]}>{HOME_TEXT.notice}</Text>
       </ScrollView>
     </Background>
   );
 }
 
 /**
- * Cabecera: circulo con la inicial, saludo y, debajo, nombre y rol.
+ * Cabecera: circulo con la inicial, saludo y, debajo, nombre.
  *
  * Inicial y no foto: la cuenta no guarda imagen del usuario y no hace falta otro
  * dato personal en el telefono.
@@ -77,17 +78,18 @@ export function HomeScreen() {
 function HomeHeader({ now }: { readonly now: Date }) {
   const theme = useTheme();
   const session = useSession((state) => state.session);
-  const initial = displayNameFrom(session)?.charAt(0) ?? '·';
+  const name = displayNameFrom(session);
+  const initial = name?.charAt(0) ?? '·';
 
   return (
     <View style={styles.header}>
-      <View style={[styles.avatar, { backgroundColor: theme.canvas }]}>
+      <View style={[styles.avatar, { backgroundColor: theme.surface }]}>
         <Text style={[type.body, styles.avatarLabel, { color: theme.textHigh }]}>{initial}</Text>
       </View>
       <View style={styles.headerText}>
         <Text style={[type.caption, { color: theme.textLow }]}>{greetingFor(now)}</Text>
         <Text style={[type.body, styles.name, { color: theme.textHigh }]} numberOfLines={1}>
-          {accountLine(session)}
+          {name ?? HOME_TEXT.accountFallback}
         </Text>
       </View>
     </View>
@@ -114,8 +116,8 @@ function HomeStudies() {
   return (
     <>
       {studies.length === 0 ? null : (
-        <View style={[styles.card, { backgroundColor: theme.surface }, cardShadow]}>
-          <Text style={[type.eyebrow, { color: theme.textLow }]}>{HOME_TEXT.summaryTitle}</Text>
+        <View style={styles.summary}>
+          <Text style={[type.section, { color: theme.textHigh }]}>{HOME_TEXT.summaryTitle}</Text>
           <StudySummary
             counts={studyCounts(studies, byStudy)}
             onPress={() => router.navigate('/history')}
@@ -142,12 +144,11 @@ function RecentStudies({
 }) {
   const theme = useTheme();
   const recent = studies.slice(-RECENT_LIMIT).reverse();
-  const hasMore = studies.length > RECENT_LIMIT;
 
   return (
     <HomeSection
       title={HOME_TEXT.recentTitle}
-      action={hasMore ? <SeeAllLink onPress={onSeeAll} /> : null}
+      action={studies.length > 0 ? <SeeAllLink onPress={onSeeAll} /> : null}
     >
       {recent.length === 0 ? (
         <Text style={[type.body, { color: theme.textLow }]}>{HOME_TEXT.recentEmpty}</Text>
@@ -177,7 +178,7 @@ function HomeSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHead}>
-        <Text style={[type.eyebrow, { color: theme.textLow }]}>{title}</Text>
+        <Text style={[type.section, styles.sectionTitle, { color: theme.textHigh }]}>{title}</Text>
         {action}
       </View>
       {children}
@@ -207,7 +208,7 @@ function SeeAllLink({ onPress }: { readonly onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: gap.lg, gap: gap.lg },
+  content: { paddingHorizontal: gap.xl, gap: gap.lg },
   header: { flexDirection: 'row', alignItems: 'center', gap: gap.md },
   avatar: {
     width: AVATAR_SIDE,
@@ -216,17 +217,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarLabel: { fontFamily: 'Inter_500Medium' },
+  avatarLabel: { fontFamily: font.medium },
   headerText: { flex: 1 },
-  name: { fontFamily: 'Inter_500Medium' },
-  card: { borderRadius: radius.tile, padding: gap.lg, gap: gap.xs },
-  section: { gap: gap.sm },
+  name: { fontFamily: font.semibold },
+  summary: { gap: gap.md },
+  section: { gap: gap.lg },
   // El mismo hueco entre filas que en el historial.
   rows: { gap: gap.md },
+  sectionTitle: { flex: 1, flexShrink: 1 },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: gap.md,
   },
   // Area tactil de 44 puntos que no empuja el rotulo: el margen negativo le
   // devuelve al bloque lo que el enlace crece por encima y por debajo del texto.
@@ -236,5 +239,5 @@ const styles = StyleSheet.create({
     paddingLeft: gap.lg,
     marginVertical: -gap.md,
   },
-  linkLabel: { fontFamily: 'Inter_500Medium' },
+  linkLabel: { fontFamily: font.medium },
 });

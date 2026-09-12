@@ -1,5 +1,5 @@
 import type { Session } from '@/auth/AuthService';
-import { CALENDAR_TEXT, GREETING_TEXT, PROFILE_TEXT } from '@/constants/shellText';
+import { CALENDAR_TEXT, GREETING_TEXT } from '@/constants/shellText';
 
 /**
  * Saludo de inicio: la hora del dia y a quien se saluda.
@@ -64,26 +64,6 @@ export function displayNameFrom(session: Session | null): string | null {
   }
 
   return first.charAt(0).toLocaleUpperCase('es') + first.slice(1).toLocaleLowerCase('es');
-}
-
-/**
- * Quien abre la aplicacion, en una linea: nombre y rol.
- *
- * VA DEBAJO DEL SALUDO Y NO DENTRO. El saludo con el nombre —«Buenas tardes,
- * Renata»— se partia en dos lineas a tamano de titular y ocupaba el primer cuarto
- * de la pantalla. Separados, el titular cabe en una y el nombre gana algo que
- * antes no se veia en el inicio: el rol, que decide lo que ensena el resto de la
- * aplicacion.
- *
- * @param session Sesion activa, o null si no hay.
- * @returns "Renata · Profesional de salud" o, sin nombre, solo el rol.
- */
-export function accountLine(session: Session | null): string {
-  const name = displayNameFrom(session);
-  const role =
-    session?.role === 'student' ? PROFILE_TEXT.roleStudent : PROFILE_TEXT.roleProfessional;
-
-  return name === null ? role : `${name} · ${role}`;
 }
 
 /**

@@ -1,28 +1,28 @@
-import { studyState } from '@/capture/studyState';
-import { DELETE_STUDY_TEXT, HISTORY_LIST_TEXT } from '@/constants/studyText';
-import { useAnalyses } from '@/ecg/analyses';
 import { FlashList } from '@shopify/flash-list';
-import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { studyState } from '@/capture/studyState';
 import { useQueueHydrated, useUploadQueue } from '@/capture/uploadQueue';
 import { ActionButton } from '@/components/ActionButton';
-import { Notice } from '@/components/Notice';
 import { AppTabBar } from '@/components/AppTabBar';
+import { ClinicalDisclaimer } from '@/components/ClinicalDisclaimer';
+import { Notice } from '@/components/Notice';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyListRow } from '@/components/StudyListRow';
 import { QUEUE_TEXT } from '@/constants/captureText';
 import { HISTORY_TEXT } from '@/constants/shellText';
+import { DELETE_STUDY_TEXT, HISTORY_LIST_TEXT } from '@/constants/studyText';
 import { Background } from '@/design/Background';
 import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
+import { useAnalyses } from '@/ecg/analyses';
 import { historyView, type HistoryView } from '@/shell/queueSummary';
+import { useTabBarClearance } from '@/shell/useTabBarClearance';
 import { useTask } from '@/shell/useTask';
-
-const TAB_BAR_CLEARANCE = 96;
 
 /**
  * Historial de estudios.
@@ -45,12 +45,13 @@ const TAB_BAR_CLEARANCE = 96;
  */
 export function HistoryScreen() {
   const insets = useSafeAreaInsets();
+  const tabClearance = useTabBarClearance();
   const hasHydrated = useQueueHydrated();
   const studies = useUploadQueue((state) => state.studies);
 
   const padding: ViewStyle = {
     paddingTop: insets.top + gap.xl,
-    paddingBottom: insets.bottom + TAB_BAR_CLEARANCE,
+    paddingBottom: insets.bottom + tabClearance,
   };
 
   return (
@@ -147,7 +148,7 @@ function StudyList({ padding }: { readonly padding: ViewStyle }) {
       keyExtractor={(study) => study.id}
       renderItem={({ item }) => <StudyListRow study={item} />}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
-      contentContainerStyle={{ ...padding, paddingHorizontal: gap.lg }}
+      contentContainerStyle={{ ...padding, paddingHorizontal: gap.xl }}
       refreshing={task.isBusy}
       onRefresh={onRefresh}
       ListHeaderComponent={
@@ -184,6 +185,9 @@ function StudyListHeader({
   return (
     <>
       <ScreenHeader title={HISTORY_LIST_TEXT.title} size="headline" />
+      <View style={styles.headerNotice}>
+        <ClinicalDisclaimer />
+      </View>
       <SwipeHint />
       {notice === null ? null : (
         <View style={styles.headerNotice}>
@@ -225,7 +229,7 @@ function SwipeHint() {
 const styles = StyleSheet.create({
   // El vacio ya no va centrado a mano: el titular en display lo ancla arriba,
   // como en el resto de la aplicacion, y asi las doce pantallas comparten eje.
-  empty: { flex: 1, justifyContent: 'center', paddingHorizontal: gap.lg, gap: gap.md },
+  empty: { flex: 1, justifyContent: 'center', paddingHorizontal: gap.xl, gap: gap.md },
   action: { flexDirection: 'row', marginTop: gap.lg },
   separator: { height: gap.md },
   // El titular ya deja un escalon pequeno debajo; la lista pide uno mas.

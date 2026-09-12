@@ -19,8 +19,7 @@ import { useTheme } from '@/design/theme';
 import { gap } from '@/design/tokens';
 import { type } from '@/design/type';
 import { useSignOut } from '@/shell/useSignOut';
-
-const TAB_BAR_CLEARANCE = 96;
+import { useTabBarClearance } from '@/shell/useTabBarClearance';
 
 /**
  * Perfil de la cuenta.
@@ -40,6 +39,7 @@ const TAB_BAR_CLEARANCE = 96;
  */
 export function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const tabClearance = useTabBarClearance();
   const session = useSession((state) => state.session);
 
   return (
@@ -47,7 +47,7 @@ export function ProfileScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + gap.xl, paddingBottom: insets.bottom + TAB_BAR_CLEARANCE },
+          { paddingTop: insets.top + gap.xl, paddingBottom: insets.bottom + tabClearance },
         ]}
       >
         <ScreenHeader title={PROFILE_TEXT.title} size="headline" />
@@ -133,6 +133,6 @@ function AppVersion() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: gap.lg, gap: gap.xl },
+  content: { paddingHorizontal: gap.xl, gap: gap.xl },
   centered: { textAlign: 'center' },
 });

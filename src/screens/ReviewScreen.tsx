@@ -450,7 +450,7 @@ function useReviewGeometry(photo: CapturedPhoto, container: Size | null): Review
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: gap.lg, gap: gap.md },
+  container: { flex: 1, paddingHorizontal: gap.xl, gap: gap.md },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: gap.md },
   headerText: { flex: 1, gap: gap.xs },
   stage: { flex: 1, borderRadius: radius.tile, overflow: 'hidden' },

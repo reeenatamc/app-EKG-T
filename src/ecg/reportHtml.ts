@@ -141,7 +141,7 @@ const REPORT_STYLES = `
   .trace { width: 100%; height: auto; border: 1px solid ${paperLight.gridBold}; }
   table { border-collapse: collapse; font-size: 13px; }
   td { padding: 3px 16px 3px 0; }
-  .value { font-family: monospace; }
+  .value { font-variant-numeric: tabular-nums; }
   ul { font-size: 13px; padding-left: 18px; }
   .review { color: ${paperLight.textLow}; font-size: 11px; }
 `;
