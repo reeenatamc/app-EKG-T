@@ -1,3 +1,5 @@
+import type { EcgObservation, EcgObservationCategory } from '@/ecg/EcgAnalysisService';
+
 /**
  * Etiquetas del modelo en espanol. BORRADOR para la demo, pendiente de revision
  * clinica: viene de docs/etiquetas_es_borrador.csv en ecg-pipeline.
@@ -202,4 +204,67 @@ export function observationLabel(label: string): string {
  */
 export function isShownObservation(label: string): boolean {
   return !HIDDEN_LABELS.has(label);
+}
+
+/**
+ * Categorias que se agrupan en la lista de observaciones, en el orden en que
+ * aparecen en pantalla.
+ *
+ * `resumen` QUEDA FUERA A PROPOSITO. Sus enunciados son de alcance global
+ * sobre el trazado entero (ver HIDDEN_LABELS mas arriba) y no son un hallazgo
+ * que agrupar junto a los demas: una observacion de esa categoria nunca forma
+ * su propio grupo, la traiga o no HIDDEN_LABELS por su etiqueta.
+ */
+export const CATEGORY_ORDER: readonly Exclude<EcgObservationCategory, 'resumen'>[] = [
+  'ritmo',
+  'conduccion',
+  'repolarizacion',
+  'isquemia_infarto',
+  'hipertrofia',
+  'eje',
+  'marcapasos',
+  'tecnico',
+  'otro',
+];
+
+/** Rotulo en espanol de cada categoria agrupable. */
+export const CATEGORY_TITLES: Readonly<Record<Exclude<EcgObservationCategory, 'resumen'>, string>> =
+  {
+    ritmo: 'Ritmo',
+    conduccion: 'Conducción',
+    repolarizacion: 'Repolarización',
+    isquemia_infarto: 'Isquemia e infarto',
+    hipertrofia: 'Hipertrofia',
+    eje: 'Eje',
+    marcapasos: 'Marcapasos',
+    tecnico: 'Técnico',
+    otro: 'Otros',
+  };
+
+/** Un grupo de observaciones que comparten categoria, con su rotulo. */
+export interface ObservationGroup {
+  readonly category: Exclude<EcgObservationCategory, 'resumen'>;
+  readonly title: string;
+  readonly observations: readonly EcgObservation[];
+}
+
+/**
+ * Agrupa observaciones por categoria clinica, en el orden fijo de la pantalla.
+ *
+ * UN GRUPO SIN OBSERVACIONES NO SE DEVUELVE: la pantalla no dibuja un rotulo
+ * para una categoria vacia. `resumen` no forma grupo -- ver CATEGORY_ORDER --
+ * asi que una observacion con esa categoria simplemente no aparece en ningun
+ * lado, lo mismo que si su etiqueta estuviera en HIDDEN_LABELS.
+ *
+ * @param observations Observaciones ya filtradas por `isShownObservation`.
+ * @returns Los grupos no vacios, en orden.
+ */
+export function groupByCategory(
+  observations: readonly EcgObservation[],
+): readonly ObservationGroup[] {
+  return CATEGORY_ORDER.map((category) => ({
+    category,
+    title: CATEGORY_TITLES[category],
+    observations: observations.filter((observation) => observation.category === category),
+  })).filter((group) => group.observations.length > 0);
 }
