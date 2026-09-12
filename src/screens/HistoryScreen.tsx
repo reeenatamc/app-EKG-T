@@ -55,7 +55,7 @@ export function HistoryScreen() {
   };
 
   return (
-    <Background atmosphere={false} chrome={<AppTabBar />}>
+    <Background atmosphere="soft" chrome={<AppTabBar />}>
       <HistoryBody view={historyView(hasHydrated, studies.length)} padding={padding} />
     </Background>
   );

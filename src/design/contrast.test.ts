@@ -1,12 +1,20 @@
-import { composite, contrastRatio, parseHex, relativeLuminance, round } from '@/design/contrast';
 import {
+  composite,
+  contrastRatio,
+  parseHex,
+  relativeLuminance,
+  round,
+  type Rgb,
+} from '@/design/contrast';
+import {
+  aurora,
+  auroraOpacity,
   brand,
-  clinicalNotice,
+  frost,
   glass,
   paperDark,
   paperLight,
   semantic,
-  summaryTiles,
 } from '@/design/tokens';
 
 /**
@@ -140,22 +148,41 @@ describe('la aritmetica de la medicion', () => {
   });
 });
 
-describe('aviso de alcance clínico', () => {
-  it.each([
-    ['claro', paperLight.textHigh, clinicalNotice.light.surface],
-    ['oscuro', paperDark.textHigh, clinicalNotice.dark.surface],
-  ])('mantiene texto legible en %s', (_name, ink, surface) => {
-    expect(contrastRatio(ink, surface)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
-  });
-});
+describe('texto sobre escarcha, en el peor fondo de la atmosfera suave', () => {
+  // Bajo una tarjeta escarchada no pasa contenido: pasa la atmosfera. El peor caso
+  // es el centro del blob mas contrario a la tinta del tema, a la opacidad del
+  // tema: ciruela en claro, bruma en oscuro. Ver D-25.
+  const toHex = ({ r, g, b }: Rgb): string =>
+    `#${[r, g, b].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`;
 
-describe('recuentos sobre fondos difuminados', () => {
-  it.each([
-    ['claro', paperLight.textHigh, summaryTiles.light],
-    ['oscuro', paperDark.textHigh, summaryTiles.dark],
-  ] as const)('los dos extremos del fondo son legibles en %s', (_name, ink, colors) => {
-    for (const color of colors) {
-      expect(contrastRatio(ink, color)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+  const lightCard = composite(
+    paperLight.surface,
+    tintAlpha(frost.light.fill),
+    toHex(composite(aurora.plum, auroraOpacity.light, paperLight.canvasFlat)),
+  );
+  const darkCard = composite(
+    paperDark.surface,
+    tintAlpha(frost.dark.fill),
+    toHex(composite(aurora.haze, auroraOpacity.dark, paperDark.canvasFlat)),
+  );
+
+  it('el relleno es la superficie del tema con alfa, no otro color', () => {
+    for (const [fill, surface] of [
+      [frost.light.fill, paperLight.surface],
+      [frost.dark.fill, paperDark.surface],
+    ] as const) {
+      const { r, g, b } = parseHex(surface);
+      expect(fill.startsWith(`rgba(${r}, ${g}, ${b},`)).toBe(true);
     }
+  });
+
+  it.each([
+    ['claro: texto alto', paperLight.textHigh, lightCard, 15.53],
+    ['claro: texto bajo', paperLight.textLow, lightCard, 6.01],
+    ['oscuro: texto alto', paperDark.textHigh, darkCard, 9.6],
+    ['oscuro: texto bajo', paperDark.textLow, darkCard, 4.84],
+  ] as const)('%s mide %f:1', (_label, ink, card, expected) => {
+    expect(round(contrastRatio(ink, card))).toBe(expected);
+    expect(contrastRatio(ink, card)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
   });
 });

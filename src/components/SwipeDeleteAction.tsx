@@ -1,5 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
 import { FORM_ICON_PATHS, FORM_ICON_VIEWBOX } from '@/components/icons/formIcons';
 import { LineIcon } from '@/components/icons/LineIcon';
@@ -8,6 +9,8 @@ import { brand, gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
 interface SwipeDeleteActionProps {
+  /** Apertura del gesto, de 0 en reposo a 1 con el boton entero a la vista. */
+  readonly progress: SharedValue<number>;
   readonly onPress: () => void;
 }
 
@@ -27,29 +30,43 @@ interface SwipeDeleteActionProps {
  * hace sin querer al desplazar la lista; un borrado sin segunda pregunta costaria
  * una foto que no se puede recuperar.
  *
+ * INVISIBLE EN REPOSO. Vive detras de la fila, y la fila es escarchada: sin esto
+ * el carmin se transparentaba a traves de cada tarjeta del historial. Aparece con
+ * el propio gesto, y a medio deslizar ya esta entero.
+ *
+ * @param progress Apertura del gesto.
  * @param onPress Se invoca al pulsarlo, para abrir la confirmacion.
  * @returns El boton revelado por el gesto.
  */
-export function SwipeDeleteAction({ onPress }: SwipeDeleteActionProps) {
+export function SwipeDeleteAction({ progress, onPress }: SwipeDeleteActionProps) {
+  const reveal = useAnimatedStyle(() => ({
+    opacity: Math.min(progress.value * REVEAL_SPEED, 1),
+  }));
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={DELETE_STUDY_TEXT.swipeAction}
-      onPress={onPress}
-      style={styles.action}
-    >
-      <LineIcon
-        path={FORM_ICON_PATHS.trash}
-        color={brand.onCarmine}
-        viewBox={FORM_ICON_VIEWBOX}
-        side={size.fieldIcon}
-      />
-      <Text style={[type.caption, { color: brand.onCarmine }]}>
-        {DELETE_STUDY_TEXT.swipeAction}
-      </Text>
-    </Pressable>
+    <Animated.View style={reveal}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={DELETE_STUDY_TEXT.swipeAction}
+        onPress={onPress}
+        style={styles.action}
+      >
+        <LineIcon
+          path={FORM_ICON_PATHS.trash}
+          color={brand.onCarmine}
+          viewBox={FORM_ICON_VIEWBOX}
+          side={size.fieldIcon}
+        />
+        <Text style={[type.caption, { color: brand.onCarmine }]}>
+          {DELETE_STUDY_TEXT.swipeAction}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
+
+/** Cuanto mas rapido que el gesto se hace visible: entero a mitad de recorrido. */
+const REVEAL_SPEED = 2;
 
 /** Ancho del boton revelado. Lo que hay que deslizar para que quede a la vista. */
 export const SWIPE_ACTION_WIDTH = 96;

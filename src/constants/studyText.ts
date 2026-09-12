@@ -197,6 +197,5 @@ export const COMPARE_TEXT = {
 } as const;
 
 export const CLINICAL_NOTICE = {
-  title: 'Apoyo clínico',
-  body: 'Resultados orientativos. No reemplazan la valoración de un profesional de salud.',
+  body: 'Lectura orientativa. Confirma los resultados con un profesional de salud.',
 } as const;

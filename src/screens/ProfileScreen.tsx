@@ -43,7 +43,7 @@ export function ProfileScreen() {
   const session = useSession((state) => state.session);
 
   return (
-    <Background atmosphere={false} chrome={<AppTabBar />}>
+    <Background atmosphere="soft" chrome={<AppTabBar />}>
       <ScrollView
         contentContainerStyle={[
           styles.content,

@@ -50,7 +50,7 @@ export function HomeScreen() {
   const now = new Date();
 
   return (
-    <Background atmosphere={false} chrome={<AppTabBar />}>
+    <Background atmosphere="soft" chrome={<AppTabBar />}>
       <ScrollView
         contentContainerStyle={[
           styles.content,
