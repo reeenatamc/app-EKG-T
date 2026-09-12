@@ -25,13 +25,8 @@ interface SettingsRowProps {
  * Se apoya en superficie opaca: los controles pierden contraste sobre vidrio
  * justo cuando hay que leer su estado.
  *
- * EL VALOR VA EN INTER, no en monoespaciada. Medido en D.1, este componente era
- * el unico sitio de la aplicacion donde se renderizaba `type.data`, y las tres
- * cadenas que pintaba eran prosa: un correo, «Profesional de salud» y «Español».
- * Mientras tanto las cifras de verdad —el codigo de verificacion, el
- * identificador del estudio— iban en Inter. §6 reserva la monoespaciada para
- * cifras e identificadores; una frase en monoespaciada es solo una frase peor
- * compuesta.
+ * El valor usa la misma familia que el resto de la interfaz. Correo, rol e idioma
+ * son prosa breve; cambiar de fuente los hacia parecer datos tecnicos.
  *
  * @param label Nombre del ajuste.
  * @param hint Aclaracion breve, opcional.

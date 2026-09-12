@@ -8,9 +8,8 @@ import { type } from '@/design/type';
 /**
  * Muestrario de la escala tipografica.
  *
- * La cifra vital va sobre superficie opaca y en la familia monoespaciada, que
- * es justamente la regla que este muestrario debe demostrar: si alguna vez
- * aparece sobre vidrio, se vera aqui antes que en produccion.
+ * La cifra vital va sobre superficie opaca. Si alguna vez aparece sobre vidrio,
+ * se vera aqui antes que en produccion.
  *
  * @returns El muestrario tipografico.
  */
@@ -25,9 +24,7 @@ export function TypeSpecimen() {
       <Text style={[type.body, styles.line, { color: theme.textHigh }]}>
         Cuerpo de texto legible a dieciseis puntos.
       </Text>
-      <Text style={[type.data, styles.line, { color: theme.textLow }]}>
-        0123456789 · monoespaciada
-      </Text>
+      <Text style={[type.data, styles.line, { color: theme.textLow }]}>0123456789</Text>
 
       <Text style={[type.vital, styles.line, { color: theme.textHigh }]}>
         {PLAYGROUND_TEXT.vitalSample}

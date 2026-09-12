@@ -13,7 +13,7 @@ import { CALENDAR_TEXT } from '@/constants/shellText';
  * el telefono de pruebas funcionaba, que es justo como pasa desapercibido.
  *
  * Hora en veinticuatro horas y con dos cifras, para que una columna de fechas se
- * lea alineada en monoespaciada.
+ * escanee sin ruido.
  *
  * @param capturedAt Instante ISO de la captura.
  * @param withYear Cierto para el detalle, donde el ano identifica; en una lista

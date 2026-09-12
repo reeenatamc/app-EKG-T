@@ -56,13 +56,7 @@ export const ONBOARDING_TEXT = {
   skip: 'Saltar',
   next: 'Siguiente',
   start: 'Empezar',
-  /**
-   * Contador de paso, en monoespaciada sobre el titular.
-   *
-   * Sustituye a los tres puntos que había debajo. Dice lo mismo con más
-   * precisión y en una sola línea, y los puntos eran la única cosa de la
-   * pantalla que no se podía leer en voz alta.
-   */
+  /** Contador de paso que sustituye a los puntos sin texto accesible. */
   stepCounter: 'Paso',
   steps: [
     {
