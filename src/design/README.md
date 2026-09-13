@@ -1355,3 +1355,33 @@ el texto bajo en oscuro.
 **Riesgo abierto.** El mismo que motivó D-20: la malla puede volver a competir con
 la lista. Se decide con el teléfono delante; si compite, se baja la opacidad de la
 malla solo en el modo suave.
+
+### D-26 · Liquid Glass nativo en la barra y bisel de luz en las tarjetas
+
+**2026-09-12 · §3 · decisión de la autora**
+
+La autora echó en falta el volumen del vidrio de iOS: la escarcha de D-25 es plana.
+Ese volumen (refracción, reflejo, reacción al toque) no se puede imitar con capas; lo
+dibuja el material Liquid Glass de iOS 26, que `expo-glass-effect` expone como
+`GlassView` y que ya venía compilado en la app como dependencia de expo-router. Se
+fija como dependencia directa en la versión compilada, 57.0.1, para que el JS no se
+adelante al nativo.
+
+**Dónde.** Apple reserva Liquid Glass para la capa de navegación que flota sobre el
+contenido y desaconseja ponerlo en listas o tarjetas y apilar vidrio sobre vidrio
+(WWDC25, «Meet Liquid Glass»). Por eso lo usa solo `GlassChrome`, es decir, la barra
+de pestañas: en iOS 26 con la API disponible es vidrio nativo; en Android y en iOS
+anteriores sigue el desenfoque de expo-blur; con la transparencia reducida, opaco.
+
+**Las tarjetas** ganan volumen sin vidrio: el filo de `FrostCard` pasa a ser un bisel,
+iluminado arriba y a la izquierda (`frost.*.rim`) y en sombra abajo y a la derecha
+(`frost.*.edge`). Como es el borde, sigue la curva, que es justo lo que no hacía la
+raya especular retirada en D-25. El relleno no cambia, así que el contraste tampoco.
+
+**Opacidad cero.** `GlassView` deja de dibujarse si él o un padre pasan por opacidad
+0, y el fundido de pestañas de expo-router (`forFade`, 150 ms) deja en 0 las que no
+están activas, que siguen montadas. Como cada pestaña monta su barra, se aplica la
+salida que documenta expo-glass-effect: `AppTabBar` pasa `visible` según
+`useIsFocused`, y el vidrio usa `glassEffectStyle` con `'none'` mientras está oculto y
+`'regular'` al volver, con su animación nativa de 0.15 s. No se toca la opacidad.
+Pendiente de comprobar a mano cambiando de pestaña en el simulador.

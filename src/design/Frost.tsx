@@ -14,10 +14,11 @@ import { frost, radius, size } from '@/design/tokens';
  * (§12.1). Tampoco lleva sombra: bajo un relleno translucido iOS la dibuja a
  * traves de la tarjeta y la ensucia.
  *
- * SIN LUZ ESPECULAR, a diferencia del vidrio. Era una raya recta de un punto que el
- * recorte cortaba de golpe al empezar la curva de la esquina: invisible en claro y,
- * en oscuro, una linea brillante que no seguia la forma mientras el filo si. El
- * filo solo, que recorre la curva entera, dibuja la tarjeta mejor en los dos temas.
+ * VOLUMEN CON UN BISEL, NO CON UNA RAYA. La luz especular recta de un punto se cortaba
+ * de golpe al empezar la curva de la esquina y en oscuro era una linea brillante
+ * que no seguia la forma. Ahora el propio filo hace de luz: iluminado arriba y a la
+ * izquierda, en sombra abajo y a la derecha. Como es el borde, recorre la curva
+ * entera y la tarjeta se lee como una pieza con grosor en los dos temas.
  *
  * @param props Props de una vista; `style` fija relleno interior y disposicion.
  * @returns La tarjeta.
@@ -28,7 +29,13 @@ export function FrostCard({ children, style, ...rest }: ViewProps) {
   const palette = frost[theme.mode === 'dark' ? 'dark' : 'light'];
   const surface = isFlat
     ? { backgroundColor: theme.surface, borderColor: theme.edge }
-    : { backgroundColor: palette.fill, borderColor: palette.edge };
+    : {
+        backgroundColor: palette.fill,
+        borderTopColor: palette.rim,
+        borderLeftColor: palette.rim,
+        borderBottomColor: palette.edge,
+        borderRightColor: palette.edge,
+      };
 
   return (
     <View {...rest} style={[styles.card, surface, style]}>

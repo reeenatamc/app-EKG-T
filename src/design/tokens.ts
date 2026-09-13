@@ -419,7 +419,18 @@ export const blur = {
  * de la atmosfera en `contrast.test.ts`.
  */
 export const frost = {
-  light: { fill: 'rgba(254, 254, 253, 0.72)', edge: 'rgba(205, 182, 178, 0.55)' },
-  // En oscuro, el mismo filo que la barra de vidrio: una sola arista clara en la app.
-  dark: { fill: 'rgba(49, 35, 58, 0.62)', edge: glass.borderDark },
+  // `rim` es el filo iluminado (arriba e izquierda) y `edge` el que queda en sombra
+  // (abajo y derecha). La luz llega de arriba, como en el resto de la app, y ese
+  // contraste entre filos es lo que da volumen a la tarjeta sin pintar vidrio.
+  light: {
+    fill: 'rgba(254, 254, 253, 0.72)',
+    rim: 'rgba(254, 254, 253, 0.95)',
+    edge: 'rgba(205, 182, 178, 0.55)',
+  },
+  // En oscuro la sombra usa el mismo filo que la barra de vidrio.
+  dark: {
+    fill: 'rgba(49, 35, 58, 0.62)',
+    rim: 'rgba(245, 235, 241, 0.34)',
+    edge: glass.borderDark,
+  },
 } as const;
