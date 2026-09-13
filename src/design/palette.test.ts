@@ -27,7 +27,6 @@ const ROOTS = ['src', 'app'];
 
 /** Modulos que pueden rellenar con el carmin de marca. */
 const BRAND_FILL_ALLOWED = [
-  'src/components/HomeHero.tsx',
   // Boton de accion principal: ocupa el ancho completo de la pantalla.
   'src/components/ActionButton.tsx',
   // Boton de eliminar al deslizar una fila: ocupa el alto entero de la fila, y es

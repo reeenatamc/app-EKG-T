@@ -12,6 +12,7 @@ import {
   brand,
   frost,
   glass,
+  hero,
   paperDark,
   paperLight,
   semantic,
@@ -67,7 +68,6 @@ describe('texto y trazado, suelo de 4.5:1 de §7', () => {
     ['oscuro: texto bajo sobre superficie', paperDark.textLow, paperDark.surface, 6.35],
     ['oscuro: trazado sobre superficie', paperDark.ink, paperDark.surface, 12.59],
     ['etiqueta sobre carmin (boton primario)', brand.onCarmine, brand.carmine, 7.48],
-    ['apoyo sobre carmin (modulo hero)', brand.onCarmineLow, brand.carmine, 5.68],
     ['carmin sobre hueso (boton invertido)', brand.carmine, paperLight.surface, 7.83],
   ];
 
@@ -184,5 +184,28 @@ describe('texto sobre escarcha, en el peor fondo de la atmosfera suave', () => {
   ] as const)('%s mide %f:1', (_label, ink, card, expected) => {
     expect(round(contrastRatio(ink, card))).toBe(expected);
     expect(contrastRatio(ink, card)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+  });
+});
+
+describe('texto de la tarjeta principal sobre su degradado', () => {
+  // El peor caso es el foco con el brillo encima: ahi la superficie esta mas clara.
+  // En la esquina contraria no llega el brillo. Ver D-28.
+  const toHex = ({ r, g, b }: Rgb): string =>
+    `#${[r, g, b].map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`;
+  const lit = (focus: string): Rgb => composite(paperLight.surface, tintAlpha(hero.sheen), focus);
+
+  it('el brillo es la superficie clara con alfa, no otro color', () => {
+    const { r, g, b } = parseHex(paperLight.surface);
+    expect(hero.sheen.startsWith(`rgba(${r}, ${g}, ${b},`)).toBe(true);
+  });
+
+  it.each([
+    ['claro: foco con brillo', toHex(lit(hero.light.focus)), 5.2],
+    ['claro: esquina en sombra', hero.light.edge, 10.23],
+    ['oscuro: foco con brillo', toHex(lit(hero.dark.focus)), 9.12],
+    ['oscuro: esquina en sombra', hero.dark.edge, 16.81],
+  ] as const)('hueso sobre %s mide %f:1', (_label, surface, expected) => {
+    expect(round(contrastRatio(brand.onCarmine, surface))).toBe(expected);
+    expect(contrastRatio(brand.onCarmine, surface)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
   });
 });
