@@ -134,6 +134,48 @@ export const paperDark = {
 } as const;
 
 /**
+ * Tarjeta del hallazgo principal en el detalle del estudio. **Ciruela, nunca carmin.**
+ *
+ * EL RESULTADO NO VA EN ROJO. En una pantalla de salud el rojo se lee como alarma, y
+ * pintar de carmin la lectura del modelo la convertiria en un aviso de peligro que
+ * nadie ha dado. El carmin se queda para las acciones (exportar, reintentar); el
+ * resultado destaca por densidad, en la tinta oscura de la marca (D-30).
+ *
+ * En claro la superficie es la del tema oscuro, que ya estaba medida. En oscuro esa
+ * misma superficie es la de cualquier tarjeta, asi que sube un escalon hacia la
+ * ciruela para seguir destacando. El bisel repite el de `hero`: luz arriba a la
+ * izquierda, sombra abajo a la derecha. Texto en hueso; contraste fijado en
+ * `contrast.test.ts`, incluido el hueso sobre la etiqueta translucida.
+ */
+export const resultCard = {
+  light: {
+    surface: '#31233A',
+    rim: 'rgba(245, 235, 241, 0.22)',
+    shade: 'rgba(23, 16, 25, 0.5)',
+  },
+  dark: {
+    surface: '#3F2B4A',
+    rim: 'rgba(245, 235, 241, 0.22)',
+    shade: 'rgba(23, 16, 25, 0.5)',
+  },
+  ink: identity.bone,
+  inkLow: '#CDB9CC',
+  /** Pastilla de la categoria y pista de la barra: la tinta clara con alfa. */
+  tag: 'rgba(245, 235, 241, 0.14)',
+  track: 'rgba(245, 235, 241, 0.16)',
+} as const;
+
+/**
+ * Barra fina de confianza en la lista de hallazgos.
+ *
+ * GRIS CIRUELA Y NO TINTA. Diez barras en tinta pesan mas que las etiquetas que
+ * acompanan; la cifra de al lado es la que se lee, la barra solo compara de un
+ * vistazo. No lleva texto encima, asi que su suelo es el de un grafico (3:1):
+ * 3.97 en claro y 4.49 en oscuro sobre la superficie del tema.
+ */
+export const findingMeter = { light: '#8C7A86', dark: '#9C889F' } as const;
+
+/**
  * RESERVADO. Paleta de monitor de constantes vitales.
  *
  * Esta bien definida y sigue la convencion de los monitores multiparametro,
@@ -377,6 +419,21 @@ export const size = {
   trace: 1.6,
   shutterOuter: 76,
   shutterInner: 62,
+  /** Selector Trazado/Foto junto al titulo del bloque: dos opciones cortas. */
+  viewSwitch: 176,
+  /** Barra de confianza de la tarjeta del hallazgo principal. */
+  confidenceBar: 6,
+  /** Barra fina de cada fila de hallazgos, y su ancho fijo para que se comparen. */
+  findingMeter: 4,
+  findingMeterWidth: 56,
+  /** Barrita de la hoja inferior y la franja tocable que la contiene. */
+  sheetGrabWidth: 40,
+  sheetGrabHeight: 5,
+  sheetGrabArea: 20,
+  /** Fila de pestanas de la hoja inferior. Alto fijo: de el sale lo que asoma cerrada. */
+  sheetTabRow: 48,
+  /** Subrayado de la pestana activa, en tinta. */
+  sheetTabUnderline: 2,
 } as const;
 
 /**

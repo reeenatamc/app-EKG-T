@@ -10,6 +10,11 @@ import { type } from '@/design/type';
 
 interface StudyNotesProps {
   readonly studyId: string;
+  /**
+   * Falso dentro de la pestana Notas del detalle, que ya dice lo que es: un titulo
+   * «Anotaciones» debajo de la pestana «Notas» nombraria dos veces lo mismo.
+   */
+  readonly isTitled?: boolean;
 }
 
 /** Alto del campo. Da para varias lineas sin ocupar la pantalla entera. */
@@ -29,33 +34,42 @@ const NOTES_HEIGHT = 96;
  * @param studyId Identificador del estudio.
  * @returns El campo de anotaciones.
  */
-export function StudyNotes({ studyId }: StudyNotesProps) {
+export function StudyNotes({ studyId, isTitled = true }: StudyNotesProps) {
+  const field = <NotesField studyId={studyId} />;
+
+  return isTitled ? (
+    <SettingsSection title={STUDY_TEXT.notesSection}>{field}</SettingsSection>
+  ) : (
+    field
+  );
+}
+
+/** El campo y su ayuda, sin titulo. */
+function NotesField({ studyId }: { readonly studyId: string }) {
   const theme = useTheme();
   const saved = useStudyNote(studyId);
   const setNote = useStudyNotes((state) => state.setNote);
   const [draft, setDraft] = useState(saved);
 
   return (
-    <SettingsSection title={STUDY_TEXT.notesSection}>
-      <View style={styles.field}>
-        <TextInput
-          multiline
-          value={draft}
-          onChangeText={setDraft}
-          onBlur={() => setNote(studyId, draft)}
-          placeholder={STUDY_TEXT.notesPlaceholder}
-          placeholderTextColor={theme.textLow}
-          accessibilityLabel={STUDY_TEXT.notesSection}
-          style={[
-            styles.input,
-            // Con filo: sobre el lienzo plano la superficie es el mismo hueso, y sin
-            // borde el campo no se veia; solo flotaba el texto de ejemplo.
-            { backgroundColor: theme.surface, borderColor: theme.edge, color: theme.textHigh },
-          ]}
-        />
-        <Text style={[type.caption, { color: theme.textLow }]}>{STUDY_TEXT.notesHint}</Text>
-      </View>
-    </SettingsSection>
+    <View style={styles.field}>
+      <TextInput
+        multiline
+        value={draft}
+        onChangeText={setDraft}
+        onBlur={() => setNote(studyId, draft)}
+        placeholder={STUDY_TEXT.notesPlaceholder}
+        placeholderTextColor={theme.textLow}
+        accessibilityLabel={STUDY_TEXT.notesSection}
+        style={[
+          styles.input,
+          // Con filo: sobre el lienzo plano la superficie es el mismo hueso, y sin
+          // borde el campo no se veia; solo flotaba el texto de ejemplo.
+          { backgroundColor: theme.surface, borderColor: theme.edge, color: theme.textHigh },
+        ]}
+      />
+      <Text style={[type.caption, { color: theme.textLow }]}>{STUDY_TEXT.notesHint}</Text>
+    </View>
   );
 }
 

@@ -3,38 +3,27 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { LineIcon } from '@/components/icons/LineIcon';
 import { NAV_ICON_PATHS, NAV_ICON_VIEWBOX } from '@/components/icons/navIcons';
+import { observationLabel, type ObservationGroup } from '@/constants/labelsEs';
 import { STUDY_TEXT } from '@/constants/studyText';
 import type { EcgObservation } from '@/ecg/EcgAnalysisService';
+import { confidencePercent, listedGroups } from '@/ecg/findings';
 import { useTheme } from '@/design/theme';
-import { gap, radius, size } from '@/design/tokens';
+import { findingMeter, gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
-import {
-  groupByCategory,
-  isShownObservation,
-  observationLabel,
-  type ObservationGroup,
-} from '@/constants/labelsEs';
 
 interface ObservationListProps {
   readonly observations: readonly EcgObservation[];
 }
-
-/**
- * Fraccion a porcentaje, para mostrar la confianza.
- *
- * SE TRUNCA, NO SE REDONDEA. Redondear convierte 0,996 en «100%», y eso es una
- * certeza que el modelo no ha afirmado: sus salidas no son probabilidades
- * calibradas, y ni siquiera las que lo fueran llegan al uno. Una aplicacion que
- * pide confirmar la lectura no puede a la vez escribir un cien por cien.
- */
-const PERCENT = 100;
 
 /** Decimales de la puntuacion cruda del modelo, en el detalle. */
 const SCORE_DECIMALS = 2;
 
 /** Lado del cheuron que indica que la fila se abre. */
 const CHEVRON_SIDE = 16;
+
+/** Ancho de la cifra: alinea los porcentajes en columna, de «0 %» a «99 %». */
+const PERCENT_WIDTH = 44;
 
 /**
  * Lo que el modelo observo en el trazado.
@@ -45,26 +34,19 @@ const CHEVRON_SIDE = 16;
  * convertirian una sugerencia en un veredicto, ademas de invadir la paleta de
  * alarma de §12.
  *
- * UNA TABLA, NO UNA TARJETA POR OBSERVACION. Eran tarjetas de tres lineas y la
- * tercera repetia «Requiere confirmacion» en todas: una lectura corriente trae
- * diez observaciones y ocupaba cuatro pantallas de desplazamiento, con la misma
- * advertencia diez veces, que a la tercera ya no se lee. Ahora es una fila por
- * observacion —el hallazgo a la izquierda, la confianza a la derecha— y la
- * advertencia va una vez, encima. Cada fila la sigue diciendo a quien la recorre
- * con lector de pantalla, que no ve la cabecera.
+ * UNA TABLA, NO UNA TARJETA POR OBSERVACION. Una fila por observacion --el
+ * hallazgo, una barra fina para comparar de un vistazo y la confianza-- y la
+ * advertencia una vez, encima. Cada fila la sigue diciendo a quien la recorre con
+ * lector de pantalla, que no ve la cabecera.
+ *
+ * SIN CAJA. Vive dentro de la hoja del detalle, que ya es superficie opaca; una
+ * tabla con filo dentro de otra superficie era un marco dentro de un marco (D-30).
  *
  * LAS DERIVACIONES NO SE PINTAN POR FILA. El pipeline las calcula una vez para la
- * lectura entera y se las pone iguales a todas las observaciones, porque el
- * modelo no localiza hallazgos. Repetirlas insinuaria una diferencia que no
- * existe; se dicen una vez, arriba, junto al foco.
+ * lectura entera; se dicen una vez, junto al trazado.
  *
- * La confianza se muestra porque una observacion al 60% y otra al 95% no piden la
- * misma atencion, y ocultarlo seria decidir por el clinico.
- *
- * AGRUPADA POR CATEGORIA CLINICA, no en el orden en que llega. `groupByCategory`
- * decide el orden y los rotulos; aqui solo se dibuja lo que devuelve, una tabla
- * por grupo no vacio. `resumen` no forma grupo -- la agrupacion respeta la misma
- * regla que ya aplicaba HIDDEN_LABELS a esos enunciados de alcance global.
+ * AGRUPADA POR CATEGORIA CLINICA con `listedGroups`, la misma agrupacion de la que
+ * sale la tarjeta del hallazgo principal, para que las dos cuenten lo mismo.
  *
  * @param observations Observaciones del analisis.
  * @returns La lista de observaciones.
@@ -76,59 +58,45 @@ export function ObservationList({ observations }: ObservationListProps) {
     return <Text style={[type.body, { color: theme.textLow }]}>{STUDY_TEXT.noObservations}</Text>;
   }
 
-  const shown = observations.filter((observation) => isShownObservation(observation.label));
-  const groups = groupByCategory(shown);
-
   return (
     <View style={styles.block}>
       <Text style={[type.caption, { color: theme.textHigh }]}>
         {STUDY_TEXT.observationsReviewAll}
       </Text>
-      {groups.map((group) => (
+      {listedGroups(observations).map((group) => (
         <ObservationGroupTable key={group.category} group={group} />
       ))}
     </View>
   );
 }
 
-/** Rotulo de la categoria y su tabla de observaciones. */
+/** Rotulo de la categoria y sus filas. */
 function ObservationGroupTable({ group }: { readonly group: ObservationGroup }) {
   const theme = useTheme();
 
   return (
     <View style={styles.group}>
-      {/* Misma micro-etiqueta que SettingsSection, un escalon mas adentro: dice
-          "esto es un grupo", no "esto es la seccion". */}
       <Text style={[type.eyebrow, { color: theme.textLow }]}>{group.title}</Text>
-      <View style={[styles.table, { backgroundColor: theme.surface, borderColor: theme.edge }]}>
-        {group.observations.map((observation, index) => (
-          <ObservationRow key={observation.id} observation={observation} isFirst={index === 0} />
-        ))}
-      </View>
+      {group.observations.map((observation) => (
+        <ObservationRow key={observation.id} observation={observation} />
+      ))}
     </View>
   );
 }
 
 /**
- * Una fila: el hallazgo y su confianza, separada de la anterior por un filo.
+ * Una fila: el hallazgo y su confianza, con un filo debajo.
  *
  * SE ABRE. La cifra de la derecha se lee como una probabilidad y no lo es, y si
  * la observacion paso o no el umbral del modelo no cabia en la fila sin
- * convertirla en un parrafo. Va debajo, y solo para quien lo pida: el detalle es
- * para el clinico que se detiene en una observacion, no para quien recorre diez.
+ * convertirla en un parrafo. Va debajo, y solo para quien lo pida.
  */
-function ObservationRow({
-  observation,
-  isFirst,
-}: {
-  readonly observation: EcgObservation;
-  readonly isFirst: boolean;
-}) {
+function ObservationRow({ observation }: { readonly observation: EcgObservation }) {
   const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={isFirst ? null : { borderTopColor: theme.edge, borderTopWidth: size.hairline }}>
+    <View style={{ borderBottomColor: theme.edge, borderBottomWidth: size.hairline }}>
       <ObservationHeader
         observation={observation}
         isOpen={isOpen}
@@ -145,10 +113,11 @@ interface ObservationHeaderProps {
   readonly onToggle: () => void;
 }
 
-/** La parte siempre visible: el hallazgo, su confianza y el cheuron que la abre. */
+/** La parte siempre visible: el hallazgo, su barra, su confianza y el cheuron. */
 function ObservationHeader({ observation, isOpen, onToggle }: ObservationHeaderProps) {
   const theme = useTheme();
   const press = usePressMotion();
+  const percent = confidencePercent(observation.confidence);
 
   return (
     <AnimatedPressable
@@ -163,9 +132,27 @@ function ObservationHeader({ observation, isOpen, onToggle }: ObservationHeaderP
       <Text style={[type.body, styles.label, { color: theme.textHigh }]}>
         {observationLabel(observation.label)}
       </Text>
-      <Text style={[type.data, { color: theme.textLow }]}>{percentOf(observation)} %</Text>
+      <ConfidenceMeter percent={percent} />
+      <Text style={[type.data, styles.percent, { color: theme.textLow }]}>{percent} %</Text>
       <ObservationChevron isOpen={isOpen} />
     </AnimatedPressable>
+  );
+}
+
+/**
+ * Barra fina de confianza, en gris ciruela y no en tinta ni en color de estado.
+ *
+ * Todas las barras miden lo mismo de ancho, asi que se comparan de un vistazo. La
+ * cifra de al lado es la que se lee.
+ */
+function ConfidenceMeter({ percent }: { readonly percent: number }) {
+  const theme = useTheme();
+  const fill = findingMeter[theme.mode === 'dark' ? 'dark' : 'light'];
+
+  return (
+    <View style={[styles.meter, { backgroundColor: theme.canvas }]}>
+      <View style={[styles.meterFill, { width: `${percent}%`, backgroundColor: fill }]} />
+    </View>
   );
 }
 
@@ -185,11 +172,6 @@ function ObservationChevron({ isOpen }: { readonly isOpen: boolean }) {
   );
 }
 
-/** La confianza en porcentaje entero. Ver la nota de PERCENT: se trunca. */
-function percentOf(observation: EcgObservation): number {
-  return Math.floor(observation.confidence * PERCENT);
-}
-
 /**
  * Lo que oye un lector de pantalla en la fila.
  *
@@ -202,7 +184,7 @@ function percentOf(observation: EcgObservation): number {
  */
 function spokenRow(observation: EcgObservation, isOpen: boolean): string {
   const action = isOpen ? STUDY_TEXT.observationClose : STUDY_TEXT.observationOpen;
-  const confidence = `${percentOf(observation)}% ${STUDY_TEXT.confidenceLabel}`;
+  const confidence = `${confidencePercent(observation.confidence)}% ${STUDY_TEXT.confidenceLabel}`;
 
   return `${observationLabel(observation.label)}. ${confidence}. ${STUDY_TEXT.observationNeedsReview}. ${action}.`;
 }
@@ -212,17 +194,15 @@ function spokenRow(observation: EcgObservation, isOpen: boolean): string {
  *
  * SOLO DICE LO QUE EL ANALISIS SABE. La puntuacion exacta, si paso el umbral y
  * que hay que confirmarla. NO lleva las derivaciones: el pipeline las calcula
- * una vez para la lectura entera y se las pone iguales a todas, asi que
- * escribirlas aqui insinuaria que esta observacion se apoya en unas y otra en
- * otras. Tampoco lleva texto clinico por etiqueta: eso lo redacta un cardiologo,
- * y hasta entonces no se inventa.
+ * una vez para la lectura entera. Tampoco lleva texto clinico por etiqueta: eso
+ * lo redacta un cardiologo, y hasta entonces no se inventa.
  */
 function ObservationDetail({ observation }: { readonly observation: EcgObservation }) {
   const theme = useTheme();
   const score = observation.confidence.toFixed(SCORE_DECIMALS).replace('.', ',');
 
   return (
-    <View style={[styles.detail, { borderTopColor: theme.edge }]}>
+    <View style={styles.detail}>
       <Text style={[type.caption, { color: theme.textHigh }]}>
         {STUDY_TEXT.observationScore}: {score}
       </Text>
@@ -255,27 +235,23 @@ function thresholdNote(observation: EcgObservation): string {
 
 const styles = StyleSheet.create({
   block: { gap: gap.lg },
-  group: { gap: gap.sm },
-  table: {
-    borderRadius: radius.tile,
-    borderCurve: 'continuous',
-    borderWidth: size.hairline,
-    overflow: 'hidden',
-  },
+  group: { gap: gap.xs },
   row: {
     minHeight: size.touchTarget,
     flexDirection: 'row',
     alignItems: 'center',
     gap: gap.md,
-    paddingHorizontal: gap.lg,
     paddingVertical: gap.md,
   },
   label: { flex: 1 },
-  chevronOpen: { transform: [{ rotate: '180deg' }] },
-  detail: {
-    borderTopWidth: size.hairline,
-    paddingHorizontal: gap.lg,
-    paddingVertical: gap.md,
-    gap: gap.xs,
+  meter: {
+    width: size.findingMeterWidth,
+    height: size.findingMeter,
+    borderRadius: radius.pill,
+    overflow: 'hidden',
   },
+  meterFill: { height: '100%', borderRadius: radius.pill },
+  percent: { width: PERCENT_WIDTH, textAlign: 'right' },
+  chevronOpen: { transform: [{ rotate: '180deg' }] },
+  detail: { paddingBottom: gap.md, gap: gap.xs },
 });

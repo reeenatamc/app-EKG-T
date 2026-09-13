@@ -26,6 +26,9 @@ interface StudyReportActionsProps {
  * se volvia a habilitar sin mas, que desde fuera es indistinguible de una
  * exportacion que si funciono y no abrio nada.
  *
+ * EN CARMIN, a ancho completo (D-30). En el detalle el resultado ya no es rojo, asi
+ * que el carmin queda libre para lo que es: la accion principal de la pestana.
+ *
  * @param study Estudio del informe.
  * @param analysis Analisis ya listo.
  * @returns Las acciones del informe.
@@ -44,7 +47,7 @@ export function StudyReportActions({ study, analysis }: StudyReportActionsProps)
         <ActionButton
           label={STUDY_TEXT.exportAction}
           onPress={() => task.run(() => exportReport(study, analysis, note))}
-          variant="secondary"
+          variant="primary"
           disabled={task.isBusy}
         />
       </View>

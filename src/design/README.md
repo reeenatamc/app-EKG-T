@@ -1405,3 +1405,47 @@ queda en la etiqueta del botón. Tokens en `hero`.
 La tarjeta sale de la lista de relleno con `brand.carmine` de `palette.test.ts`, porque
 ya no lo usa. Contraste del hueso fijado en pruebas: 5.20 sobre el foco con brillo y
 10.23 en la esquina en claro; 9.12 y 16.81 en oscuro.
+
+### D-30 · Detalle del estudio: resultado en ciruela y hoja inferior
+
+**2026-09-12 · §2, §7, §11, §12.1 y §12.9 · decisión de la autora**
+
+La autora eligió la variante «Tarjeta ciruela» de la maqueta `equilibrada.html`: cabecera
+en fila, tarjeta del hallazgo principal, línea de aviso, bloque Trazado a sangre con
+selector Trazado/Foto y una hoja inferior con Hallazgos, Medidas y Notas.
+
+**El resultado no va en carmín.** En una pantalla de salud el rojo se lee como alarma, y
+una lectura automática pintada de rojo parece un aviso de peligro que nadie ha dado. La
+tarjeta destaca por densidad, en la ciruela de la marca (`resultCard`); el carmín queda
+para las acciones: exportar informe (pasa a `primary`) y reintentar. El subrayado de la
+pestaña activa y la barra de confianza van en tinta, y las barras finas de la lista en
+gris ciruela (`findingMeter`).
+
+**Tokens y contraste**, fijados en `contrast.test.ts`. En claro la superficie es
+`#31233A`; en oscuro sube a `#3F2B4A` para no ser una tarjeta más (1.47:1 contra el
+lienzo, 1.16:1 contra la superficie). Hueso sobre ciruela: 13.88 en claro y 12.00 en
+oscuro; texto bajo `#CDB9CC`: 7.97 y 6.89; hueso sobre la etiqueta translúcida: 9.25 y
+8.06. Barra fina: 3.97 y 4.49 contra la superficie, suelo de gráfico (3:1).
+
+**La hoja, hecha a mano** sobre gesture-handler y Reanimated, ya compilados: no hace
+falta librería ni recompilar. Dos posiciones, arrastre en el hilo de interfaz y decisión
+al soltar en `sheetSnap.ts`, pura y probada. Es superficie opaca porque lleva cifras
+(§12.1). Se abre sin arrastrar: la barrita es un botón con estado `expanded`, las
+pestañas tienen rol `tab` y `selected`, tocar una pestaña abre la hoja y el gesto
+escapar la cierra. Plegada, su contenido se oculta al lector de pantalla. Sin muelle:
+curva de `motion.card`, y con movimiento reducido salta a su sitio.
+
+**Estados.** La tarjeta y la hoja solo existen con el análisis listo. En cola, procesando
+y fallido siguen la cabecera y el aviso, el mismo bloque Trazado cuando ya hay señal, el
+indicador o la causa con reintentar, y las notas en la propia pantalla.
+
+**El resaltado de derivaciones va bajo el trazado y no en la hoja:** la hoja abierta tapa
+el visor, así que un botón dentro cambiaría algo que en ese momento no se ve.
+
+**De paso.** `confidencePercent` suma un margen antes de truncar: `0.57 * 100` es
+56.99999999999999 y la lista escribía «56 %». La tarjeta y la lista salen de la misma
+agrupación (`listedGroups`), así que no pueden contar cosas distintas.
+
+**Distinto de la maqueta.** El selector usa `SegmentedControl` (opción elegida en tinta,
+44 puntos de alto) y no la pastilla blanca pequeña; las filas conservan el cheurón del
+desplegable; la calibración va bajo el trazado; la hoja es opaca y no translúcida.

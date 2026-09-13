@@ -10,11 +10,13 @@ import {
   aurora,
   auroraOpacity,
   brand,
+  findingMeter,
   frost,
   glass,
   hero,
   paperDark,
   paperLight,
+  resultCard,
   semantic,
 } from '@/design/tokens';
 
@@ -184,6 +186,54 @@ describe('texto sobre escarcha, en el peor fondo de la atmosfera suave', () => {
   ] as const)('%s mide %f:1', (_label, ink, card, expected) => {
     expect(round(contrastRatio(ink, card))).toBe(expected);
     expect(contrastRatio(ink, card)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+  });
+});
+
+describe('texto de la tarjeta del hallazgo principal, en ciruela', () => {
+  // Superficie opaca, sin degradado: el peor caso de cada tema es la propia
+  // superficie y, para la etiqueta de categoria, la pastilla translucida encima.
+  // Ver D-30.
+  const onTag = (surface: string): Rgb =>
+    composite(paperDark.textHigh, tintAlpha(resultCard.tag), surface);
+
+  it('la pastilla y la pista son la tinta clara del tema oscuro con alfa', () => {
+    const { r, g, b } = parseHex(paperDark.textHigh);
+    expect(resultCard.tag.startsWith(`rgba(${r}, ${g}, ${b},`)).toBe(true);
+    expect(resultCard.track.startsWith(`rgba(${r}, ${g}, ${b},`)).toBe(true);
+  });
+
+  it('el resultado no se pinta con ningun rojo de la marca', () => {
+    const reds = [brand.carmine, brand.edge, hero.light.focus, hero.light.edge, hero.dark.focus];
+    expect(reds).not.toContain(resultCard.light.surface);
+    expect(reds).not.toContain(resultCard.dark.surface);
+  });
+
+  it.each([
+    ['claro: hueso sobre ciruela', resultCard.ink, resultCard.light.surface, 13.88],
+    ['claro: texto bajo sobre ciruela', resultCard.inkLow, resultCard.light.surface, 7.97],
+    ['claro: hueso sobre la etiqueta', resultCard.ink, onTag(resultCard.light.surface), 9.25],
+    ['oscuro: hueso sobre ciruela', resultCard.ink, resultCard.dark.surface, 12],
+    ['oscuro: texto bajo sobre ciruela', resultCard.inkLow, resultCard.dark.surface, 6.89],
+    ['oscuro: hueso sobre la etiqueta', resultCard.ink, onTag(resultCard.dark.surface), 8.06],
+  ] as const)('%s mide %f:1', (_label, ink, surface, expected) => {
+    expect(round(contrastRatio(ink, surface))).toBe(expected);
+    expect(contrastRatio(ink, surface)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+  });
+
+  it('en oscuro la tarjeta se separa del lienzo y de las demas tarjetas', () => {
+    // Si se quedara en `paperDark.surface` seria una tarjeta mas (1:1).
+    expect(round(contrastRatio(resultCard.dark.surface, paperDark.canvas))).toBe(1.47);
+    expect(round(contrastRatio(resultCard.dark.surface, paperDark.surface))).toBe(1.16);
+  });
+});
+
+describe('barra fina de confianza en la lista de hallazgos', () => {
+  it.each([
+    ['claro', findingMeter.light, paperLight.surface, 3.97],
+    ['oscuro', findingMeter.dark, paperDark.surface, 4.49],
+  ] as const)('%s: se distingue de la superficie, %f:1', (_label, meter, surface, expected) => {
+    expect(round(contrastRatio(meter, surface))).toBe(expected);
+    expect(contrastRatio(meter, surface)).toBeGreaterThanOrEqual(WCAG_BOUNDARY_FLOOR);
   });
 });
 

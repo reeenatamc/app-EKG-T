@@ -57,6 +57,23 @@ export const rowShadow: ViewStyle = Platform.select<ViewStyle>({
   default: {},
 });
 
+/**
+ * Hoja inferior: la sombra cae hacia arriba, sobre el contenido que tapa.
+ *
+ * Es lo unico que la separa del trazado cuando asoma plegada, porque los dos son
+ * superficie opaca del mismo color.
+ */
+export const sheetShadow: ViewStyle = Platform.select<ViewStyle>({
+  ios: {
+    shadowColor: glass.shadow,
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: -8 },
+  },
+  android: { elevation: CHROME_ELEVATION },
+  default: {},
+});
+
 /** Sombra exterior de la barra, separada del recorte del BlurView. */
 export const chromeShadow: ViewStyle = Platform.select<ViewStyle>({
   ios: {

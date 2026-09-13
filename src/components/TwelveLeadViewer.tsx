@@ -32,6 +32,11 @@ interface TwelveLeadViewerProps {
    * ninguna elegida. Las demas se atenuan.
    */
   readonly focusedLeads?: readonly LeadName[] | null;
+  /**
+   * De borde a borde de la pantalla, sin esquinas redondeadas. Asi lo monta el
+   * detalle: cada punto de ancho es escala del trazado.
+   */
+  readonly isFullBleed?: boolean;
 }
 
 /**
@@ -59,6 +64,7 @@ export function TwelveLeadViewer({
   mount,
   calibration,
   focusedLeads = null,
+  isFullBleed = false,
 }: TwelveLeadViewerProps) {
   const theme = useTheme();
   // El reparto entero del visor cuelga de este numero: de el salen los pixeles
@@ -72,7 +78,14 @@ export function TwelveLeadViewer({
   const handleLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
 
   return (
-    <View style={[styles.surface, { backgroundColor: theme.surface }]} onLayout={handleLayout}>
+    <View
+      style={[
+        styles.surface,
+        isFullBleed ? null : styles.rounded,
+        { backgroundColor: theme.surface },
+      ]}
+      onLayout={handleLayout}
+    >
       {layout === null || grid === null ? null : (
         // Desplazamiento horizontal cuando la hoja no cabe a escala legible; ver
         // MIN_PIXELS_PER_MM en viewerLayout. Los rotulos van dentro para acompanar al lienzo.
@@ -295,7 +308,8 @@ function LeadCell({ cell, signal, layout, theme, isFocused }: LeadCellProps) {
 }
 
 const styles = StyleSheet.create({
-  surface: { borderRadius: radius.tile, overflow: 'hidden' },
+  surface: { overflow: 'hidden' },
+  rounded: { borderRadius: radius.tile },
   label: { position: 'absolute' },
   hint: { padding: gap.sm },
 });

@@ -13,7 +13,26 @@ export const STUDY_TEXT = {
   signalSection: 'Trazado',
   viewTrace: 'Trazado',
   viewPhoto: 'Foto original',
+  /** La misma opcion en el selector junto al titulo, donde no cabe entera. */
+  viewPhotoShort: 'Foto',
   viewSwitchLabel: 'Ver el trazado digitalizado o la foto original',
+  principalFinding: 'Hallazgo principal',
+  categoryLabel: 'Categoría',
+  categoryCountsLabel: 'Hallazgos por categoría',
+  /** Pestanas de la hoja inferior del detalle. */
+  sheetTabsLabel: 'Secciones del estudio',
+  tabFindings: 'Hallazgos',
+  tabMeasurements: 'Medidas',
+  tabNotes: 'Notas',
+  /**
+   * Lo que anuncia la barrita de la hoja.
+   *
+   * Dice lo que hay dentro y lo que va a hacer: quien usa lector de pantalla no ve
+   * que la hoja asoma, y sin esto la unica forma de abrirla seria arrastrar.
+   */
+  sheetOpen: 'Mostrar hallazgos, medidas y notas',
+  sheetClose: 'Ocultar hallazgos, medidas y notas',
+  noMeasurements: 'Todavía no hay medidas para este estudio.',
   zoomHint: 'Toca una derivación para verla de cerca.',
   zoomTitle: 'Derivación',
   zoomSquare: 'Cuadro pequeño',
@@ -198,4 +217,10 @@ export const COMPARE_TEXT = {
 
 export const CLINICAL_NOTICE = {
   body: 'Lectura orientativa. Confirma los resultados con un profesional de salud.',
+  /**
+   * El mismo aviso en el detalle, en una linea bajo el resultado.
+   *
+   * Pegado a lo que matiza: ahi se lee junto al hallazgo, no como una tarjeta mas.
+   */
+  detail: 'Lectura orientativa. Confírmala con un profesional de salud.',
 } as const;
