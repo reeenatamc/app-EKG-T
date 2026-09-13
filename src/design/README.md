@@ -271,6 +271,49 @@ Toda desviación respecto de `SKILL.md` se registra aquí con fecha, motivo y
 alternativa descartada. Si algo de la especificación resulta imposible, se
 enmienda la especificación y se anota; nunca se ignora en silencio.
 
+### D-27 · El arranque y el icono pasan a un corazón con volumen
+
+**2026-09-12 · §8, §11 · petición de la autora**
+
+La autora pidió «algo 3D, una animación más chévere»: el latido plano se quedaba
+corto como primera impresión.
+
+**Opciones evaluadas.**
+
+- **3D real** (expo-gl con three o react-three-fiber, o un modelo glTF): un módulo
+  nativo nuevo y recompilar, unos 600 KB de three en el paquete y un contexto GL
+  que tarda en crearse en un Android de gama baja, justo en el arranque. Además
+  un modelo descargado tiende a lo anatómico o al clip-art.
+- **Lottie o Rive**: también módulo nativo y recompilación, y una animación
+  ajena que no conoce la paleta ni el latido de §8.
+- **Skia pseudo-3D** (elegida): ya instalado y compilado, se ve al instante y
+  reutiliza el latido real. No se descargó ningún recurso.
+
+**Qué hace.** `SplashHeart`, en un solo `<Canvas>`: el corazón da una vuelta en Y
+(escala horizontal, con la luz fija), el latido cruza la pantalla por detrás y se
+ve en hueso dentro de la silueta, y late dos veces: al pasar la pluma por el QRS y
+al terminar la onda T, que es el orden real del primer y segundo ruido. Con el
+primero sale una onda con la forma del corazón. El volumen es pintura: degradados
+radiales, dos brillos recortados y sombra de contacto (en oscuro, luz carmín en el
+suelo). Solo el trazo interior lleva desenfoque.
+
+**Reglas.** Un reloj lineal en el hilo de UI y funciones puras (`heartTimeline.ts`,
+probadas); ningún path se construye por fotograma. Con movimiento reducido se
+muestra `t = 1`, que es un reposo. Dura los mismos 1800 ms que el latido anterior,
+así que `useSplashExit` no cambia. Las luces y sombras son la familia
+`tokens.heart`; `heartArt.ts` entra en la lista blanca del carmín y es el único
+que consume `heart.*`, comprobado en `palette.test.ts`.
+
+**Icono.** El mismo dibujo sobre ciruela, con el trazo de borde a borde. Los PNG
+(icono de iOS en RGB sin alfa, capas del adaptativo de Android, monocromo, splash
+nativo y favicon) los genera `node scripts/render-brand-art.mjs` con CanvasKit, el
+Skia que ya trae react-native-skia, leyendo `heartArt.ts`. `--preview DIR`
+exporta además fotogramas del arranque.
+
+**Pendiente.** El icono y el splash nativo solo cambian tras la próxima compilación
+nativa. Sin medir en dispositivo: fluidez en el Android de gama baja y el empalme
+entre el splash nativo y el de React, que no coinciden al punto.
+
 ### D-26 · La captura se usa en horizontal, sin desbloquear la pantalla
 
 **2026-09-11 · §12 · hallazgo leyendo expo-camera, y decisión del autor**

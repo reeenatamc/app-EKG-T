@@ -163,6 +163,39 @@ export const trace = {
  */
 export const auroraOpacity = { light: 0.2, dark: 0.38 } as const;
 
+/**
+ * Volumen del corazon del arranque y del icono. **Solo identidad.** Ver D-27.
+ *
+ * No es otra familia de marca: son las luces y sombras del mismo carmin, para
+ * que un relleno plano se lea como un objeto con volumen. `lit` es el carmin
+ * llevado hacia el hueso, `shade` y `core` hacia la ciruela. Los brillos son
+ * hueso con alfa, nunca blanco puro. Cada color con alfa tiene su pareja
+ * transparente del mismo tono: un degradado hacia `transparent` pasa por gris y
+ * deja un filo sucio.
+ *
+ * Solo lo consume `heartArt.ts`, que es el dibujo compartido entre la pantalla
+ * y el script de iconos. Lo comprueba `palette.test.ts`.
+ */
+export const heart = {
+  lit: '#D9546C',
+  shade: '#5E0C20',
+  core: '#33081A',
+  bounce: 'rgba(236, 118, 142, 0.38)',
+  bounceClear: 'rgba(236, 118, 142, 0)',
+  sheen: 'rgba(252, 248, 244, 0.5)',
+  sheenClear: 'rgba(252, 248, 244, 0)',
+  spark: 'rgba(252, 248, 244, 0.95)',
+  sparkClear: 'rgba(252, 248, 244, 0)',
+  shadowLight: 'rgba(23, 16, 25, 0.34)',
+  shadowLightClear: 'rgba(23, 16, 25, 0)',
+  shadowDark: 'rgba(158, 27, 50, 0.5)',
+  shadowDarkClear: 'rgba(158, 27, 50, 0)',
+  glowLight: 'rgba(190, 74, 94, 0.3)',
+  glowLightClear: 'rgba(190, 74, 94, 0)',
+  glowDark: 'rgba(224, 114, 140, 0.3)',
+  glowDarkClear: 'rgba(224, 114, 140, 0)',
+} as const;
+
 export const aurora = {
   carmine: '#BE4A5E',
   plum: '#6E3A63',

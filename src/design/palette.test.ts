@@ -37,7 +37,14 @@ const BRAND_FILL_ALLOWED = [
   // convencion de iOS para el acento y lo que §12.9 deja fuera de la
   // prohibicion. El test de abajo comprueba que ahi no hay ningun relleno.
   'src/components/TabBarItem.tsx',
+  // El corazon del arranque y del icono (D-27). Es la identidad misma, a un
+  // cuarto largo de la pantalla, y no aparece nunca junto a un estado. El carmin
+  // es el tono medio de su volumen; las luces y sombras son la familia `heart`.
+  'src/design/heartArt.ts',
 ];
+
+/** Modulos que pueden tocar el volumen del corazon. */
+const HEART_ALLOWED = ['src/design/heartArt.ts'];
 
 /** Modulos que pueden tocar la jerarquia de alarma de la IEC 60601-1-8. */
 // `Notice` sustituye a `ErrorNotice` en esta lista: el color de alarma se movio
@@ -202,6 +209,14 @@ describe('regla de tamano de §12.9 — la alarma no es un fondo grande', () => 
 describe('la atmosfera no sale del lienzo', () => {
   it('`aurora.*` solo lo consumen los tokens y la propia capa 1', () => {
     expect(filesMatching(/\baurora\.\w+/).sort()).toEqual([...AURORA_ALLOWED].sort());
+  });
+});
+
+describe('el volumen del corazon no sale de la identidad', () => {
+  it('`heart.*` solo lo consume el dibujo compartido del corazon', () => {
+    // Son luces y sombras del carmin. Fuera del corazon serian un segundo
+    // carmin de marca que esquiva la lista blanca de §12.9.
+    expect(filesMatching(/\bheart\.\w+/).sort()).toEqual([...HEART_ALLOWED].sort());
   });
 });
 

@@ -62,9 +62,10 @@ const config: ExpoConfig = {
   android: {
     package: BUNDLE_IDENTIFIER,
     adaptiveIcon: {
-      // Era #E6F4FE, un azul claro de plantilla que no esta en tokens.ts y no
-      // aparece en ningun otro sitio de la aplicacion.
-      backgroundColor: BONE,
+      // Era #E6F4FE, un azul claro de plantilla. Desde D-27 el icono es el
+      // corazon sobre ciruela; el color de respaldo coincide con la imagen de
+      // fondo. Los PNG los genera `scripts/render-brand-art.mjs`.
+      backgroundColor: PLUM,
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -89,7 +90,9 @@ const config: ExpoConfig = {
       'expo-splash-screen',
       {
         image: './assets/splash-icon.png',
-        imageWidth: 180,
+        // El corazon ocupa el 72 % de la imagen: a 200 puntos queda cerca del
+        // tamano con que lo recoge la pantalla de arranque de React (D-27).
+        imageWidth: 200,
         resizeMode: 'contain',
         backgroundColor: BONE,
         dark: {
