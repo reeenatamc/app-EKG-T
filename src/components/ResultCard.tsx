@@ -119,6 +119,7 @@ function CategoryCounts({ counts }: { readonly counts: readonly CategoryCount[] 
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
+            minimumFontScale={0.75}
             style={[type.caption, { color: resultCard.inkLow }]}
           >
             {entry.shortTitle}
@@ -145,13 +146,13 @@ const styles = StyleSheet.create({
   tag: { borderRadius: radius.pill, paddingHorizontal: gap.md, paddingVertical: gap.xs },
   bar: { flex: 1, height: size.confidenceBar, borderRadius: radius.pill, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: radius.pill },
+  // Una sola fila: con cinco categorias el ajuste de linea dejaba una sola abajo.
   counts: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    rowGap: gap.sm,
+    gap: gap.xs,
     marginTop: gap.md,
     paddingTop: gap.md,
     borderTopWidth: size.hairline,
   },
-  count: { flexBasis: '25%', alignItems: 'center', paddingHorizontal: gap.xs },
+  count: { flex: 1, minWidth: 0, alignItems: 'center' },
 });
