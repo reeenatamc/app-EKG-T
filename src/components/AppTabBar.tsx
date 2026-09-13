@@ -1,4 +1,4 @@
-import { usePathname, useRouter } from 'expo-router';
+import { useIsFocused, usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -16,6 +16,9 @@ import { useTabIndicator } from '@/shell/useTabIndicator';
 /** Barra flotante; ruta activa, geometría y presentación tienen una sola fuente. */
 export function AppTabBar() {
   const insets = useSafeAreaInsets();
+  // Cada pestana monta su propia barra y las inactivas quedan en opacidad 0 por el
+  // fundido: el vidrio nativo solo se enciende en la pestana que se ve (D-26).
+  const isFocused = useIsFocused();
   const [width, setWidth] = useState(0);
   const { fontScale } = useWindowDimensions();
   const active = slotForPath(usePathname());
@@ -30,7 +33,7 @@ export function AppTabBar() {
       style={[styles.slot, chromeShadow, { bottom: insets.bottom + gap.sm }]}
       pointerEvents="box-none"
     >
-      <GlassChrome>
+      <GlassChrome visible={isFocused}>
         <View style={styles.row} onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}>
           <TabIndicator active={active} width={itemWidth} expanded={expanded} />
           <TabItems active={active} expanded={expanded} width={itemWidth} />
