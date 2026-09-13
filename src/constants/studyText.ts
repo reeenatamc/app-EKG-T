@@ -195,3 +195,8 @@ export const COMPARE_TEXT = {
    */
   sameScaleNote: 'Ambos se dibujan a la misma escala, para que las amplitudes sean comparables.',
 } as const;
+
+export const CLINICAL_NOTICE = {
+  title: 'Apoyo clínico',
+  body: 'Resultados orientativos. No reemplazan la valoración de un profesional de salud.',
+} as const;

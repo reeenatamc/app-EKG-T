@@ -15,11 +15,6 @@ interface MeasurementListProps {
  *
  * SUPERFICIE OPACA: son cifras clinicas y §12.1 no admite vidrio debajo.
  *
- * Van en la familia monoespaciada de §6, que no es una eleccion estetica: con
- * cifras de anchura fija, dos valores en columna se comparan de un vistazo
- * porque las unidades quedan alineadas. Con una proporcional, un 1 y un 8 ocupan
- * distinto y la columna baila.
- *
  * @param measurements Medidas del estudio.
  * @returns La lista de medidas.
  */

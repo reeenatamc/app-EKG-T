@@ -24,7 +24,7 @@ import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { rowShadow } from '@/design/elevation';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size, studyTone } from '@/design/tokens';
-import { type } from '@/design/type';
+import { font, type } from '@/design/type';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 
 interface StudyListRowProps {
@@ -207,9 +207,8 @@ function OpenableRow({
  *
  * EL MONTAJE ES EL TITULO Y EL IDENTIFICADOR VA DEBAJO. El identificador es una
  * cadena tecnica; lo que le dice al profesional que estudio es cada fila es el
- * tipo de registro y cuando se tomo. Identificador y fecha en monoespaciada, que
- * es lo que pide §6 para cifras e identificadores: una columna de ellos se lee
- * como columna.
+ * tipo de registro y cuando se tomo. Identificador y fecha van en Inter, como el
+ * resto del historial.
  */
 function RowContent({ study, analysis, state }: Omit<StudyOpenerProps, 'canOpen'>) {
   const theme = useTheme();
@@ -223,7 +222,7 @@ function RowContent({ study, analysis, state }: Omit<StudyOpenerProps, 'canOpen'
         </Text>
         <StateBadge state={state} />
       </View>
-      <Text style={[type.data, { color: theme.textLow }]} numberOfLines={1}>
+      <Text style={[type.caption, { color: theme.textLow }]} numberOfLines={1}>
         {study.metadata.anonymousId} · {formatStudyDate(study.metadata.capturedAt)}
       </Text>
       {cause === null ? null : (
@@ -279,16 +278,13 @@ function failureCause(
 }
 
 const styles = StyleSheet.create({
-  // CON FILO PROPIO. En las pantallas de producto el lienzo y la superficie son el
-  // mismo hueso, y la tarjeta solo se separaba por una sombra que en la practica no
-  // se veia: la lista parecia texto suelto sobre el fondo. Un filo de un punto la
-  // recorta sin anadir peso.
-  card: { borderRadius: radius.tile, borderCurve: 'continuous', borderWidth: size.hairline },
+  // Superficie blanca sobre lienzo gris ciruela, con sombra discreta.
+  card: { borderRadius: radius.tile, borderCurve: 'continuous' },
   // El relleno vive en el pulsable y no en la tarjeta: asi el area tactil llega
   // hasta el filo de la fila en lugar de dejar dieciseis puntos muertos.
-  opener: { minHeight: size.touchTarget, padding: gap.lg, gap: gap.xs },
+  opener: { minHeight: size.touchTarget, padding: gap.lg, gap: gap.sm },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: gap.md },
-  title: { flex: 1 },
+  title: { flex: 1, fontFamily: font.medium },
   badge: { flexDirection: 'row', alignItems: 'center', gap: gap.xs },
   dot: { width: gap.sm, height: gap.sm, borderRadius: radius.pill },
   retry: { flexDirection: 'row', paddingHorizontal: gap.lg, paddingBottom: gap.lg },

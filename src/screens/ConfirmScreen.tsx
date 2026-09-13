@@ -196,7 +196,7 @@ function StudyMetadataFields({ draft, onChange }: StudyMetadataFieldsProps) {
 
 const styles = StyleSheet.create({
   // Solo los lados: arriba y abajo los pone el area segura, que cambia por telefono.
-  content: { paddingHorizontal: gap.lg, gap: gap.xl },
+  content: { paddingHorizontal: gap.xl, gap: gap.xl },
   thumbnail: { height: THUMBNAIL_HEIGHT, borderRadius: radius.tile },
   actions: { gap: gap.md },
   // En fila aunque vaya solo: ActionButton crece con flex, y en columna creceria en alto.

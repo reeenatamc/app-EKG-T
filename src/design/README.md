@@ -1249,3 +1249,54 @@ CMake incrusta la ruta del proyecto dos veces.
 - **El vídeo del scroll bajo el vidrio, en ambos temas.** El desenfoque solo se
   puede juzgar en movimiento: en una captura estática un tinte y un desenfoque se
   parecen. Pendiente de grabar en el Redmi.
+
+## Ajuste visual — 2026-09-11
+
+A petición de la autora, el inicio adopta la composición de la referencia de
+app médica: cabecera independiente, tarjeta de captura carmín, tarjetas blancas
+sobre gris ciruela `#F3F1F5`, radios de 24–28 y sombras discretas. La barra
+conserva su selección suave, desenfoque y alternativa opaca.
+
+Inter es la familia de la interfaz cotidiana, incluidas etiquetas, fechas del
+historial y recuentos. Se retira la monoespaciada de estos elementos por petición
+explícita; permanece en mediciones clínicas. Los títulos de trabajo usan Inter
+600 y Bricolage queda en las pantallas de entrada. Esta decisión sustituye las
+reglas históricas que exigían monospace para todos los identificadores y un
+lienzo de producto idéntico a la superficie.
+
+La tarjeta principal vuelve a la lista de superficies grandes autorizadas para
+`brand.carmine`. La prueba de tinte exclusivo se aplica a TabBarItem;
+ActionButton ya admite relleno primario carmín y no pertenece a esa restricción.
+
+Comprobación visual del inicio en simulador iPhone 17. No se ha medido rendimiento
+de scroll en Android ni se ha validado el flujo clínico completo en dispositivo.
+
+El aviso de alcance ahora es un componente compartido (`ClinicalDisclaimer`)
+en inicio, historial y detalle, antes del análisis. Lleva icono de información,
+título y superficie opaca ciruela suave en ambos temas. No es descartable.
+Los nuevos pares de texto se verifican contra el suelo 4.5:1. El contraste
+del tinte histórico contra el nuevo lienzo es 10.04:1 (antes 11.16:1).
+
+### Dirección visual final y limpieza — 2026-09-11
+
+La autora pidió retirar toda monoespaciada y reducir la variedad visual. Toda la
+app usa ahora Inter (regular, medium y semibold), incluidas las mediciones. Se
+retiran las dependencias de Bricolage y JetBrains Mono. Esta preferencia sustituye
+la exigencia tipográfica histórica del skill; no se usa la anchura del texto
+para calibrar ningún trazado.
+
+El resumen pasa a tres tarjetas independientes con un único tinte carmín suave.
+`StudySummary` presenta recuentos y navegación; `SummaryBackdrop` dibuja los tres
+fondos radiales en un solo Canvas, con alternativa plana. Los extremos de los
+fondos están cubiertos por pruebas de contraste. No se desenfoca texto ni cifras.
+
+La navegación tiene una sola definición de destinos, etiquetas e iconos en
+`TAB_ITEMS`. El indicador animado vive en `useTabIndicator`; `AppTabBar` compone
+el chrome y `TabBarItem` representa cada control. La sección activa ocupa dos
+unidades con icono y texto; las demás una con icono. Con texto ampliado o poco
+ancho, todas recuperan su etiqueta y el reparto igual. Capturar sigue siendo
+una acción, nunca una pestaña seleccionada.
+
+Se eliminan los tokens de subtarjetas antiguas, bordes de selección sin uso y
+el aviso de inicio duplicado. El aviso clínico mantiene un tinte de la misma
+familia carmín.

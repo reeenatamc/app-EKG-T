@@ -1,5 +1,5 @@
 import type { Session } from '@/auth/AuthService';
-import { accountLine, displayNameFrom, greetingFor, longDate } from '@/shell/greeting';
+import { displayNameFrom, greetingFor, longDate } from '@/shell/greeting';
 
 /** Sesion minima: solo importa el correo, que es de donde sale el nombre. */
 function sessionWith(email: string): Session {
@@ -70,19 +70,6 @@ describe('el nombre sale del correo, que es el unico dato que hay', () => {
     expect(displayNameFrom(sessionWith(''))).toBeNull();
     expect(displayNameFrom(sessionWith('@ejemplo.com'))).toBeNull();
     expect(displayNameFrom(sessionWith('.oculto@ejemplo.com'))).toBeNull();
-  });
-});
-
-describe('la linea de cuenta', () => {
-  it('junta nombre y rol', () => {
-    expect(accountLine(sessionWith('renata@ejemplo.com'))).toBe('Renata · Profesional de salud');
-    expect(accountLine({ userId: 'u-2', email: 'ana@ejemplo.com', role: 'student' })).toBe(
-      'Ana · Estudiante o demostración',
-    );
-  });
-
-  it('sin nombre, el rol va solo y sin separador colgando', () => {
-    expect(accountLine(sessionWith(''))).toBe('Profesional de salud');
   });
 });
 

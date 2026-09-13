@@ -13,6 +13,8 @@ interface TabBarItemProps {
   readonly icon: TabIconName;
   readonly onPress: () => void;
   readonly isActive: boolean;
+  readonly expanded: boolean;
+  readonly width: number;
   /**
    * `tab` para una seccion, `button` para una accion. Capturar es lo segundo: no
    * cambia de seccion, abre la camara.
@@ -20,43 +22,9 @@ interface TabBarItemProps {
   readonly role: 'tab' | 'button';
 }
 
-/**
- * Elemento de la barra de pestanas.
- *
- * ICONO Y ETIQUETA, no icono solo. Los iconos son propios y salen del
- * vocabulario del instrumento —el latido, la hoja, la guia de encuadre—, pero
- * ninguno de ellos es tan universal como para prescindir del texto: §12.3 no
- * admite que la forma sea el unico portador de significado, y una silueta de
- * hoja con un trazado dentro se puede leer como "documento" o como "estudio"
- * segun quien mire.
- *
- * CAPTURAR YA NO SE RELLENA. Fue una pildora de tinta para destacar sobre las
- * pestanas; con la burbuja deslizante chocaba con ella —dos formas rellenas en
- * la misma barra, una de ellas quieta— y hacia dudar de cual marcaba la seccion
- * actual. Ahora es un hueco como los demas, y la burbuja nunca se posa en el.
- *
- * LA PESTANA ACTIVA VA EN CARMIN, ademas de la burbuja: §12.9 prohibe
- * el carmin como RELLENO de un elemento pequeno, no como tinte de un icono y su
- * etiqueta. Marcar la pestana activa con el color de acento es la convencion de
- * iOS, y hacia falta: con tinta oscura contra gris, a trece puntos y sobre
- * vidrio, la diferencia no se leia —la propia autora dijo que la barra «no se
- * hovereaba»—, aunque el estado de accesibilidad si fuera correcto. Comprobado
- * en el arbol: `selected=true` en la pestana buena. El problema era de contraste,
- * no de logica. Medido, el carmin sobre el vidrio claro da 7.4:1.
- *
- * NO TENIA NINGUNA RESPUESTA AL DEDO. Ni opacidad ni nada: se tocaba una
- * pestana y no ocurria absolutamente nada hasta que la ruta cambiaba, o sea que
- * en una navegacion lenta el toque parecia perdido. Ahora se hunde con el muelle
- * de §11, igual que el resto de controles.
- *
- * @param label Texto del elemento.
- * @param icon Icono del elemento.
- * @param onPress Accion al pulsarlo.
- * @param isActive Cierto si es la pestana actual.
- * @param role Seccion o accion.
- * @returns El elemento renderizado.
- */
-export function TabBarItem({ label, icon, onPress, isActive, role }: TabBarItemProps) {
+/** La sección activa muestra su nombre; con texto ampliado, todas lo muestran. */
+export function TabBarItem(props: TabBarItemProps) {
+  const { label, icon, onPress, isActive, role, expanded, width } = props;
   const theme = useTheme();
   const press = usePressMotion();
   // EN OSCURO, TINTA CLARA Y NO CARMIN. Sobre la burbuja del tema oscuro el carmin
@@ -69,7 +37,7 @@ export function TabBarItem({ label, icon, onPress, isActive, role }: TabBarItemP
   return (
     <AnimatedPressable
       accessibilityRole={role}
-      accessibilityState={{ selected: isActive }}
+      accessibilityState={role === 'tab' ? { selected: isActive } : undefined}
       accessibilityLabel={label}
       onPress={() => {
         playHaptic('selection');
@@ -77,23 +45,24 @@ export function TabBarItem({ label, icon, onPress, isActive, role }: TabBarItemP
       }}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
-      style={[styles.item, press.style]}
+      style={[styles.item, expanded && styles.horizontal, { width }, press.style]}
     >
       <TabIcon name={icon} color={color} />
-      <Text style={[type.caption, { color }]} numberOfLines={1}>
-        {label}
-      </Text>
+      {!expanded || isActive ? (
+        <Text style={[type.caption, styles.label, { color }]}>{label}</Text>
+      ) : null}
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
+  label: { lineHeight: size.tabLabelLineHeight, flexShrink: 1, textAlign: 'center' },
+  horizontal: { flexDirection: 'row', gap: gap.sm },
   item: {
-    flex: 1,
-    minHeight: size.touchTarget,
+    minHeight: size.tabHeight,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: gap.xs,
+    paddingVertical: gap.sm,
     paddingHorizontal: gap.xs,
     borderRadius: radius.pill,
     gap: gap.xs,

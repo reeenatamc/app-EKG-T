@@ -1,95 +1,46 @@
-import { BricolageGrotesque_800ExtraBold } from '@expo-google-fonts/bricolage-grotesque';
-import { Inter_400Regular, Inter_500Medium } from '@expo-google-fonts/inter';
-import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_500Medium,
-} from '@expo-google-fonts/jetbrains-mono';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
 import { useEffect } from 'react';
 
-/**
- * Escala tipografica de SKILL.md §6.
- *
- * lineHeight y letterSpacing van en pixeles absolutos: React Native no admite
- * multiplicadores ni unidades em, asi que los valores de la especificacion web
- * estan ya convertidos.
- *
- * QUE HACE CADA FAMILIA, y por que se queda en el paquete.
- *
- * Las tres familias pesan unos 980 KB juntas, asi que cada una tiene que
- * ganarse el sitio. Medido en D.1, ninguna lo hacia: la display aparecia en 1 de
- * 12 pantallas —el splash, que dura 800 ms—, la monoespaciada en 2 de 12 y solo
- * sobre **prosa** (el correo, el rol, el idioma), mientras que las cifras de
- * verdad —el codigo de verificacion, el identificador del estudio— iban en
- * Inter. Justo al reves de lo que dice §6.
- *
- * - **Bricolage 800** es `display`, y ahora abre TODAS las pantallas
- *   principales. Sin titular, una pantalla empieza directamente en cuerpo de
- *   texto y se lee como un formulario, no como un producto.
- * - **Inter** es prosa: titulos de seccion, cuerpo, etiquetas y valores de
- *   texto. Es la unica familia que lleva palabras corrientes.
- * - **JetBrains Mono** es CIFRAS E IDENTIFICADORES, nunca prosa: `vital` para el
- *   codigo de verificacion, `data` para identificadores y fechas, `eyebrow` para
- *   contadores de paso. La anchura constante del digito es estructural, asi que
- *   no se recurre a fontVariant: tabular-nums, que ademas no es fiable en
- *   Android (§0).
- */
+/** Una familia compartida; los roles conservan la jerarquía de la información. */
+export const font = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+} as const;
 export const type = {
   display: {
-    fontFamily: 'BricolageGrotesque_800ExtraBold',
+    fontFamily: font.semibold,
     fontSize: 44,
     lineHeight: 42,
     letterSpacing: -1.3,
   },
-  /**
-   * Titular de las pantallas de trabajo: inicio, historial, perfil, detalle.
-   *
-   * La misma familia que `display` y un escalon menos. A 44 puntos, los titulares
-   * de estas pantallas se partian en dos lineas —el saludo con el nombre, el
-   * montaje de un estudio— y el titular ocupaba el primer cuarto de la pantalla
-   * sin decir nada que no cupiese en una. `display` se queda para las pantallas
-   * de entrada, donde el titular es casi lo unico que hay.
-   */
   headline: {
-    fontFamily: 'BricolageGrotesque_800ExtraBold',
+    fontFamily: font.semibold,
     fontSize: 32,
     lineHeight: 36,
     letterSpacing: -0.8,
   },
-  h1: { fontFamily: 'Inter_500Medium', fontSize: 24, lineHeight: 30 },
-  body: { fontFamily: 'Inter_400Regular', fontSize: 16, lineHeight: 24 },
-  caption: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 18 },
-  /**
-   * Micro-etiqueta sobre el titular.
-   *
-   * Monoespaciada y en caja alta porque el vocabulario del instrumento etiqueta
-   * asi: las derivaciones de un electrocardiograma se rotulan `II`, `aVR`, `V1`.
-   * Solo se usa cuando lleva informacion real —el paso de un proceso, el destino
-   * de un codigo—, nunca para repetir el nombre de la pantalla.
-   */
+  section: { fontFamily: font.semibold, fontSize: 18, lineHeight: 24 },
+  h1: { fontFamily: font.medium, fontSize: 24, lineHeight: 30 },
+  body: { fontFamily: font.regular, fontSize: 16, lineHeight: 24 },
+  caption: { fontFamily: font.regular, fontSize: 13, lineHeight: 18 },
+  /** Etiquetas auxiliares, con la misma familia que el resto de la interfaz. */
   eyebrow: {
-    fontFamily: 'JetBrainsMono_500Medium',
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
+    fontFamily: font.medium,
+    fontSize: 13,
+    lineHeight: 18,
   },
   vital: {
-    fontFamily: 'JetBrainsMono_500Medium',
+    fontFamily: font.semibold,
     fontSize: 64,
     lineHeight: 64,
     letterSpacing: -1,
   },
-  data: { fontFamily: 'JetBrainsMono_400Regular', fontSize: 15, lineHeight: 20 },
-  /**
-   * Una cifra que se lee sola, como los recuentos del resumen del inicio.
-   *
-   * Entre `data`, que acompana a un texto, y `vital`, que es la lectura de un
-   * monitor y no se usa fuera de el. Monoespaciada por lo mismo que las otras dos:
-   * tres recuentos en fila se comparan mejor si sus digitos miden lo mismo.
-   */
+  data: { fontFamily: font.regular, fontSize: 15, lineHeight: 20 },
+  /** Recuentos administrativos del inicio, no mediciones clínicas. */
   figure: {
-    fontFamily: 'JetBrainsMono_500Medium',
+    fontFamily: font.semibold,
     fontSize: 28,
     lineHeight: 32,
     letterSpacing: -0.5,
@@ -111,11 +62,9 @@ export const type = {
  */
 export function useAppFonts(): boolean {
   const [loaded, error] = useFonts({
-    BricolageGrotesque_800ExtraBold,
     Inter_400Regular,
     Inter_500Medium,
-    JetBrainsMono_400Regular,
-    JetBrainsMono_500Medium,
+    Inter_600SemiBold,
   });
 
   useEffect(() => {

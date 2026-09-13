@@ -4,12 +4,12 @@ import type { QueuedStudy } from '@/capture/study';
 import { formatStudyDate } from '@/capture/studyDate';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { AnalysisSection } from '@/components/AnalysisSection';
+import { ClinicalDisclaimer } from '@/components/ClinicalDisclaimer';
 import { KeyboardLift } from '@/components/KeyboardLift';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { StudyNotes } from '@/components/StudyNotes';
 import { StudyReportActions } from '@/components/StudyReportActions';
 import { MOUNT_COPY } from '@/constants/captureText';
-import { STUDY_TEXT } from '@/constants/studyText';
 import { useAnalysis } from '@/ecg/analyses';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { Background } from '@/design/Background';
@@ -77,13 +77,9 @@ interface StudyBodyProps {
  * un aviso al final se lee despues de haber decidido.
  */
 function StudyBody({ study, analysis }: StudyBodyProps) {
-  const theme = useTheme();
-
   return (
     <>
-      <Text style={[type.caption, styles.notice, { color: theme.textHigh }]}>
-        {STUDY_TEXT.supportOnly}
-      </Text>
+      <ClinicalDisclaimer />
       <AnalysisSection study={study} analysis={analysis} />
       {analysis?.status === 'ready' ? (
         <StudyReportActions study={study} analysis={analysis} />
@@ -99,8 +95,7 @@ function StudyBody({ study, analysis }: StudyBodyProps) {
  * EL TITULAR ES EL MONTAJE Y EL IDENTIFICADOR VA DE ETIQUETA. Al reves de como
  * estaba: un identificador anonimo en display seria una cadena tecnica gritada, y
  * lo que le dice al clinico donde esta es el tipo de registro que tiene delante.
- * El identificador y la calibracion van en monoespaciada, que es lo que §6 pide
- * para cifras e identificadores.
+ * La calibración permanece junto al registro y usa la tipografía compartida.
  */
 function StudyHeader({
   study,
@@ -129,7 +124,6 @@ function StudyHeader({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: gap.lg, gap: gap.xl },
+  content: { paddingHorizontal: gap.xl, gap: gap.xl },
   header: { gap: gap.xs },
-  notice: { fontStyle: 'italic' },
 });

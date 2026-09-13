@@ -50,29 +50,9 @@ export const identity = {
 export const brand = {
   carmine: identity.carmine,
   edge: '#C8455E',
-  /**
-   * Los dos extremos del degradado radial del modulo hero.
-   *
-   * EL DEGRADADO OSCURECE HACIA FUERA, no aclara. La referencia que fijo esta
-   * decision iba de un rosa saturado a un rosa casi blanco, y ahi la tinta clara
-   * de encima se quedaba sin contraste. Invirtiendo la direccion se consigue la
-   * misma profundidad luminosa y el suelo de §7 solo puede mejorar hacia el
-   * borde: la tinta hueso mide 6.05:1 sobre el foco y 10.07:1 sobre el extremo.
-   *
-   * El foco no esta centrado, por lo mismo que los blobs del aurora: una luz
-   * centrada se lee como un degradado, y descentrada se lee como luz.
-   */
-  carmineLit: '#B32340',
-  carmineDeep: '#7A1226',
   /** Tinta sobre carmin. Medida: 7.47:1 contra el relleno, en los dos temas. */
   onCarmine: identity.bone,
-  /**
-   * Tinta secundaria sobre carmin.
-   *
-   * Se aclaro de #EBBFC6 al llegar el degradado: sobre el foco `carmineLit` el
-   * valor anterior caia a 3.96:1. Ahora mide 4.67:1 sobre el foco, 5.68:1 sobre
-   * el carmin plano y 7.77:1 sobre el extremo oscuro.
-   */
+  /** Texto de apoyo sobre la tarjeta carmín. */
   onCarmineLow: '#F2D3D8',
 } as const;
 
@@ -86,19 +66,8 @@ export const brand = {
  */
 export const paperLight = {
   canvas: '#EADFD9',
-  /**
-   * Lienzo de las pantallas de producto, que van sin atmosfera (D-20).
-   *
-   * Blanco neutro, por decision de la autora (antes hueso #FCF8F4: se leia amarillento). No es #FFFFFF: ver la regla de palette.test.ts. Sobre un lienzo plano no hay malla
-   * que apoyar, asi que la hoja no esta sobre un escritorio en sombra: es la
-   * hoja. En oscuro coincide con `canvas`, porque ahi el extremo ya era el fondo.
-   *
-   * CONSECUENCIA, y define como se dibuja una tarjeta: lienzo y superficie
-   * quedan del mismo valor, o sea que una tarjeta blanca no puede separarse por
-   * color. Se separa por **sombra**, igual que un objeto apoyado sobre una mesa
-   * del mismo color que el.
-   */
-  canvasFlat: '#FEFEFD',
+  /** Fondo gris ciruela suave que separa las tarjetas blancas del lienzo. */
+  canvasFlat: '#F3F1F5',
   surface: '#FEFEFD',
   /** Color del trazado digitalizado: la tinta con que se imprimio en papel. */
   ink: '#150F1A',
@@ -135,39 +104,6 @@ export const paperDark = {
   textLow: '#B9A4BC',
   /** Aqui el latido es mas claro que su fondo: es un resplandor. */
   bloom: '#E0728C',
-} as const;
-
-/**
- * Superficie de las subtarjetas del bento.
- *
- * NO DEPENDE DEL TEMA, y esa es la decision. Antes habia dos tintes: en oscuro
- * un vino apagado con el borde subiendo a carmin, y en claro su reflejo —nucleo
- * hueso, borde rosa— para que la tarjeta siguiera siendo clara sobre lienzo
- * claro. El rosa no se sostenia: sobre hueso queda a 1.91:1 del lienzo, o sea
- * que la tarjeta apenas existia y toda la separacion la hacia la sombra.
- *
- * El vino si existe en los dos lienzos: 10.66:1 contra el hueso y 1.66:1 contra
- * la ciruela. Asi que la subtarjeta pasa a ser un objeto de color propio,
- * exactamente igual que el hero de carmin, y lo unico que cambia con el tema es
- * el lienzo sobre el que se apoya.
- *
- * EL COSTE, DICHO CLARO: el borde del vino y el borde del hero quedan a 1.04:1,
- * o sea que en luminancia son el mismo bloque oscuro. Lo que los separa es la
- * saturacion —el hero es rojo cargado, esto es vino apagado— y el tamano. En
- * claro la pantalla pasa a leerse como bloques oscuros sobre hueso, que es un
- * contraste mucho mas duro que el de antes; era eso o seguir con unas tarjetas
- * que no se veian.
- *
- * `edge` es el borde y por tanto el punto mas cargado, o sea el peor caso para
- * la tinta de encima.
- */
-export const tinted = {
-  focus: '#31233A',
-  edge: '#5E2A38',
-  /** Titular. Medido: 12.59 sobre el nucleo, 9.67 sobre el borde. */
-  title: '#F5EBF1',
-  /** Apoyo, un escalon por debajo del titular. Medido: 9.93 y 7.62. */
-  body: '#E2CFDE',
 } as const;
 
 /**
@@ -268,15 +204,8 @@ export const semantic = {
   ok: '#3DF57E',
 } as const;
 
-/**
- * Radios de esquina.
- *
- * `card` subio de 28 a 40. A 28 los modulos del inicio leian como rectangulos
- * con la esquina limada; a 40 la curva es parte de la forma, que es lo que hace
- * que un modulo se lea como una pieza y no como un recuadro. Con `borderCurve:
- * 'continuous'` en iOS ademas es una squircle, no un arco de circulo.
- */
-export const radius = { pill: 999, card: 40, tile: 24, chip: 12 } as const;
+/** Radios compartidos: tarjetas suaves y controles en cápsula. */
+export const radius = { pill: 999, card: 28, tile: 24, control: 16, chip: 12 } as const;
 
 export const gap = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 
@@ -339,6 +268,13 @@ export const opacity = {
  * usa con guantes y con prisa.
  */
 export const size = {
+  noticeIcon: 20,
+  summaryTile: 96,
+  tabHeight: 52,
+  tabLabelLineHeight: 18,
+  tabIcon: 24,
+  tabExpandedMinWidth: 300,
+  tabExpandedMaxFontScale: 1.2,
   touchTarget: 44,
   hairline: 1,
   frameBorder: 3,
@@ -408,7 +344,7 @@ export const size = {
  * y 0.68 en oscuro ningun compuesto baja de 4.5:1. Ver §2 del README y D-18.
  */
 export const glass = {
-  tintLight: 'rgba(252, 248, 244, 0.55)',
+  tintLight: 'rgba(254, 254, 253, 0.55)',
   tintDark: 'rgba(49, 35, 58, 0.68)',
   borderLight: 'rgba(252, 248, 244, 0.55)',
   borderDark: 'rgba(245, 235, 241, 0.20)',
@@ -427,8 +363,6 @@ export const glass = {
    */
   selectionLight: 'rgba(190, 74, 94, 0.13)',
   selectionDark: 'rgba(245, 235, 241, 0.14)',
-  selectionEdgeLight: 'rgba(252, 248, 244, 0.75)',
-  selectionEdgeDark: 'rgba(245, 235, 241, 0.22)',
   shadow: '#5A1C2E',
 } as const;
 
@@ -450,8 +384,20 @@ export const ambientGrid = { step: 11, offset: 3 } as const;
 
 /** Desenfoques de §3 y §8. Por encima de 80 el vidrio parece plastico. */
 export const blur = {
-  card: 40,
+  card: 28,
   chrome: 60,
   aurora: 14,
   bloom: 48,
+} as const;
+
+/** Aviso de alcance clínico: ciruela suave, separado de los colores de alarma. */
+export const clinicalNotice = {
+  light: { surface: '#F4E8EB', edge: '#DDC4CA' },
+  dark: { surface: '#36272D', edge: '#745460' },
+} as const;
+
+/** Un único tinte carmín tenue para las tres tarjetas del resumen. */
+export const summaryTiles = {
+  light: ['#EAD6DC', '#FAF7F8'],
+  dark: ['#513640', '#2D2429'],
 } as const;

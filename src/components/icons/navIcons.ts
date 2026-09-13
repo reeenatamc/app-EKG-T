@@ -42,7 +42,11 @@ const ROTATE_ARROW = 'M22 4 V10 H16 M19.5 15 A9 9 0 1 1 17.4 5.64 L22 10';
 /** Cheuron hacia abajo: lo que se despliega. Es el de volver, girado un cuarto. */
 const CHEVRON_DOWN = 'M4 9 L12 17 L20 9';
 
+/** Circulo con una i: aviso informativo, que no se confunde con una alerta. */
+const INFO_CIRCLE = 'M12 3 A9 9 0 1 0 12 21 A9 9 0 1 0 12 3 M12 11 V17 M12 7 V7.2';
+
 export const NAV_ICON_PATHS = {
+  info: Skia.Path.MakeFromSVGString(INFO_CIRCLE),
   close: Skia.Path.MakeFromSVGString(CLOSE_CROSS),
   back: Skia.Path.MakeFromSVGString(BACK_CHEVRON),
   gallery: Skia.Path.MakeFromSVGString(GALLERY_PICTURE),

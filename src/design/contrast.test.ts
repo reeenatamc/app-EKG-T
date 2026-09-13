@@ -1,5 +1,13 @@
 import { composite, contrastRatio, parseHex, relativeLuminance, round } from '@/design/contrast';
-import { brand, glass, paperDark, paperLight, semantic, tinted } from '@/design/tokens';
+import {
+  brand,
+  clinicalNotice,
+  glass,
+  paperDark,
+  paperLight,
+  semantic,
+  summaryTiles,
+} from '@/design/tokens';
 
 /**
  * Los pares de contraste de la paleta, medidos y fijados.
@@ -53,19 +61,6 @@ describe('texto y trazado, suelo de 4.5:1 de §7', () => {
     ['etiqueta sobre carmin (boton primario)', brand.onCarmine, brand.carmine, 7.48],
     ['apoyo sobre carmin (modulo hero)', brand.onCarmineLow, brand.carmine, 5.68],
     ['carmin sobre hueso (boton invertido)', brand.carmine, paperLight.surface, 7.83],
-    // Los dos extremos del degradado del hero. El peor caso es el FOCO, no el
-    // borde: el degradado oscurece hacia fuera a proposito, asi que hacia el
-    // borde el contraste solo puede mejorar.
-    ['etiqueta sobre el foco del degradado', brand.onCarmine, brand.carmineLit, 6.15],
-    ['etiqueta sobre el extremo del degradado', brand.onCarmine, brand.carmineDeep, 10.23],
-    ['apoyo sobre el foco del degradado', brand.onCarmineLow, brand.carmineLit, 4.67],
-    ['apoyo sobre el extremo del degradado', brand.onCarmineLow, brand.carmineDeep, 7.77],
-    // La subtarjeta del bento. Aqui el peor caso es el BORDE, al reves que en el
-    // hero: el vino se carga hacia fuera. Ver D-23.
-    ['titulo sobre el nucleo de la subtarjeta', tinted.title, tinted.focus, 12.59],
-    ['titulo sobre el borde de la subtarjeta', tinted.title, tinted.edge, 9.67],
-    ['apoyo sobre el nucleo de la subtarjeta', tinted.body, tinted.focus, 9.93],
-    ['apoyo sobre el borde de la subtarjeta', tinted.body, tinted.edge, 7.62],
   ];
 
   it.each(pairs)('%s mide %f:1', (_label, foreground, background, expected) => {
@@ -116,20 +111,6 @@ describe('una tarjeta tiene filo propio', () => {
     expect(round(contrastRatio(paperLight.canvas, paperLight.surface))).toBe(1.3);
     expect(round(contrastRatio(paperDark.canvas, paperDark.surface))).toBe(1.27);
   });
-
-  it('la subtarjeta se ve como objeto en los dos lienzos', () => {
-    // El motivo de D-23. El tinte rosa anterior media 1.91:1 contra el hueso, o
-    // sea que la tarjeta apenas existia y toda la separacion la hacia la sombra.
-    expect(round(contrastRatio(tinted.edge, paperLight.canvasFlat))).toBe(11.16);
-    expect(round(contrastRatio(tinted.edge, paperDark.canvasFlat))).toBe(1.66);
-  });
-
-  it('el hero y la subtarjeta NO se separan por luminancia', () => {
-    // El coste de D-23, fijado para que no se olvide: en luminancia los dos
-    // bordes son el mismo bloque oscuro. Lo que los separa es la saturacion y el
-    // tamano, no la claridad.
-    expect(round(contrastRatio(brand.carmineDeep, tinted.edge))).toBe(1.04);
-  });
 });
 
 describe('la marca no se confunde con una alarma', () => {
@@ -156,5 +137,25 @@ describe('la aritmetica de la medicion', () => {
 
   it('componer con alfa 1 devuelve el color de encima', () => {
     expect(composite('#9E1B32', 1, '#FCF8F4')).toEqual({ r: 158, g: 27, b: 50 });
+  });
+});
+
+describe('aviso de alcance clínico', () => {
+  it.each([
+    ['claro', paperLight.textHigh, clinicalNotice.light.surface],
+    ['oscuro', paperDark.textHigh, clinicalNotice.dark.surface],
+  ])('mantiene texto legible en %s', (_name, ink, surface) => {
+    expect(contrastRatio(ink, surface)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+  });
+});
+
+describe('recuentos sobre fondos difuminados', () => {
+  it.each([
+    ['claro', paperLight.textHigh, summaryTiles.light],
+    ['oscuro', paperDark.textHigh, summaryTiles.dark],
+  ] as const)('los dos extremos del fondo son legibles en %s', (_name, ink, colors) => {
+    for (const color of colors) {
+      expect(contrastRatio(ink, color)).toBeGreaterThanOrEqual(WCAG_TEXT_FLOOR);
+    }
   });
 });

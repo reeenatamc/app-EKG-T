@@ -22,14 +22,12 @@ export function SettingsSection({ title, children }: SettingsSectionProps) {
 
   return (
     <View style={styles.section}>
-      {/* Rotulo en micro-etiqueta: en caja alta y monoespaciada se distingue del
-          contenido de un vistazo, que en cuerpo de texto gris no pasaba. */}
-      <Text style={[type.eyebrow, { color: theme.textLow }]}>{title}</Text>
+      <Text style={[type.section, { color: theme.textHigh }]}>{title}</Text>
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: gap.sm },
+  section: { gap: gap.md },
 });
