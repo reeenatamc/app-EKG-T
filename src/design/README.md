@@ -1385,3 +1385,23 @@ salida que documenta expo-glass-effect: `AppTabBar` pasa `visible` según
 `useIsFocused`, y el vidrio usa `glassEffectStyle` con `'none'` mientras está oculto y
 `'regular'` al volver, con su animación nativa de 0.15 s. No se toca la opacidad.
 Pendiente de comprobar a mano cambiando de pestaña en el simulador.
+
+### D-28 · La tarjeta principal gana volumen y deja el carmín saturado en oscuro
+
+**2026-09-12 · §2 y §12.9 · decisión de la autora**
+
+La autora vio plana la tarjeta de «Nuevo electrocardiograma» al lado de la escarcha con
+bisel y la barra de vidrio, y en oscuro el carmín saturado chocaba con la ciruela.
+
+**Elegido.** Degradado radial con la luz arriba a la izquierda (la misma dirección que el
+bisel), un brillo superior al 10 % y bisel en el filo, todo como estilo nativo con
+`experimental_backgroundImage` de React Native 0.86, sin un segundo lienzo de Skia. En
+claro vuelve el par de extremos que el sistema ya había medido (`#B32340` a `#7A1226`);
+en oscuro el volumen va en vino hacia la ciruela (`#5E1A2C` a `#241220`) y el carmín
+queda en la etiqueta del botón. Tokens en `hero`.
+
+**Consecuencias.** Todo el texto de la tarjeta pasa a hueso: `onCarmineLow` no llegaba a
+4.5:1 bajo el brillo en claro (3.95 al 10 %, y ni al 6 %), así que se retira el token.
+La tarjeta sale de la lista de relleno con `brand.carmine` de `palette.test.ts`, porque
+ya no lo usa. Contraste del hueso fijado en pruebas: 5.20 sobre el foco con brillo y
+10.23 en la esquina en claro; 9.12 y 16.81 en oscuro.

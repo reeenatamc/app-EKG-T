@@ -52,8 +52,35 @@ export const brand = {
   edge: '#C8455E',
   /** Tinta sobre carmin. Medida: 7.47:1 contra el relleno, en los dos temas. */
   onCarmine: identity.bone,
-  /** Texto de apoyo sobre la tarjeta carmín. */
-  onCarmineLow: '#F2D3D8',
+} as const;
+
+/**
+ * Tarjeta principal del inicio: volumen de carmin con la luz arriba a la izquierda.
+ *
+ * `focus` es donde da la luz y `edge` la esquina contraria, en un degradado radial;
+ * `sheen` es el brillo superior, la superficie del tema con alfa. `rim` y `shade`
+ * son el bisel, iluminado arriba y a la izquierda y en sombra abajo y a la derecha,
+ * como las tarjetas escarchadas.
+ *
+ * EN OSCURO NO ES CARMIN SATURADO. Sobre ciruela profunda un bloque de #9E1B32 chocaba
+ * con el tema; ahi el volumen va en vino hacia la ciruela y el carmin queda en el
+ * boton. Contraste del texto medido en `contrast.test.ts` sobre los extremos, con el
+ * brillo encima (D-28).
+ */
+export const hero = {
+  light: {
+    focus: '#B32340',
+    edge: '#7A1226',
+    rim: 'rgba(254, 254, 253, 0.34)',
+    shade: 'rgba(23, 16, 25, 0.28)',
+  },
+  dark: {
+    focus: '#5E1A2C',
+    edge: '#241220',
+    rim: 'rgba(245, 235, 241, 0.22)',
+    shade: 'rgba(23, 16, 25, 0.5)',
+  },
+  sheen: 'rgba(254, 254, 253, 0.1)',
 } as const;
 
 /**
