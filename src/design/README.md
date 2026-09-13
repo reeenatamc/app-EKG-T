@@ -36,7 +36,7 @@ La tesis central de la especificación gobierna todo lo demás:
 | Vidrio con caída a opaco                                                | §3            | `Glass.tsx` → `GlassSurface`, rama `isFlat`                                                                  |
 | `overflow: 'hidden'` en todo BlurView                                   | §3            | `Glass.tsx`, estilo `base`                                                                                   |
 | Capa de tinte propia, nunca por debajo de 0.30                          | §3            | `Glass.tsx`; valores en `tokens.glass`                                                                       |
-| Línea especular, una sola dirección de luz                              | §3            | `Glass.tsx`, estilo `specular`                                                                               |
+| Sin línea especular: el filo dibuja la forma                            | §3, D-25      | `Glass.tsx` y `FrostCard`, solo borde                                                                        |
 | Sombras declaradas para iOS y para Android                              | §3            | `Glass.tsx`, `Platform.select` en `base`                                                                     |
 | Presupuesto de dos superficies de vidrio                                | §3            | Sin cambios: una sola en el producto, la barra. Medido en §3 de este documento                               |
 | Malla radial, nunca degradado lineal                                    | §4            | `Aurora.tsx` — tres blobs, ninguno centrado, uno anclado bajo el vidrio                                      |
@@ -849,7 +849,7 @@ guardarraíl clínico y pesa más que un valor por defecto de estilo.
 | `opacity`     | Evita decimales sueltos por los estilos                                                                                                  |
 | `size`        | Incluye `touchTarget: 44`, mínimo de §7                                                                                                  |
 | `blur`        | Intensidades de §3 y §8 en un solo sitio                                                                                                 |
-| `glass`       | Composición del vidrio: tintes, bordes y especular                                                                                       |
+| `glass`       | Composición del vidrio: tintes y bordes                                                                                                  |
 | `ambientGrid` | Pasos de la retícula de textura, deliberadamente no milimétricos                                                                         |
 
 ### D-17 · La foto pendiente vive en documentos, no en caché
@@ -1300,3 +1300,58 @@ una acción, nunca una pestaña seleccionada.
 Se eliminan los tokens de subtarjetas antiguas, bordes de selección sin uso y
 el aviso de inicio duplicado. El aviso clínico mantiene un tinte de la misma
 familia carmín.
+
+### D-25 · Escarcha en las pestañas: D-20 se revierte en parte
+
+**2026-09-12 · §1, §3 y §12.6 · decisión de la autora**
+
+La autora pidió terminar el estilo glassmorphism en las pantallas principales.
+Sobre el lienzo plano de D-20 el vidrio no tiene nada que enseñar (la barra medía
+1.01:1 contra el lienzo), así que la petición obliga a devolver color detrás.
+
+**Elegido.** `Background` acepta `atmosphere="soft"`: malla y retícula sobre el
+lienzo plano del producto, sin latido difuso (un trazado decorativo junto a
+trazados reales confunde) y con la franja bajo la hora. Solo Inicio, Historial y
+Perfil. El detalle del estudio y la captura siguen planos: ahí se lee un ECG.
+
+Las tarjetas informativas (filas de estudios, resumen y aviso clínico) usan
+`FrostCard`: la superficie del tema con alfa, filo claro y la misma luz superior
+que el vidrio. **No desenfoca.** Un `BlurView` dentro del contenido que se
+desplaza queda dentro de su propio objetivo y cae a un tinte plano, que es lo que
+ya se comprobó en `AuthScreenLayout`; además costaría una pasada de GPU por
+tarjeta en el teléfono donde se midieron tirones. El desenfoque real sigue siendo
+solo del chrome flotante.
+
+Lo que no cambia: controles, formularios y cifras clínicas siguen sobre superficie
+opaca (§12.1). Con la transparencia reducida la escarcha cae a la superficie opaca.
+
+**Consecuencias.**
+
+- El aviso clínico deja su tinte rosa: justo debajo del hero carmín eran dos
+  bloques rojizos y se leía como alerta. Pasa a la misma superficie que las demás
+  tarjetas, con icono en tinta baja y una sola frase. Se retiran `clinicalNotice`
+  y `radius.control`.
+- El resumen deja su fondo radial y con él `SummaryBackdrop`, que era un segundo
+  `<Canvas>` en la misma pantalla. Se retira `summaryTiles`.
+- La acción de eliminar vive detrás de la fila y ahora se transparentaría: queda
+  invisible en reposo y aparece con el progreso del gesto.
+- Las opacidades de la malla pasan a `tokens.ts` (`auroraOpacity`) para que las
+  pruebas las lean sin copiarlas.
+
+**Corrección en oscuro, el mismo día.** La autora vio mal los bordes en oscuro. Eran dos
+cosas: la luz especular, una raya recta de un punto que el recorte cortaba al
+empezar la curva de la esquina (invisible en claro, brillante en oscuro), y un filo
+al 16 % que se perdía sobre la bruma clara de la malla y en otras zonas no. Se
+quita la raya de `FrostCard` y el filo oscuro pasa a ser `glass.borderDark`, el
+mismo de la barra. El relleno no cambia, así que el contraste tampoco.
+La autora vio después la misma raya en la barra de pestañas: se quita también de
+`Glass.tsx`, y con ella el token `glass.specular`, que se queda sin uso. El vidrio y
+la escarcha quedan con la misma regla: la forma la dibuja el filo.
+
+**Contraste**, medido sobre el centro del blob más contrario a la tinta:
+15.53 y 6.01 en claro (texto alto y bajo), 9.60 y 4.84 en oscuro. El más justo es
+el texto bajo en oscuro.
+
+**Riesgo abierto.** El mismo que motivó D-20: la malla puede volver a competir con
+la lista. Se decide con el teléfono delante; si compite, se baja la opacidad de la
+malla solo en el modo suave.

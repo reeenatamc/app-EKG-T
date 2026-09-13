@@ -144,6 +144,25 @@ export const trace = {
  * de un blob decorativo. Ahora la marca es `brand.carmine` y esta familia no
  * sale nunca del lienzo. Lo comprueba `palette.test.ts`.
  */
+/**
+ * Opacidad de la malla por tema. BAJADAS DE 0.5 Y 0.42.
+ *
+ * A los valores anteriores el aurora seguia siendo lo primero que se veia al
+ * abrir la aplicacion: sobre el hueso, el lobulo ciruela caia justo detras del
+ * titular de las pantallas de acceso y lo dejaba lavado, con las esquinas de la
+ * pantalla en dos tonos distintos. La pantalla se leia sucia, no atmosferica.
+ *
+ * Es la misma conclusion de D.1 —«el aurora era el elemento mas fuerte de las
+ * doce pantallas»— llevada hasta el final. Alli se resolvio quitando el aurora
+ * de las pantallas de producto y bajandolo a 0.42 en las de entrada; esto
+ * segundo se anoto entonces como que «ayudo sin arreglarlo». Esto lo arregla.
+ * D-25 lo devuelve a las pestanas en modo suave, con estos mismos valores.
+ *
+ * El oscuro baja menos: sobre ciruela profundo el mismo valor se ve la mitad, y
+ * ahi el aurora es lo unico que separa el fondo de un negro plano.
+ */
+export const auroraOpacity = { light: 0.2, dark: 0.38 } as const;
+
 export const aurora = {
   carmine: '#BE4A5E',
   plum: '#6E3A63',
@@ -205,7 +224,7 @@ export const semantic = {
 } as const;
 
 /** Radios compartidos: tarjetas suaves y controles en cápsula. */
-export const radius = { pill: 999, card: 28, tile: 24, control: 16, chip: 12 } as const;
+export const radius = { pill: 999, card: 28, tile: 24, chip: 12 } as const;
 
 export const gap = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 
@@ -348,7 +367,6 @@ export const glass = {
   tintDark: 'rgba(49, 35, 58, 0.68)',
   borderLight: 'rgba(252, 248, 244, 0.55)',
   borderDark: 'rgba(245, 235, 241, 0.20)',
-  specular: 'rgba(252, 248, 244, 0.85)',
   /**
    * La burbuja que marca la pestana activa, dentro de la barra de vidrio.
    *
@@ -390,14 +408,18 @@ export const blur = {
   bloom: 48,
 } as const;
 
-/** Aviso de alcance clínico: ciruela suave, separado de los colores de alarma. */
-export const clinicalNotice = {
-  light: { surface: '#F4E8EB', edge: '#DDC4CA' },
-  dark: { surface: '#36272D', edge: '#745460' },
-} as const;
-
-/** Un único tinte carmín tenue para las tres tarjetas del resumen. */
-export const summaryTiles = {
-  light: ['#EAD6DC', '#FAF7F8'],
-  dark: ['#513640', '#2D2429'],
+/**
+ * Superficie escarchada de las tarjetas informativas de las pestanas.
+ *
+ * NO ES VIDRIO CON DESENFOQUE. Un BlurView dentro del contenido que se desplaza
+ * queda dentro de su propio objetivo y cae a un tinte plano (ver
+ * `AuthScreenLayout`). Esto es translucidez sin desenfoque: deja pasar el color de
+ * la atmosfera suave sin pagar una pasada de GPU por tarjeta. El relleno es la
+ * superficie del tema con alfa; el contraste se mide sobre el blob mas contrario
+ * de la atmosfera en `contrast.test.ts`.
+ */
+export const frost = {
+  light: { fill: 'rgba(254, 254, 253, 0.72)', edge: 'rgba(205, 182, 178, 0.55)' },
+  // En oscuro, el mismo filo que la barra de vidrio: una sola arista clara en la app.
+  dark: { fill: 'rgba(49, 35, 58, 0.62)', edge: glass.borderDark },
 } as const;

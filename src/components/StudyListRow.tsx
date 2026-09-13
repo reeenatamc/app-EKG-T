@@ -21,7 +21,7 @@ import {
 } from '@/constants/studyText';
 import { useAnalyses } from '@/ecg/analyses';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
-import { rowShadow } from '@/design/elevation';
+import { FrostCard } from '@/design/Frost';
 import { useTheme } from '@/design/theme';
 import { gap, radius, size, studyTone } from '@/design/tokens';
 import { font, type } from '@/design/type';
@@ -64,8 +64,8 @@ export function StudyListRow({ study }: StudyListRowProps) {
       friction={2}
       leftThreshold={40}
       overshootLeft={false}
-      renderLeftActions={(_progress, _translation, methods) => (
-        <SwipeDeleteAction onPress={() => confirmDelete(study, methods)} />
+      renderLeftActions={(progress, _translation, methods) => (
+        <SwipeDeleteAction progress={progress} onPress={() => confirmDelete(study, methods)} />
       )}
     >
       <StudyCard
@@ -122,7 +122,6 @@ interface StudyCardProps {
  * dentro: el boton de reintentar de un estudio atascado sigue funcionando.
  */
 function StudyCard({ study, canOpen, canRetry, onDelete }: StudyCardProps) {
-  const theme = useTheme();
   const retryStudy = useUploadQueue((state) => state.retryStudy);
   const analysis = useAnalyses((state) =>
     study.remoteId === null ? undefined : state.byStudy[study.remoteId],
@@ -130,8 +129,7 @@ function StudyCard({ study, canOpen, canRetry, onDelete }: StudyCardProps) {
   const state = studyState(study.status, analysis);
 
   return (
-    <View
-      style={[styles.card, rowShadow, { backgroundColor: theme.surface, borderColor: theme.edge }]}
+    <FrostCard
       accessibilityActions={
         onDelete === undefined ? undefined : [{ name: 'delete', label: DELETE_STUDY_TEXT.confirm }]
       }
@@ -147,7 +145,7 @@ function StudyCard({ study, canOpen, canRetry, onDelete }: StudyCardProps) {
           />
         </View>
       ) : null}
-    </View>
+    </FrostCard>
   );
 }
 
@@ -278,8 +276,6 @@ function failureCause(
 }
 
 const styles = StyleSheet.create({
-  // Superficie blanca sobre lienzo gris ciruela, con sombra discreta.
-  card: { borderRadius: radius.tile, borderCurve: 'continuous' },
   // El relleno vive en el pulsable y no en la tarjeta: asi el area tactil llega
   // hasta el filo de la fila en lugar de dejar dieciseis puntos muertos.
   opener: { minHeight: size.touchTarget, padding: gap.lg, gap: gap.sm },

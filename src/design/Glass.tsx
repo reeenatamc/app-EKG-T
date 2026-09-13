@@ -51,7 +51,6 @@ function GlassSurface({ children, intensity, cornerRadius, style }: GlassSurface
           { backgroundColor: isDark ? glass.tintDark : glass.tintLight },
         ]}
       />
-      <View pointerEvents="none" style={styles.specular} />
       {children}
     </BlurView>
   );
@@ -129,14 +128,5 @@ const styles = StyleSheet.create({
       },
       android: { elevation: ANDROID_ELEVATION },
     }),
-  },
-  // Luz especular desde arriba. Una sola direccion de luz en toda la app.
-  specular: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: size.hairline,
-    backgroundColor: glass.specular,
   },
 });

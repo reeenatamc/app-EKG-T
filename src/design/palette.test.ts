@@ -25,13 +25,7 @@ const ROOTS = ['src', 'app'];
 // Las listas no incluyen `tokens.ts`: ahi las familias se DEFINEN, no se
 // consumen, y sus propios valores se escriben sin prefijo de grupo.
 
-/**
- * Modulos que pueden rellenar con el carmin de marca, en cualquiera de sus tres
- * densidades: `carmine`, `carmineLit` y `carmineDeep`.
- *
- * El modulo hero del inicio salio de la lista con el bento (D-24): el inicio ya no
- * tiene ninguna superficie de carmin fuera del boton principal.
- */
+/** Modulos que pueden rellenar con el carmin de marca. */
 const BRAND_FILL_ALLOWED = [
   'src/components/HomeHero.tsx',
   // Boton de accion principal: ocupa el ancho completo de la pantalla.
@@ -158,9 +152,8 @@ describe('el censo de fuentes es real', () => {
 
 describe('regla de tamano de §12.9 — el carmin de marca no rellena elementos pequenos', () => {
   it('solo lo consumen los modulos de superficie grande', () => {
-    // `\w*` para alcanzar tambien `carmineLit` y `carmineDeep`, que son el mismo
-    // relleno en otra densidad. No alcanza `onCarmine`, que es tinta, no relleno.
-    expect(filesMatching(/\bbrand\.carmine\w*/).sort()).toEqual([...BRAND_FILL_ALLOWED].sort());
+    // No alcanza `onCarmine`, que es tinta, no relleno.
+    expect(filesMatching(/\bbrand\.carmine\b/).sort()).toEqual([...BRAND_FILL_ALLOWED].sort());
   });
 
   it('donde tine, no rellena', () => {

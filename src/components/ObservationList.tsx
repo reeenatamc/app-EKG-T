@@ -49,10 +49,9 @@ const CHEVRON_SIDE = 16;
  * tercera repetia «Requiere confirmacion» en todas: una lectura corriente trae
  * diez observaciones y ocupaba cuatro pantallas de desplazamiento, con la misma
  * advertencia diez veces, que a la tercera ya no se lee. Ahora es una fila por
- * observacion —el hallazgo a la izquierda, la confianza a la derecha en
- * monoespaciada, para que las cifras se lean en columna— y la advertencia va una
- * vez, encima. Cada fila la sigue diciendo a quien la recorre con lector de
- * pantalla, que no ve la cabecera.
+ * observacion —el hallazgo a la izquierda, la confianza a la derecha— y la
+ * advertencia va una vez, encima. Cada fila la sigue diciendo a quien la recorre
+ * con lector de pantalla, que no ve la cabecera.
  *
  * LAS DERIVACIONES NO SE PINTAN POR FILA. El pipeline las calcula una vez para la
  * lectura entera y se las pone iguales a todas las observaciones, porque el

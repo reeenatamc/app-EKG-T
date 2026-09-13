@@ -10,9 +10,8 @@ const RESET_LABEL = 'Reiniciar el minimo de fotogramas por segundo';
 /**
  * Lectura de fotogramas por segundo del hilo de UI.
  *
- * Se apoya en superficie opaca y usa la familia monoespaciada, igual que
- * cualquier otra cifra: no es un signo vital, pero seguir la misma regla evita
- * que la excepcion se normalice.
+ * Se apoya en superficie opaca para que el numero se lea igual que el resto de
+ * datos de inspeccion del playground.
  *
  * @returns El medidor de fotogramas.
  */

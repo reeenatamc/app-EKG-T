@@ -32,7 +32,7 @@ export const PLAYGROUND_TEXT = {
     'Vidrio sobre el fondo. Con la transparencia reducida cae a superficie opaca sin perder jerarquía.',
   typeTitle: 'Escala tipográfica',
   vitalSample: '72',
-  vitalCaption: 'Cifra clínica: monoespaciada y sobre superficie opaca',
+  vitalCaption: 'Cifra clínica sobre superficie opaca',
   chromeLabel: 'Chrome flotante',
   gestureHint: 'Arrastra el punto: comprueba que los gestos corren en el hilo de UI',
   gestureLabel: 'Arrastra',

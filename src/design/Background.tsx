@@ -20,9 +20,11 @@ interface BackgroundProps {
    * Monta las capas 1 a 3: malla, latido difuso y retícula.
    *
    * Falso deja el lienzo **plano**, con el color de `theme.canvas` y nada mas: ni
-   * un solo nodo de Skia. Ver la explicacion de abajo y la desviacion D-20.
+   * un solo nodo de Skia. `'soft'` es la atmosfera de las pestanas: malla y
+   * retícula sobre el lienzo plano, sin latido difuso, para que la escarcha de las
+   * tarjetas tenga color que dejar pasar. Ver D-20 y D-25.
    */
-  readonly atmosphere?: boolean;
+  readonly atmosphere?: boolean | 'soft';
   /**
    * Oculta el latido difuso. Util en pantallas cuyo contenido principal es una
    * imagen o un trazado real, donde un segundo trazado de fondo confundiria.
@@ -71,7 +73,7 @@ interface BackgroundProps {
  *
  * @param children Capa 5: el contenido, que pasa por debajo del vidrio.
  * @param chrome Capa 4: el vidrio flotante, que se monta encima del objetivo.
- * @param atmosphere Falso para dejar el lienzo plano, sin capas 1 a 3.
+ * @param atmosphere Falso para dejar el lienzo plano; `'soft'` para la atmosfera de las pestanas.
  * @param showSignalBloom Falso para omitir la capa 2.
  * @returns La pantalla con su fondo compuesto.
  */
@@ -83,25 +85,19 @@ export function Background({
 }: BackgroundProps) {
   const theme = useTheme();
   const blurTarget = useRef<View>(null);
-  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const { layout, onLayout } = useViewLayout();
 
-  const handleLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    setLayout({ width, height });
-  };
-
-  const hasLayers = atmosphere && layout.width > 0 && layout.height > 0;
-  // Sin atmosfera el lienzo es hueso puro: una hoja plana no esta apoyada sobre
-  // nada, asi que no tiene por que estar en sombra. En oscuro los dos coinciden.
-  const ground = atmosphere ? theme.canvas : theme.canvasFlat;
+  // Solo la entrada va sobre el lienzo en sombra. Las pestanas, con o sin atmosfera
+  // suave, conservan el lienzo plano del producto. En oscuro los dos coinciden.
+  const ground = atmosphere === true ? theme.canvas : theme.canvasFlat;
 
   return (
-    <View style={[styles.root, { backgroundColor: ground }]} onLayout={handleLayout}>
+    <View style={[styles.root, { backgroundColor: ground }]} onLayout={onLayout}>
       <BlurTargetView ref={blurTarget} style={styles.target}>
         <CanvasFill color={ground} />
-        {hasLayers ? <BackgroundLayers {...layout} showSignalBloom={showSignalBloom} /> : null}
+        <Atmosphere mode={atmosphere} layout={layout} showSignalBloom={showSignalBloom} />
         {children}
-        {atmosphere ? null : <StatusScrim color={ground} />}
+        {atmosphere === true ? null : <StatusScrim color={ground} />}
       </BlurTargetView>
 
       {chrome === undefined ? null : (
@@ -109,6 +105,46 @@ export function Background({
       )}
     </View>
   );
+}
+
+/**
+ * Tamano de una vista, para dimensionar el lienzo de Skia que la llena.
+ *
+ * @returns El tamano medido y el manejador que lo actualiza.
+ */
+function useViewLayout() {
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setLayout({ width, height });
+  };
+
+  return { layout, onLayout };
+}
+
+interface AtmosphereProps {
+  readonly mode: BackgroundProps['atmosphere'];
+  readonly layout: { readonly width: number; readonly height: number };
+  readonly showSignalBloom: boolean;
+}
+
+/**
+ * Capas 1 a 3, o nada.
+ *
+ * Nada sin atmosfera, y nada hasta que la vista tiene tamano: un lienzo de cero
+ * puntos no dibuja. En modo suave nunca lleva el latido difuso.
+ *
+ * @param mode Atmosfera pedida por la pantalla.
+ * @param layout Tamano de la pantalla.
+ * @param showSignalBloom Falso para omitir la capa 2.
+ * @returns El lienzo con sus capas, o null.
+ */
+function Atmosphere({ mode, layout, showSignalBloom }: AtmosphereProps) {
+  if (mode === false || layout.width === 0 || layout.height === 0) {
+    return null;
+  }
+
+  return <BackgroundLayers {...layout} showSignalBloom={showSignalBloom && mode !== 'soft'} />;
 }
 
 /**

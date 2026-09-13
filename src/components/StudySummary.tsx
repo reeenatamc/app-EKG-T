@@ -1,16 +1,16 @@
-import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { StudyCounts } from '@/capture/studyState';
 import { HOME_TEXT } from '@/constants/shellText';
-import { SummaryBackdrop } from '@/design/SummaryBackdrop';
+import { FrostCard } from '@/design/Frost';
 import { useTheme } from '@/design/theme';
-import { gap, radius, size } from '@/design/tokens';
+import { gap, size } from '@/design/tokens';
 import { type } from '@/design/type';
 import { AnimatedPressable, usePressMotion } from '@/design/usePressMotion';
 
 interface StudySummaryProps {
   readonly counts: StudyCounts;
+  /** Lleva al historial, que es donde se ve cada uno. */
   readonly onPress: () => void;
 }
 
@@ -20,13 +20,21 @@ const COLUMNS = [
   { key: 'failed', label: HOME_TEXT.summaryFailed },
 ] as const;
 
-/** Tres tarjetas independientes con manchas radiales suaves en un solo lienzo. */
+/**
+ * Cuantos estudios hay listos, en curso y con error, en tres tarjetas escarchadas.
+ *
+ * Son recuentos administrativos, no cifras clinicas, asi que pueden ir sobre la
+ * escarcha. Antes llevaban un fondo radial propio pintado en un segundo lienzo de
+ * Skia; con la atmosfera suave detras ya no hace falta, y la pantalla vuelve a
+ * tener un solo lienzo (§1).
+ *
+ * @param counts Recuentos por estado.
+ * @param onPress Abre el historial.
+ * @returns La fila de recuentos.
+ */
 export function StudySummary({ counts, onPress }: StudySummaryProps) {
-  const [layout, setLayout] = useState({ width: 0, height: 0 });
-
   return (
-    <View style={styles.strip} onLayout={({ nativeEvent }) => setLayout(nativeEvent.layout)}>
-      <SummaryBackdrop width={layout.width} height={layout.height} count={COLUMNS.length} />
+    <View style={styles.strip}>
       {COLUMNS.map((column) => (
         <SummaryCell
           key={column.key}
@@ -39,16 +47,14 @@ export function StudySummary({ counts, onPress }: StudySummaryProps) {
   );
 }
 
-/** Cada recuento abre el historial completo; la etiqueta anuncia ese destino. */
-function SummaryCell({
-  label,
-  count,
-  onPress,
-}: {
+interface SummaryCellProps {
   readonly label: string;
   readonly count: number;
   readonly onPress: () => void;
-}) {
+}
+
+/** Cada recuento abre el historial completo; la etiqueta anuncia ese destino. */
+function SummaryCell({ label, count, onPress }: SummaryCellProps) {
   const theme = useTheme();
   const press = usePressMotion();
 
@@ -59,23 +65,24 @@ function SummaryCell({
       onPress={onPress}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
-      style={[styles.cell, press.style]}
+      style={[styles.tile, press.style]}
     >
-      <Text style={[type.figure, { color: theme.textHigh }]}>{count}</Text>
-      <Text style={[type.caption, { color: theme.textHigh }]}>{label}</Text>
+      <FrostCard style={styles.cell}>
+        <Text style={[type.figure, { color: theme.textHigh }]}>{count}</Text>
+        <Text style={[type.caption, { color: theme.textHigh }]}>{label}</Text>
+      </FrostCard>
     </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   strip: { flexDirection: 'row', gap: gap.md },
+  tile: { flex: 1, minWidth: 0 },
   cell: {
     flex: 1,
     minHeight: size.summaryTile,
-    minWidth: 0,
     paddingVertical: gap.lg,
     paddingHorizontal: gap.md,
     gap: gap.sm,
-    borderRadius: radius.tile,
   },
 });
