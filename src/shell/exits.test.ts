@@ -37,7 +37,15 @@ const STACKED_SCREENS: readonly StackedScreen[] = [
   {
     file: 'src/screens/StudyDetailScreen.tsx',
     why: 'se abre desde el Historial y admite enlace profundo',
-    required: [/useGoBack\(/, /onBack=\{/],
+    required: [/useGoBack\(/, /<StudyDetailHeader[^>]*onBack=\{goBack\}/],
+  },
+  {
+    // Desde D-30 el detalle dibuja su propia cabecera en fila y no pasa por
+    // `ScreenHeader`, asi que la exigencia sigue hasta donde se pinta el boton: que
+    // la pantalla pase `goBack` no basta si la cabecera no lo conecta.
+    file: 'src/components/StudyDetailHeader.tsx',
+    why: 'es la cabecera del detalle, que dibuja la salida',
+    required: [/icon="back"/, /onPress=\{onBack\}/],
   },
   {
     file: 'src/screens/CameraScreen.tsx',

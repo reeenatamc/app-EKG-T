@@ -1,16 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
 import { ActionButton } from '@/components/ActionButton';
-import { MeasurementList } from '@/components/MeasurementList';
-import { ObservationList } from '@/components/ObservationList';
-import { SegmentedControl } from '@/components/SegmentedControl';
-import { presentLeads } from '@/ecg/leads';
-import type { EcgSignal, LeadName } from '@/ecg/signal';
 import { ProcessingIndicator } from '@/components/ProcessingIndicator';
-import { SettingsSection } from '@/components/SettingsSection';
-import { TwelveLeadViewer } from '@/components/TwelveLeadViewer';
+import { StudyTrace } from '@/components/StudyTrace';
 import {
   ANALYSIS_FAILURE_COPY,
   STATUS_DETAIL,
@@ -19,9 +12,9 @@ import {
 } from '@/constants/studyText';
 import { useAnalyses } from '@/ecg/analyses';
 import { isWorthRetrying } from '@/ecg/retryable';
-import type { EcgAnalysis, EcgObservation } from '@/ecg/EcgAnalysisService';
+import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
-import { gap, radius } from '@/design/tokens';
+import { gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
 interface AnalysisSectionProps {
@@ -30,15 +23,19 @@ interface AnalysisSectionProps {
 }
 
 /**
- * Lo que se muestra segun el estado del analisis.
+ * Lo que se muestra mientras el analisis no esta listo.
  *
- * Los cuatro estados tienen contenido propio, ninguno es una pantalla vacia con
- * un texto. Mientras se procesa hay algo que mirar y algo que entender; cuando
- * falla se dice por que y que se puede hacer.
+ * Los estados tienen contenido propio, ninguno es una pantalla vacia con un texto.
+ * Mientras se procesa hay algo que mirar y algo que entender; cuando falla se dice
+ * por que y que se puede hacer.
+ *
+ * LISTO NO SE DIBUJA AQUI. Desde D-30 un estudio listo lleva tarjeta de resultado,
+ * trazado y hoja inferior, y la hoja tiene que vivir fuera del desplazamiento de la
+ * pantalla: lo compone `StudyDetailScreen`.
  *
  * @param study Estudio en cuestion.
  * @param analysis Analisis, o undefined mientras no llega el primero.
- * @returns El contenido del estado actual.
+ * @returns El contenido del estado actual, o nada si ya esta listo.
  */
 export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
   if (analysis === undefined || analysis.status === 'queued') {
@@ -56,7 +53,7 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
     return <AnalysisFailure study={study} studyId={study.remoteId} analysis={analysis} />;
   }
 
-  return <ReadyAnalysis study={study} analysis={analysis} />;
+  return null;
 }
 
 /**
@@ -64,196 +61,20 @@ export function AnalysisSection({ study, analysis }: AnalysisSectionProps) {
  *
  * LA DIGITALIZACION ES LA MITAD RAPIDA, unos quince segundos, y la
  * interpretacion la lenta, de treinta a cincuenta y cinco. El servidor guarda
- * el trazado en cuanto lo digitaliza, mucho antes de que la interpretacion
- * termine, asi que aqui se ensena en cuanto llega en vez de esperar al final:
- * quien acaba de fotografiar el registro ve algo mientras el resto sigue en
- * marcha, no un indicador vacio todo ese tiempo.
+ * el trazado en cuanto lo digitaliza, asi que aqui se ensena en cuanto llega en
+ * vez de esperar al final.
  *
  * EL INDICADOR SE QUEDA, con o sin trazado. El trazado es un adelanto de lo
  * que se leyo, no el resultado: la interpretacion sigue en curso y todavia
  * puede fallar.
  */
 function ProcessingSignal({ study, analysis }: { study: QueuedStudy; analysis: EcgAnalysis }) {
-  const theme = useTheme();
-
   return (
-    <View style={styles.processing}>
+    <View style={styles.stack}>
       {analysis.signal === null ? null : (
-        <SettingsSection title={STUDY_TEXT.signalSection}>
-          <Text style={[type.caption, { color: theme.textLow }]}>
-            {STUDY_TEXT.signalReadCaption}
-          </Text>
-          <SignalView study={study} signal={analysis.signal} focusedLeads={null} />
-        </SettingsSection>
+        <StudyTrace study={study} signal={analysis.signal} caption={STUDY_TEXT.signalReadCaption} />
       )}
       <ProcessingIndicator isQueued={false} />
-    </View>
-  );
-}
-
-/**
- * Las derivaciones de las que sale la lectura.
- *
- * Se unen las de todas las observaciones porque el pipeline se las pone iguales
- * a todas: las calcula una vez para la lectura entera. El modelo no localiza
- * hallazgos -- recibe una senal y devuelve puntuaciones-- asi que no hay forma de
- * saber en cual se ve cada cosa. La union deja esto correcto si algun dia las
- * distingue, sin prometerlo hoy.
- *
- * @param signal Senal digitalizada, o null si no la hay.
- * @param observations Observaciones de la lectura.
- * @returns Las derivaciones presentes, o null si no se puede decir.
- */
-function readingBasis(
-  signal: EcgSignal | null,
-  observations: readonly EcgObservation[],
-): readonly LeadName[] | null {
-  if (signal === null) {
-    return null;
-  }
-
-  const named = [...new Set(observations.flatMap((observation) => observation.leads))];
-
-  return presentLeads(signal, named);
-}
-
-interface ReadingBasisProps {
-  readonly basis: readonly LeadName[] | null;
-  readonly isShown: boolean;
-  readonly onToggle: () => void;
-}
-
-/**
- * De donde sale la lectura, y el interruptor para verlo en el trazado.
- *
- * UN SOLO INTERRUPTOR, y no una seleccion por observacion. Tocar cada una
- * sugeriria que cada una lleva a un sitio distinto, y no puede: todas se apoyan
- * en las mismas derivaciones porque es lo unico que el pipeline sabe decir.
- *
- * Y con estado a la vista. Un foco del que solo se sale repitiendo el gesto que
- * lo encendio obliga a acordarse de cual fue; este dice en su etiqueta lo que
- * va a hacer.
- *
- * @param basis Derivaciones de las que sale la lectura.
- * @param isShown Cierto si el foco esta puesto.
- * @param onToggle Encender o apagar el foco.
- * @returns La linea, o nada si no se puede decir de donde sale.
- */
-function ReadingBasis({ basis, isShown, onToggle }: ReadingBasisProps) {
-  const theme = useTheme();
-
-  if (basis === null) {
-    return null;
-  }
-
-  return (
-    <View style={styles.basis}>
-      <Text style={[type.caption, { color: theme.textLow }]}>
-        {STUDY_TEXT.basisLabel} {basis.join(' · ')}
-      </Text>
-      {/* En fila, como el de reintentar: a ancho completo pesaria mas que la lectura. */}
-      <View style={styles.basisAction}>
-        <ActionButton
-          label={isShown ? STUDY_TEXT.hideBasis : STUDY_TEXT.showBasis}
-          onPress={onToggle}
-          variant="secondary"
-        />
-      </View>
-    </View>
-  );
-}
-
-interface SignalViewProps {
-  readonly study: QueuedStudy;
-  readonly signal: EcgSignal | null;
-  readonly focusedLeads: readonly LeadName[] | null;
-}
-
-/** El trazado, con el montaje y la calibracion con que se imprimio. */
-function SignalView({ study, signal, focusedLeads }: SignalViewProps) {
-  // Trazado o foto: la misma hoja vista dos veces. Poder saltar de una a otra es
-  // lo que deja comprobar a ojo que lo digitalizado es lo que estaba en el papel.
-  const [view, setView] = useState<'trace' | 'photo'>('trace');
-
-  if (signal === null) {
-    return null;
-  }
-
-  return (
-    <View style={styles.signalView}>
-      <SegmentedControl
-        options={[
-          { value: 'trace', label: STUDY_TEXT.viewTrace },
-          { value: 'photo', label: STUDY_TEXT.viewPhoto },
-        ]}
-        value={view}
-        onChange={setView}
-        accessibilityLabel={STUDY_TEXT.viewSwitchLabel}
-      />
-      {view === 'photo' ? (
-        <StudyPhoto study={study} />
-      ) : (
-        <TwelveLeadViewer
-          signal={signal}
-          mount={study.metadata.mount}
-          calibration={study.metadata.calibration}
-          focusedLeads={focusedLeads}
-        />
-      )}
-    </View>
-  );
-}
-
-/** La foto tal como se envio, a su proporcion, para cotejarla con el trazado. */
-function StudyPhoto({ study }: { study: QueuedStudy }) {
-  const theme = useTheme();
-
-  return (
-    <Image
-      source={{ uri: study.imageUri }}
-      style={[
-        styles.photo,
-        { aspectRatio: study.imageWidth / study.imageHeight, backgroundColor: theme.surface },
-      ]}
-      resizeMode="contain"
-      accessibilityLabel={STUDY_TEXT.viewPhoto}
-    />
-  );
-}
-
-/**
- * Trazado, medidas y observaciones de un estudio ya procesado.
- *
- * TOCAR UNA OBSERVACION LLEVA EL FOCO A SUS DERIVACIONES. El estado vive aqui
- * porque aqui es donde el visor y la lista son hermanos, y ninguno de los dos
- * tiene por que saber del otro.
- */
-function ReadyAnalysis({ study, analysis }: { study: QueuedStudy; analysis: EcgAnalysis }) {
-  const [showBasis, setShowBasis] = useState(false);
-
-  const { signal } = analysis;
-  const basis = useMemo(() => readingBasis(signal, analysis.observations), [signal, analysis]);
-
-  return (
-    <View style={styles.ready}>
-      <SettingsSection title={STUDY_TEXT.signalSection}>
-        <SignalView study={study} signal={signal} focusedLeads={showBasis ? basis : null} />
-      </SettingsSection>
-
-      {analysis.measurements === null ? null : (
-        <SettingsSection title={STUDY_TEXT.measurementsSection}>
-          <MeasurementList measurements={analysis.measurements} />
-        </SettingsSection>
-      )}
-
-      <SettingsSection title={STUDY_TEXT.observationsSection}>
-        <ReadingBasis
-          basis={basis}
-          isShown={showBasis}
-          onToggle={() => setShowBasis((on) => !on)}
-        />
-        <ObservationList observations={analysis.observations} />
-      </SettingsSection>
     </View>
   );
 }
@@ -271,36 +92,23 @@ interface AnalysisFailureProps {
  * Se dice la causa y, sobre todo, que el estudio no se ha perdido. Quien acaba
  * de fotografiar un registro necesita saber eso antes que el motivo tecnico.
  *
- * Y AHORA TIENE SALIDA. Antes decia la causa y ahi se acababa la pantalla: la
- * unica forma de volver a intentarlo era cerrar la aplicacion, y ni siquiera
- * eso, porque el estudio ya constaba como pedido. La imagen sigue en el
- * dispositivo y el estudio sigue subido, asi que reintentar es barato y no
- * arriesga nada.
+ * SALIDA SOLO CUANDO LA HAY. El boton de reintentar no aparece en las causas que
+ * no pueden terminar de otra manera -- ver isWorthRetrying. En esas, lo que hay
+ * que hacer lo dice el texto de la causa.
  *
- * SALIDA SOLO CUANDO LA HAY. El boton no aparece en las causas que no pueden
- * terminar de otra manera -- ver isWorthRetrying. En esas, lo que hay que hacer
- * lo dice el texto de la causa, y un boton al lado solo invita a pulsarlo en
- * lugar de leerlo.
- *
- * Y CON EL TRAZADO SI LLEGO A DIGITALIZARSE. Un fallo tras la digitalizacion
- * -- un error del servidor en la interpretacion, un montaje no soportado que
- * salta la comprobacion cruzada-- no borra lo que ya se leyo del papel. Quien
- * hizo la foto ve el trazado igual, encima del aviso.
+ * Y CON EL TRAZADO SI LLEGO A DIGITALIZARSE. Un fallo tras la digitalizacion no
+ * borra lo que ya se leyo del papel.
  */
 function AnalysisFailure({ study, studyId, analysis }: AnalysisFailureProps) {
-  const theme = useTheme();
-
   return (
-    <View style={styles.failureWrap}>
+    <View style={styles.stack}>
       {analysis.signal === null ? null : (
-        <SettingsSection title={STUDY_TEXT.signalSection}>
-          <Text style={[type.caption, { color: theme.textLow }]}>
-            {STUDY_TEXT.signalReadFailureCaption}
-          </Text>
-          <SignalView study={study} signal={analysis.signal} focusedLeads={null} />
-        </SettingsSection>
+        <StudyTrace
+          study={study}
+          signal={analysis.signal}
+          caption={STUDY_TEXT.signalReadFailureCaption}
+        />
       )}
-
       <FailureCard studyId={studyId} analysis={analysis} />
     </View>
   );
@@ -312,7 +120,7 @@ function FailureCard({ studyId, analysis }: { studyId: string | null; analysis: 
   const retry = useAnalyses((state) => state.retry);
 
   return (
-    <View style={[styles.failure, { backgroundColor: theme.surface }]}>
+    <View style={[styles.failure, { backgroundColor: theme.surface, borderColor: theme.edge }]}>
       <Text style={[type.body, { color: theme.textHigh }]}>{STATUS_TEXT.failed}</Text>
       <Text style={[type.caption, { color: theme.textLow }]}>
         {analysis.failure === null ? STATUS_DETAIL.failed : ANALYSIS_FAILURE_COPY[analysis.failure]}
@@ -332,14 +140,14 @@ function FailureCard({ studyId, analysis }: { studyId: string | null; analysis: 
 }
 
 const styles = StyleSheet.create({
-  signalView: { gap: gap.sm },
-  photo: { width: '100%', borderRadius: radius.tile },
-  basis: { gap: gap.sm, marginBottom: gap.md },
-  basisAction: { flexDirection: 'row', alignSelf: 'flex-start' },
-  ready: { gap: gap.xl },
-  processing: { gap: gap.xl },
-  failureWrap: { gap: gap.xl },
-  failure: { padding: gap.lg, borderRadius: radius.tile, gap: gap.xs },
+  stack: { gap: gap.xl },
+  failure: {
+    padding: gap.lg,
+    borderRadius: radius.tile,
+    borderCurve: 'continuous',
+    borderWidth: size.hairline,
+    gap: gap.xs,
+  },
   // En fila para que el boton no se estire al ancho de la tarjeta: dentro de un
   // aviso, un boton a sangre pesa mas que el propio aviso.
   failureAction: { flexDirection: 'row', marginTop: gap.sm },

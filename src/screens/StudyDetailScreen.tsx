@@ -1,15 +1,16 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { QueuedStudy } from '@/capture/study';
-import { formatStudyDate } from '@/capture/studyDate';
 import { useUploadQueue } from '@/capture/uploadQueue';
 import { AnalysisSection } from '@/components/AnalysisSection';
-import { ClinicalDisclaimer } from '@/components/ClinicalDisclaimer';
+import { SHEET_HEADER_HEIGHT } from '@/components/BottomSheet';
 import { KeyboardLift } from '@/components/KeyboardLift';
-import { ScreenHeader } from '@/components/ScreenHeader';
+import { ReadyTrace } from '@/components/ReadyTrace';
+import { ResultCard } from '@/components/ResultCard';
+import { StudyDetailHeader } from '@/components/StudyDetailHeader';
+import { StudyFindingsSheet } from '@/components/StudyFindingsSheet';
 import { StudyNotes } from '@/components/StudyNotes';
-import { StudyReportActions } from '@/components/StudyReportActions';
-import { MOUNT_COPY } from '@/constants/captureText';
+import { CLINICAL_NOTICE } from '@/constants/studyText';
 import { useAnalysis } from '@/ecg/analyses';
 import type { EcgAnalysis } from '@/ecg/EcgAnalysisService';
 import { Background } from '@/design/Background';
@@ -24,11 +25,14 @@ interface StudyDetailScreenProps {
 }
 
 /**
- * Detalle de un estudio: estado, trazado, medidas y observaciones.
+ * Detalle de un estudio: cabecera, resultado, aviso, trazado y hoja inferior (D-30).
  *
- * El aviso de que esto es una lectura automatica va arriba del todo y no al pie.
- * Es la pantalla donde alguien podria tomar una decision, y un aviso al final se
- * lee despues de haber decidido.
+ * El aviso de que esto es una lectura automatica va arriba y no al pie, pegado al
+ * resultado. Es la pantalla donde alguien podria tomar una decision, y un aviso al
+ * final se lee despues de haber decidido.
+ *
+ * LA HOJA VA FUERA DEL DESPLAZAMIENTO, como hermana del `ScrollView`, y el contenido
+ * reserva abajo lo que asoma de ella para que el trazado no quede debajo.
  *
  * @param studyId Identificador del estudio.
  * @returns La pantalla de detalle.
@@ -39,91 +43,92 @@ export function StudyDetailScreen({ studyId }: StudyDetailScreenProps) {
   const analysis = useAnalysis(study?.remoteId ?? null);
   const safe = useSafePadding(gap.lg, gap.xl);
 
-  // Puede pasar de verdad: si el estudio se descarta desde el historial
-  // mientras su detalle esta abierto, esta pantalla sobrevive un fotograma sin
-  // dato. Se sale en blanco en lugar de reventar.
+  // Puede pasar de verdad: si el estudio se descarta desde el historial mientras
+  // su detalle esta abierto, esta pantalla sobrevive un fotograma sin dato.
   if (study === undefined) {
-    return (
-      <Background atmosphere={false}>
-        <View />
-      </Background>
-    );
+    return <Background atmosphere={false}>{null}</Background>;
   }
+
+  const ready = analysis?.status === 'ready' ? analysis : null;
+  const padding = {
+    ...safe,
+    paddingBottom: safe.paddingBottom + (ready ? SHEET_HEADER_HEIGHT : 0),
+  };
 
   return (
     <Background atmosphere={false}>
       <KeyboardLift>
         <ScrollView
-          contentContainerStyle={[styles.content, safe]}
+          contentContainerStyle={[styles.content, padding]}
           keyboardShouldPersistTaps="handled"
         >
-          <StudyHeader study={study} onBack={goBack} />
-          <StudyBody study={study} analysis={analysis} />
+          <StudyDetailHeader study={study} onBack={goBack} />
+          <DetailBody study={study} analysis={analysis} />
         </ScrollView>
+        {ready === null ? null : <StudyFindingsSheet study={study} analysis={ready} />}
       </KeyboardLift>
     </Background>
   );
 }
 
-interface StudyBodyProps {
-  readonly study: QueuedStudy;
-  readonly analysis: EcgAnalysis | undefined;
+/** Lo que va bajo la cabecera, segun el analisis este listo o no. */
+function DetailBody({ study, analysis }: { study: QueuedStudy; analysis?: EcgAnalysis }) {
+  return analysis?.status === 'ready' ? (
+    <ReadyBody study={study} analysis={analysis} />
+  ) : (
+    <PendingBody study={study} analysis={analysis} />
+  );
 }
 
 /**
- * Aviso, analisis, acciones del informe y notas.
+ * Un estudio listo: la tarjeta ciruela, el aviso debajo y el trazado.
  *
- * El aviso de que es una lectura automatica va delante del analisis y no al pie:
- * un aviso al final se lee despues de haber decidido.
+ * Hallazgos, medidas y notas van en la hoja inferior.
  */
-function StudyBody({ study, analysis }: StudyBodyProps) {
+function ReadyBody({ study, analysis }: { study: QueuedStudy; analysis: EcgAnalysis }) {
   return (
     <>
-      <ClinicalDisclaimer />
+      <View style={styles.result}>
+        <ResultCard observations={analysis.observations} />
+        <ScopeNote />
+      </View>
+      <ReadyTrace study={study} analysis={analysis} />
+    </>
+  );
+}
+
+/**
+ * En cola, procesando o fallido: el aviso, el contenido del estado y las notas.
+ *
+ * Sin tarjeta de resultado, porque todavia no hay resultado que resumir, y sin hoja,
+ * porque no hay hallazgos ni medidas que poner en ella.
+ */
+function PendingBody({ study, analysis }: { study: QueuedStudy; analysis?: EcgAnalysis }) {
+  return (
+    <>
+      <ScopeNote />
       <AnalysisSection study={study} analysis={analysis} />
-      {analysis?.status === 'ready' ? (
-        <StudyReportActions study={study} analysis={analysis} />
-      ) : null}
       <StudyNotes studyId={study.id} />
     </>
   );
 }
 
 /**
- * Identificador, fecha, montaje y calibracion del estudio.
- *
- * EL TITULAR ES EL MONTAJE Y EL IDENTIFICADOR VA DE ETIQUETA. Al reves de como
- * estaba: un identificador anonimo en display seria una cadena tecnica gritada, y
- * lo que le dice al clinico donde esta es el tipo de registro que tiene delante.
- * La calibración permanece junto al registro y usa la tipografía compartida.
+ * La linea de alcance. Una frase y no una tarjeta: pegada a lo que matiza se lee con
+ * ello, y como tarjeta competia con el resultado por la primera mirada.
  */
-function StudyHeader({
-  study,
-  onBack,
-}: {
-  readonly study: QueuedStudy;
-  readonly onBack: () => void;
-}) {
+function ScopeNote() {
   const theme = useTheme();
-  const { calibration, capturedAt, mount, anonymousId } = study.metadata;
 
   return (
-    <View style={styles.header}>
-      <ScreenHeader
-        title={MOUNT_COPY[mount].label}
-        eyebrow={anonymousId}
-        onBack={onBack}
-        size="headline"
-      />
-      <Text style={[type.data, { color: theme.textLow }]}>
-        {formatStudyDate(capturedAt, true)} · {calibration.speedMmPerSecond} mm/s ·{' '}
-        {calibration.gainMmPerMillivolt} mm/mV
-      </Text>
-    </View>
+    <Text style={[type.caption, styles.scope, { color: theme.textLow }]}>
+      {CLINICAL_NOTICE.detail}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
   content: { paddingHorizontal: gap.xl, gap: gap.xl },
-  header: { gap: gap.xs },
+  result: { gap: gap.sm },
+  scope: { paddingHorizontal: gap.xs },
 });

@@ -241,6 +241,20 @@ export const CATEGORY_TITLES: Readonly<Record<Exclude<EcgObservationCategory, 'r
     otro: 'Otros',
   };
 
+/**
+ * Rotulo corto de cada categoria, para el recuento de la tarjeta del detalle.
+ *
+ * Alli caben cuatro columnas en el ancho de un telefono, y «Isquemia e infarto»
+ * no entra en una. Solo se acortan los que no caben; la lista usa los largos.
+ */
+export const CATEGORY_SHORT_TITLES: Readonly<
+  Record<Exclude<EcgObservationCategory, 'resumen'>, string>
+> = {
+  ...CATEGORY_TITLES,
+  isquemia_infarto: 'Isquemia',
+  repolarizacion: 'Repolariz.',
+};
+
 /** Un grupo de observaciones que comparten categoria, con su rotulo. */
 export interface ObservationGroup {
   readonly category: Exclude<EcgObservationCategory, 'resumen'>;

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { MEASUREMENT_LABELS } from '@/constants/studyText';
 import type { EcgMeasurements } from '@/ecg/EcgAnalysisService';
 import { useTheme } from '@/design/theme';
-import { gap, radius } from '@/design/tokens';
+import { gap, radius, size } from '@/design/tokens';
 import { type } from '@/design/type';
 
 interface MeasurementListProps {
@@ -24,7 +24,12 @@ export function MeasurementList({ measurements }: MeasurementListProps) {
   return (
     <View style={styles.grid}>
       {Object.entries(MEASUREMENT_LABELS).map(([key, copy]) => (
-        <View key={key} style={[styles.cell, { backgroundColor: theme.surface }]}>
+        // Con filo: dentro de la hoja del detalle la celda y la hoja son la misma
+        // superficie, y sin borde las cifras flotarian sueltas.
+        <View
+          key={key}
+          style={[styles.cell, { backgroundColor: theme.surface, borderColor: theme.edge }]}
+        >
           <Text style={[type.caption, { color: theme.textLow }]}>{copy.label}</Text>
           <Text style={[type.vital, { color: theme.textHigh }]}>
             {measurements[key as keyof EcgMeasurements]}
@@ -43,6 +48,7 @@ const styles = StyleSheet.create({
     flexBasis: '30%',
     padding: gap.md,
     borderRadius: radius.tile,
+    borderWidth: size.hairline,
     gap: gap.xs,
   },
 });
